@@ -60,12 +60,12 @@
   border-radius: 20px;
   font-size: 0.9rem;
 
-  background-color: #333; /* dark background */
-  color: white;           /* white text */
+  background-color: white; /* dark background */
+  color: black;           /* white text */
 }
 
 .navbar-search::placeholder {
-  color: #bbb; /* lighter gray placeholder so it's visible */
+  color: gray; /* lighter gray placeholder so it's visible */
 }
 
 

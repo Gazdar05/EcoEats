@@ -18,6 +18,24 @@ function InventoryPage() {
   return <h1>Inventory Management</h1>;
 }
 
+function MealsPage() {
+  return <h1>Meal Planning</h1>;
+}
+
+function DonationPage() {
+  return <h1>User Donations</h1>;
+}
+
+function NotificationsPage() {
+  return <h1>User Notifications</h1>;
+}
+function ProfilePage() {
+  return <h1>User Profile</h1>;
+}
+function AnalyticsPage() {
+  return <h1>Track and Record of User</h1>;
+}
+
 function App() {
   return (
     <>
@@ -27,6 +45,11 @@ function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/browse" element={<BrowsePage />} />
         <Route path="/inventory" element={<InventoryPage />} />
+        <Route path="/meals" element={<MealsPage />} />
+        <Route path="/donations" element={<DonationPage />} /> {/* fixed */}
+        <Route path="/notifications" element={<NotificationsPage />} />
+        <Route path="/profile" element={<ProfilePage />} /> {/* fixed */}
+        <Route path="/analytics" element={<AnalyticsPage />} />
       </Routes>
     </>
   );
