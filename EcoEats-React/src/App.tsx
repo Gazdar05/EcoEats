@@ -36,23 +36,32 @@ function ProfilePage() {
 function AnalyticsPage() {
   return <h1>Track and Record of User</h1>;
 }
+function SupportPage() {
+  return <h1>Support Page</h1>;
+}
+
+function AboutPage() {
+  return <h1>About EcoEats</h1>;
+}
 
 function App() {
   return (
     <>
-      <Navbar /> {/* 👈 Should always show */}
+      <Navbar />
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/browse" element={<BrowsePage />} />
         <Route path="/inventory" element={<InventoryPage />} />
         <Route path="/meals" element={<MealsPage />} />
-        <Route path="/donations" element={<DonationPage />} /> {/* fixed */}
+        <Route path="/donations" element={<DonationPage />} />
         <Route path="/notifications" element={<NotificationsPage />} />
-        <Route path="/profile" element={<ProfilePage />} /> {/* fixed */}
+        <Route path="/profile" element={<ProfilePage />} />
         <Route path="/analytics" element={<AnalyticsPage />} />
+        <Route path="/support" element={<SupportPage />} />
+        <Route path="/about" element={<AboutPage />} />
       </Routes>
-      <Footer /> {/* 👈 stays at bottom on every page */}
+      <Footer />
     </>
   );
 }

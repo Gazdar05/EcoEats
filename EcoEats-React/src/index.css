@@ -84,7 +84,7 @@ body {
 html, body {
   margin: 0;
   padding: 0;
-  height: 100%;       /* take up full viewport */
-  overflow: hidden;   /* 🚫 disable scrolling */
+  height: 100%;       
+  overflow: hidden;   
 }
 

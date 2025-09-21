@@ -22,7 +22,7 @@
 .navbar-logo-text {
   font-weight: bold;
   font-size: 1.2rem;
-  color: #6EA124; /* ✅ Eco green */
+  color: #6EA124; 
 }
 
 .navbar-links {
@@ -39,13 +39,13 @@
 
 .navbar-links a {
   text-decoration: none;
-  color: #333; /* ✅ default gray */
+  color: #333;
   font-weight: 500;
   transition: color 0.2s;
 }
 
 .navbar-links a.active {
-  color: #6EA124; /* ✅ only active link is green */
+  color: #6EA124; 
 }
 
 .navbar-right {
@@ -60,12 +60,12 @@
   border-radius: 20px;
   font-size: 0.9rem;
 
-  background-color: white; /* dark background */
-  color: black;           /* white text */
+  background-color: white;
+  color: black;           
 }
 
 .navbar-search::placeholder {
-  color: gray; /* lighter gray placeholder so it's visible */
+  color: gray; 
 }
 
 
