@@ -16,13 +16,14 @@
 }
 
 .navbar-logo-img {
-  height: 32px;
+  height: 48px;   /* bigger logo */
+  width: auto;    /* keep aspect ratio */
 }
 
 .navbar-logo-text {
   font-weight: bold;
-  font-size: 1.2rem;
-  color: #6EA124; /* ✅ Eco green */
+  font-size: 1.2rem;  /* also a little bigger to match logo */
+  color: #6EA124;
 }
 
 .navbar-links {

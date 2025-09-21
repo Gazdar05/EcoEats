@@ -1,13 +1,14 @@
 import { NavLink } from "react-router-dom";
 import "./Navbar.css";
 import profileImg from "./profile.jpg";
+import Logo from "./ecoeats.jpg";
 
 function Navbar() {
   return (
     <nav className="navbar">
       {/* Logo */}
       <div className="navbar-logo">
-        <img src="/vite.svg" alt="EcoEats Logo" className="navbar-logo-img" />
+        <img src={Logo} alt="EcoEats Logo" className="navbar-logo-img" />
         <span className="navbar-logo-text">EcoEats</span>
       </div>
 
