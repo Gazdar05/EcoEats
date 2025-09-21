@@ -1,5 +1,6 @@
 import { Routes, Route } from "react-router-dom";
 import Navbar from "./components/navbar";
+import Footer from "./components/footer";
 
 // Temporary page components
 function HomePage() {
@@ -51,6 +52,7 @@ function App() {
         <Route path="/profile" element={<ProfilePage />} /> {/* fixed */}
         <Route path="/analytics" element={<AnalyticsPage />} />
       </Routes>
+      <Footer /> {/* 👈 stays at bottom on every page */}
     </>
   );
 }

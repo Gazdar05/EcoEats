@@ -81,3 +81,10 @@ nav {
 body {
   padding-top: 58px; /* leave space so page content isn't hidden behind fixed nav */
 }
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;       /* take up full viewport */
+  overflow: hidden;   /* 🚫 disable scrolling */
+}
+
