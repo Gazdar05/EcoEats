@@ -1,5 +1,6 @@
 import { NavLink } from "react-router-dom";
 import "./Navbar.css";
+import profileImg from "./profile.jpg";
 
 function Navbar() {
   return (
@@ -47,11 +48,7 @@ function Navbar() {
           placeholder="Search food items..."
           className="navbar-search"
         />
-        <img
-          src="https://via.placeholder.com/32"
-          alt="Profile"
-          className="navbar-profile"
-        />
+        <img src={profileImg} alt="Profile" className="navbar-profile" />
       </div>
     </nav>
   );
