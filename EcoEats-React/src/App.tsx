@@ -2,17 +2,16 @@ import { Routes, Route } from "react-router-dom";
 import Navbar from "./components/navbar";
 import Footer from "./components/footer";
 
-// Temporary page components
+// ✅ Import your real feature page
+import BrowseFood from "./WebPages/BrowseFood-Zayyan/BrowsePage";
+
+// Temporary page components (others stay as placeholders for now)
 function HomePage() {
   return <h1>Welcome to EcoEats!</h1>;
 }
 
 function LoginPage() {
   return <h1>Login Page</h1>;
-}
-
-function BrowsePage() {
-  return <h1>Browse Food Items</h1>;
 }
 
 function InventoryPage() {
@@ -30,12 +29,15 @@ function DonationPage() {
 function NotificationsPage() {
   return <h1>User Notifications</h1>;
 }
+
 function ProfilePage() {
   return <h1>User Profile</h1>;
 }
+
 function AnalyticsPage() {
   return <h1>Track and Record of User</h1>;
 }
+
 function SupportPage() {
   return <h1>Support Page</h1>;
 }
@@ -51,7 +53,10 @@ function App() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/browse" element={<BrowsePage />} />
+
+        {/* ✅ Now using your actual feature */}
+        <Route path="/browse" element={<BrowseFood />} />
+
         <Route path="/inventory" element={<InventoryPage />} />
         <Route path="/meals" element={<MealsPage />} />
         <Route path="/donations" element={<DonationPage />} />
