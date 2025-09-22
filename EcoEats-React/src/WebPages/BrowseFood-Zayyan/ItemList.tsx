@@ -1,3 +1,4 @@
+// src/WebPage/BrowseFood/ItemList.tsx
 import React from "react";
 import type { FoodItem } from "./mockData";
 import ItemCard from "./ItemCard";
@@ -8,13 +9,18 @@ type Props = {
 };
 
 const ItemList: React.FC<Props> = ({ items, onItemClick }) => {
-  if (items.length === 0) {
-    return <p>No items found. Please adjust your filters.</p>;
+  if (!items || items.length === 0) {
+    return (
+      <div className="no-items">
+        No items found. Please adjust your filters.
+      </div>
+    );
   }
+
   return (
-    <div className="item-list">
+    <div className="item-grid">
       {items.map((item) => (
-        <ItemCard key={item.id} item={item} onClick={onItemClick} />
+        <ItemCard key={item.id} item={item} onView={onItemClick} />
       ))}
     </div>
   );
