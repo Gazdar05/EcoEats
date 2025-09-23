@@ -1,6 +1,16 @@
 // src/WebPage/BrowseFood/ItemDetailModal.tsx
 import React, { useState } from "react";
 import type { FoodItem } from "./mockData";
+import {
+  CalendarDays,
+  Package,
+  Archive,
+  StickyNote,
+  ShoppingBasket,
+  MapPin,
+  Clock,
+  Phone,
+} from "lucide-react"; // ✅ icons
 
 type Props = {
   item: FoodItem | null;
@@ -49,7 +59,8 @@ const ItemDetailModal: React.FC<Props> = ({
 
   return (
     <div className="detail-overlay" onClick={onClose}>
-      <div className="detail-sheet" onClick={(e) => e.stopPropagation()}>
+      <div className="detail-card" onClick={(e) => e.stopPropagation()}>
+        {/* Header */}
         <div className="detail-header">
           <h3>{item.name}</h3>
           <button className="close-x" onClick={onClose}>
@@ -57,40 +68,33 @@ const ItemDetailModal: React.FC<Props> = ({
           </button>
         </div>
 
-        <div className="detail-body">
-          <p>
-            <strong>Expiry:</strong> {formatDate(item.expiry)}
-          </p>
-          <p>
-            <strong>Category:</strong> {item.category}
-          </p>
-          <p>
-            <strong>Storage:</strong> {item.storage}
-          </p>
-          <p>
-            <strong>Notes:</strong> {item.notes || "—"}
-          </p>
-          <p>
-            <strong>Quantity:</strong> {item.quantity}
-          </p>
+        <div className="detail-content">
+          {/* Left = image */}
+          <div className="detail-thumb">
+            <div className="thumb-placeholder-lg" />
+          </div>
 
-          {item.source === "donation" && item.donationDetails && (
-            <>
-              <h4>Donation Info</h4>
-              <p>
-                <strong>Location:</strong> {item.donationDetails.location}
-              </p>
-              <p>
-                <strong>Availability:</strong>{" "}
-                {item.donationDetails.availability}
-              </p>
-              <p>
-                <strong>Contact:</strong> {item.donationDetails.contact}
-              </p>
-            </>
-          )}
+          {/* Right = info */}
+          <div className="detail-info">
+            <p>📅 Expiry: {formatDate(item.expiry)}</p>
+            <p>🍴 Category: {item.category}</p>
+            <p>📦 Storage: {item.storage}</p>
+            <p>📝 Notes: {item.notes || "—"}</p>
+            <p>🔢 Quantity: {item.quantity}</p>
+
+            {/* Donation info section */}
+            {item.source === "donation" && item.donationDetails && (
+              <div className="donation-details">
+                <h4>Donation Info</h4>
+                <p>📍 Location: {item.donationDetails.location}</p>
+                <p>⏰ Availability: {item.donationDetails.availability}</p>
+                <p>📞 Contact: {item.donationDetails.contact}</p>
+              </div>
+            )}
+          </div>
         </div>
 
+        {/* Actions */}
         <div className="detail-actions">
           <button onClick={() => onMarkUsed(item.id)}>Mark as Used</button>
           <button onClick={() => onPlanMeal(item.id)}>Plan for Meal</button>
@@ -99,6 +103,7 @@ const ItemDetailModal: React.FC<Props> = ({
           </button>
         </div>
 
+        {/* Donation form */}
         {showDonationForm && (
           <div className="donation-form">
             <h4>Donation Details</h4>

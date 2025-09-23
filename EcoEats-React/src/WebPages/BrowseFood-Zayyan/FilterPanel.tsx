@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 
 type Filters = {
-  expiryDays?: number; // items expiring within X days
+  expiryDays?: string; // 👈 was number
   categories?: string[];
   storage?: string;
 };
@@ -13,6 +13,14 @@ type Props = {
   onApply: (filters: Filters) => void;
   onClear: () => void;
 };
+const EXPIRY_OPTIONS = [
+  { label: "Expired", value: "expired" },
+  { label: "Today", value: "0" },
+  { label: "3 days", value: "3" },
+  { label: "7 days", value: "7" },
+  { label: "14 days", value: "14" },
+  { label: "30 days", value: "30" },
+];
 
 const CATEGORIES = [
   "Fruits",
@@ -36,7 +44,7 @@ const FilterPanel: React.FC<Props> = ({
 }) => {
   const [selCategories, setSelCategories] = useState<string[]>([]);
   const [storage, setStorage] = useState<string>("All");
-  const [expiryDays, setExpiryDays] = useState<number | undefined>(undefined);
+  const [expiryDays, setExpiryDays] = useState<string | undefined>(undefined);
 
   function toggleCategory(cat: string) {
     setSelCategories((prev) =>
@@ -46,7 +54,7 @@ const FilterPanel: React.FC<Props> = ({
 
   function apply() {
     const filters: Filters = {};
-    if (expiryDays) filters.expiryDays = expiryDays;
+    if (expiryDays) filters.expiryDays = expiryDays; // now string
     if (selCategories.length) filters.categories = selCategories;
     if (storage && storage !== "All") filters.storage = storage;
     onApply(filters);
@@ -111,30 +119,15 @@ const FilterPanel: React.FC<Props> = ({
       <div className="fp-section">
         <label className="fp-label">Expiry Filter</label>
         <div className="fp-expiry-buttons">
-          <button
-            className={expiryDays === 7 ? "selected" : ""}
-            onClick={() => setExpiryDays(7)}
-          >
-            7 days
-          </button>
-          <button
-            className={expiryDays === 14 ? "selected" : ""}
-            onClick={() => setExpiryDays(14)}
-          >
-            14 days
-          </button>
-          <button
-            className={expiryDays === 30 ? "selected" : ""}
-            onClick={() => setExpiryDays(30)}
-          >
-            30 days
-          </button>
-          <button
-            className={expiryDays === 90 ? "selected" : ""}
-            onClick={() => setExpiryDays(90)}
-          >
-            90 days
-          </button>
+          {EXPIRY_OPTIONS.map((opt) => (
+            <button
+              key={opt.value}
+              className={expiryDays === opt.value ? "selected" : ""}
+              onClick={() => setExpiryDays(opt.value)}
+            >
+              {opt.label}
+            </button>
+          ))}
         </div>
       </div>
 
