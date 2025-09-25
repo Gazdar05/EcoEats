@@ -1,16 +1,6 @@
 // src/WebPage/BrowseFood/ItemDetailModal.tsx
 import React, { useState } from "react";
 import type { FoodItem } from "./mockData";
-import {
-  CalendarDays,
-  Package,
-  Archive,
-  StickyNote,
-  ShoppingBasket,
-  MapPin,
-  Clock,
-  Phone,
-} from "lucide-react"; // ✅ icons
 
 type Props = {
   item: FoodItem | null;
@@ -96,17 +86,35 @@ const ItemDetailModal: React.FC<Props> = ({
 
         {/* Actions */}
         <div className="detail-actions">
-          <button onClick={() => onMarkUsed(item.id)}>Mark as Used</button>
-          <button onClick={() => onPlanMeal(item.id)}>Plan for Meal</button>
-          <button onClick={() => setShowDonationForm((s) => !s)}>
-            Flag for Donation
-          </button>
+          {item.source === "inventory" ? (
+            <>
+              <button onClick={() => onMarkUsed(item.id)}>Mark as Used</button>
+              <button onClick={() => onPlanMeal(item.id)}>Plan for Meal</button>
+              <button onClick={() => setShowDonationForm((s) => !s)}>
+                Flag for Donation
+              </button>
+            </>
+          ) : (
+            <>
+              <button onClick={() => alert("Removed from donation (TODO)")}>
+                Remove from Donation
+              </button>
+              <button onClick={() => setShowDonationForm((s) => !s)}>
+                Edit Donation Details
+              </button>
+              <button onClick={() => alert("Marked as donated (TODO)")}>
+                Mark as Donated
+              </button>
+            </>
+          )}
         </div>
 
         {/* Donation form */}
         {showDonationForm && (
           <div className="donation-form">
-            <h4>Donation Details</h4>
+            <h4>
+              {item.source === "donation" ? "Edit" : "Add"} Donation Details
+            </h4>
             <input
               placeholder="Pickup location"
               value={location}
@@ -124,7 +132,11 @@ const ItemDetailModal: React.FC<Props> = ({
             />
             {error && <div className="donation-error">{error}</div>}
             <div className="donation-actions">
-              <button onClick={handleDonateSubmit}>Confirm Donation</button>
+              <button onClick={handleDonateSubmit}>
+                {item.source === "donation"
+                  ? "Save Changes"
+                  : "Confirm Donation"}
+              </button>
               <button
                 className="fp-clear"
                 onClick={() => {

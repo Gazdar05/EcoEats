@@ -264,13 +264,15 @@
 
 /* ===== ITEM DETAIL MODAL (sliding sheet style) ===== */
 /* Overlay */
+/* Popup positioning (avoid navbar overlap) */
 .detail-overlay {
   position: fixed;
   inset: 0;
   background: rgba(0,0,0,0.45);
   display: flex;
   justify-content: center;
-  align-items: center; /* ✅ middle instead of bottom */
+  align-items: flex-start;
+  padding-top: calc(var(--nav-height) + 8px); /* 👈 was +20px, now smaller */
   z-index: 1000;
 }
 
@@ -287,17 +289,21 @@
   flex-direction: column;
   gap: 16px;
 }
-/* Square-ish modal */
+/* Restore original larger popup */
 .detail-card {
   background: #fff;
-  width: 560px;       /* ⬅️ slightly narrower */
-  max-width: 90%;     
-  max-height: 85vh;   /* ⬅️ still safe, but taller than before */
+  width: 560px;       /* back to old size */
+  max-width: 90%;
+  max-height: 85vh;   /* safe max height */
   border-radius: 12px;
-  padding: 16px;      /* ⬅️ reduce padding */
+  padding: 16px;
   box-shadow: 0 4px 16px rgba(0,0,0,0.2);
   animation: fadeIn 0.25s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;          /* reduce global gaps */
 }
+
 .detail-sheet {
   background: #fff;
   width: 480px;
@@ -319,7 +325,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
+  margin-bottom: 6px;   /* ⬅️ smaller gap below title */
 }
 .detail-header h3 {
   margin: 0;
@@ -343,16 +349,21 @@
 .detail-body p {
   margin: 6px 0;
 }
+
+/* Action buttons inside detail card */
 .detail-actions {
   display: flex;
-  gap: 8px;
-  margin-top: 16px;
+  justify-content: space-between;
+  gap: 6px;           /* ⬅️ tighter gap */
+  margin-top: 8px;
 }
+
 .detail-actions button {
   flex: 1;
-  padding: 8px;
+  padding: 6px 8px;   /* ⬅️ smaller buttons */
   border: none;
   border-radius: 6px;
+  font-size: 0.9rem;
   background: var(--eco-green);
   color: white;
   cursor: pointer;
@@ -362,21 +373,24 @@
 }
 /* Content: image left, info right */
 /* Content layout */
+
+/* Content (image + info) */
 .detail-content {
   display: flex;
-  gap: 20px;
-  margin-bottom: 16px;
+  gap: 14px;            /* ⬅️ smaller gap between image/info */
+  margin-bottom: 10px;  /* ⬅️ reduce space before next section */
 }
 .detail-thumb {
-  flex: 0 0 120px;
+  flex: 0 0 100px;
 }
 
 .thumb-placeholder-lg {
-  width: 120px;
-  height: 120px;
+  width: 100px;
+  height: 100px;
   border-radius: 8px;
   background: linear-gradient(135deg,#f0f0f0,#e9e9e9);
 }
+
 .detail-info {
   flex: 1;
 }
@@ -399,17 +413,19 @@
   font-size: 1rem;
 }
 
-/* Actions */
+/* Main action buttons (Mark Used, Edit Donation, etc.) */
 .detail-actions {
   display: flex;
-  gap: 8px;
-  margin-top: 16px;
+  justify-content: space-between;
+  gap: 6px;
+  margin-top: 8px;       /* ⬅️ reduce big empty space */
 }
-.detail-actions button {
+detail-actions button {
   flex: 1;
-  padding: 10px;
+  padding: 8px;          /* balanced size */
   border: none;
   border-radius: 6px;
+  font-size: 0.9rem;
   background: var(--eco-green);
   color: white;
   cursor: pointer;
@@ -419,36 +435,59 @@
 }
 
 /* Donation form inside modal */
+/* Donation form inside modal */
+/* Donation form */
 .donation-form {
-  margin-top: 16px;
+  margin-top: 10px;      /* less space before form */
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 .donation-form input {
+  background: #fff;
+  color: #111;
   padding: 8px 10px;
   border-radius: 6px;
   border: 1px solid #ccc;
+  font-size: 0.9rem;
 }
 .donation-error {
   color: red;
   font-size: 0.85rem;
 }
+/* Save / Cancel buttons */
 .donation-actions {
   display: flex;
+  justify-content: flex-end;
   gap: 8px;
-  margin-top: 8px;
+  margin-top: 10px;     /* tighter gap */
 }
 .donation-actions button {
-  flex: 1;
-}
-/* Donation details */
-.donation-details {
-  margin-top: 6px;
-  padding-top: 4px;
+  min-width: 110px;
+  padding: 6px 10px;
+  border-radius: 6px;
   font-size: 0.9rem;
 }
 
+.donation-actions button:first-child {
+  background: var(--eco-green);
+  color: white;
+}
+
+.donation-actions button:first-child:hover {
+  background: #5a8d1e;
+}
+.donation-actions button:last-child {
+  background: lightgray;
+  color: #111;
+  border: 1px solid #ccc;
+}
+/* Donation details section */
+.donation-details {
+  margin-top: 8px;       /* tighter */
+  padding-top: 4px;
+  font-size: 0.9rem;
+}
 .donation-details h4 {
   margin: 0 0 8px;
   font-size: 1rem;
