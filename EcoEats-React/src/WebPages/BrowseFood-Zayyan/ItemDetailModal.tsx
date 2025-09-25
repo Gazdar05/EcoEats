@@ -11,6 +11,7 @@ type Props = {
     id: string,
     details: { location: string; availability: string; contact: string }
   ) => void;
+  onRemoveDonation: (id: string) => void; // 👈 added
 };
 
 function formatDate(d: string) {
@@ -28,6 +29,7 @@ const ItemDetailModal: React.FC<Props> = ({
   onMarkUsed,
   onPlanMeal,
   onFlagDonation,
+  onRemoveDonation,
 }) => {
   const [showDonationForm, setShowDonationForm] = useState(false);
   const [location, setLocation] = useState("");
@@ -96,7 +98,7 @@ const ItemDetailModal: React.FC<Props> = ({
             </>
           ) : (
             <>
-              <button onClick={() => alert("Removed from donation (TODO)")}>
+              <button onClick={() => onRemoveDonation(item.id)}>
                 Remove from Donation
               </button>
               <button onClick={() => setShowDonationForm((s) => !s)}>

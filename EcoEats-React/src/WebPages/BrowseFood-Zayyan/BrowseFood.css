@@ -65,21 +65,59 @@
 }
 
 /* categories checkboxes */
+/* Style scrollbar inside categories */
 .fp-cats {
   display: flex;
   flex-direction: column;
   gap: 6px;
   max-height: 220px;
   overflow: auto;
+
+  /* smooth scrolling */
+  scrollbar-width: thin;              /* Firefox */
+  scrollbar-color: var(--eco-green) #f2f2f2; /* Firefox */
 }
+/* Chrome, Edge, Safari */
+.fp-cats::-webkit-scrollbar {
+  width: 8px; /* thinner scrollbar */
+}
+
+.fp-cats::-webkit-scrollbar-track {
+  background: #f2f2f2; /* light grey track */
+  border-radius: 4px;
+}
+
+.fp-cats::-webkit-scrollbar-thumb {
+  background-color: var(--eco-green); /* eco green thumb */
+  border-radius: 4px;
+  border: 2px solid #f2f2f2; /* space around thumb */
+}
+
+.fp-cats::-webkit-scrollbar-thumb:hover {
+  background-color: #5a8d1e; /* darker green on hover */
+}
+/* Category checkboxes */
 .fp-checkbox {
   display: flex;
   gap: 8px;
   align-items: center;
   font-size: 0.95rem;
+  color: black; /* default text color */
 }
-.fp-checkbox input { width: 16px; height: 16px; }
-
+.fp-checkbox input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--eco-green); /* ✅ checkbox turns eco-green when checked */
+  cursor: pointer;
+}
+.fp-checkbox span {
+  transition: color 0.2s ease, font-weight 0.2s ease;
+}
+/* When checked → text turns eco-green + bold */
+.fp-checkbox input:checked + span {
+  color: var(--eco-green);
+  font-weight: 600;
+}
 /* select */
 .fp-section select {
   width: 100%;
@@ -101,7 +139,7 @@
   padding: 6px 0;           /* smaller, balanced height */
   border-radius: 6px;
   border: 1px solid #ddd;
-  background: white;
+  background: white;    
   cursor: pointer;
   color: black;
   font-size: 0.85rem;

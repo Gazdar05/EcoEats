@@ -125,6 +125,18 @@ const BrowsePage: React.FC = () => {
     setSelectedItem(null);
   }
 
+  function handleRemoveDonation(id: string) {
+    setItems((prev) =>
+      prev.map((it) =>
+        it.id === id
+          ? { ...it, source: "inventory", donationDetails: undefined } // 👈 reset back to inventory
+          : it
+      )
+    );
+    alert("Item removed from donation list and moved back to inventory.");
+    setSelectedItem(null);
+  }
+
   return (
     <div className="browse-wrap">
       <aside className="left-column">
@@ -167,6 +179,7 @@ const BrowsePage: React.FC = () => {
         onMarkUsed={handleMarkUsed}
         onPlanMeal={handlePlanMeal}
         onFlagDonation={handleFlagDonation}
+        onRemoveDonation={handleRemoveDonation}
       />
     </div>
   );
