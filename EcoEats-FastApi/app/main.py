@@ -1,13 +1,14 @@
+# app/main.py
 from fastapi import FastAPI
-from .routers import browse, inventory, auth
+from app.routers import auth, inventory, browse
 
-app = FastAPI(title="EcoEats API")
-
-# include routers (placeholders for now)
-app.include_router(browse.router, prefix="/browse", tags=["Browse"])
-app.include_router(inventory.router, prefix="/inventory", tags=["Inventory"])
-app.include_router(auth.router, prefix="/auth", tags=["Auth"])
+app = FastAPI()
 
 @app.get("/")
-def root():
-    return {"message": "Backend is running!"}
+async def root():
+    return {"message": "Backend running with routers!"}
+
+# Attach routers
+app.include_router(auth.router, prefix="/auth", tags=["Auth"])
+app.include_router(inventory.router, prefix="/inventory", tags=["Inventory"])
+app.include_router(browse.router, prefix="/browse", tags=["Browse"])

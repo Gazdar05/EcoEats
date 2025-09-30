@@ -1,8 +1,10 @@
-# backend/app/config.py
-import os
-from dotenv import load_dotenv
+from pydantic_settings import BaseSettings
 
-load_dotenv()  # read .env file
+class Settings(BaseSettings):
+    MONGO_URI: str = "your-mongodb-atlas-uri"
+    DB_NAME: str = "ecoeats"
 
-MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")
-DB_NAME = os.getenv("DB_NAME", "food_saver")
+    class Config:
+        env_file = ".env"
+
+settings = Settings()
