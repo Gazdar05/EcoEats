@@ -222,11 +222,20 @@
   padding: 10px 14px;
   border-radius: 8px;
   border: 1px solid #ddd;
+<<<<<<< Updated upstream
   margin-left: auto;       /* 👈 pushes it to the far right */
   width: 180px;            /* 👈 make dropdown a bit wider */
 }
 
 
+=======
+  margin-left: auto;
+  width: 220px;  /* 👈 increase until all text fits */
+}
+
+
+
+>>>>>>> Stashed changes
 /* grid: 4 columns on wide screens */
 .item-grid {
   display: grid;
