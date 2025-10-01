@@ -1,6 +1,7 @@
 import { Routes, Route } from "react-router-dom";
 import Navbar from "./components/navbar";
 import Footer from "./components/footer";
+import Register from "./WebPages/Register-Emmeline/Register";
 
 // Temporary page components
 function HomePage() {
@@ -50,7 +51,7 @@ function App() {
       <Navbar />
       <Routes>
         <Route path="/" element={<HomePage />} />
-        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<Register />} />
         <Route path="/browse" element={<BrowsePage />} />
         <Route path="/inventory" element={<InventoryPage />} />
         <Route path="/meals" element={<MealsPage />} />

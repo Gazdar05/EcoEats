@@ -5,16 +5,18 @@
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background: #f3f9f4; /* soft eco-friendly green background */
+  background: #f3f9f4; /* eco-friendly green background */
   font-family: "Poppins", sans-serif;
+  padding: 1rem; /* prevent content from hitting edges on small screens */
 }
 
 .auth-card {
   background: #fff;
-  padding: 2.5rem;
+  padding: 2rem;
   border-radius: 20px;
   box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.1);
-  width: 360px;
+  width: 100%;
+  max-width: 360px; /* keeps it centered and not too wide */
   text-align: center;
   animation: fadeIn 0.6s ease-in-out;
 }
@@ -22,7 +24,7 @@
 .brand {
   font-size: 2rem;
   font-weight: 700;
-  color: #2e7d32; /* eco green */
+  color: #2e7d32;
   margin-bottom: 1rem;
 }
 
@@ -30,6 +32,7 @@ h2 {
   margin-bottom: 1.5rem;
   color: #333;
   font-weight: 600;
+  font-size: 1.3rem;
 }
 
 .auth-form {
@@ -45,6 +48,7 @@ h2 {
   font-size: 1rem;
   outline: none;
   transition: all 0.3s ease;
+  width: 100%;
 }
 
 .input-field:focus {
@@ -63,10 +67,11 @@ h2 {
   font-weight: 600;
   cursor: pointer;
   transition: background 0.3s;
+  width: 100%;
 }
 
 .auth-btn:hover {
-  background: #256528; /* darker green on hover */
+  background: #256528;
 }
 
 .toggle-text {
@@ -95,5 +100,48 @@ h2 {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+/* 📱 Mobile Optimizations (default is mobile-first) */
+
+/* 💻 Tablets */
+@media (min-width: 600px) {
+  .auth-card {
+    padding: 2.5rem;
+    max-width: 420px;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+  }
+}
+
+/* 🖥️ Desktop */
+@media (min-width: 1024px) {
+  .auth-container {
+    padding: 2rem;
+  }
+
+  .auth-card {
+    max-width: 480px;
+  }
+
+  .brand {
+    font-size: 2.2rem;
+  }
+
+  h2 {
+    font-size: 1.6rem;
+  }
+
+  .input-field {
+    font-size: 1.05rem;
+    padding: 14px;
+  }
+
+  .auth-btn {
+    font-size: 1.15rem;
+    padding: 14px;
   }
 }
