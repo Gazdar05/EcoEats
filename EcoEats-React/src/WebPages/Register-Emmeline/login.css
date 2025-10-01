@@ -1,0 +1,99 @@
+/* 🌱 EcoEats Login/Register Theme */
+
+.auth-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: #f3f9f4; /* soft eco-friendly green background */
+  font-family: "Poppins", sans-serif;
+}
+
+.auth-card {
+  background: #fff;
+  padding: 2.5rem;
+  border-radius: 20px;
+  box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.1);
+  width: 360px;
+  text-align: center;
+  animation: fadeIn 0.6s ease-in-out;
+}
+
+.brand {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #2e7d32; /* eco green */
+  margin-bottom: 1rem;
+}
+
+h2 {
+  margin-bottom: 1.5rem;
+  color: #333;
+  font-weight: 600;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.input-field {
+  padding: 12px;
+  margin: 10px 0;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  font-size: 1rem;
+  outline: none;
+  transition: all 0.3s ease;
+}
+
+.input-field:focus {
+  border-color: #2e7d32;
+  box-shadow: 0 0 5px rgba(46, 125, 50, 0.3);
+}
+
+.auth-btn {
+  margin-top: 1rem;
+  padding: 12px;
+  border: none;
+  border-radius: 10px;
+  background: #2e7d32;
+  color: white;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.auth-btn:hover {
+  background: #256528; /* darker green on hover */
+}
+
+.toggle-text {
+  margin-top: 1.5rem;
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.toggle-text span {
+  color: #2e7d32;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.toggle-text span:hover {
+  color: #1b5e20;
+}
+
+/* 🌟 Fade-in animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
