@@ -87,12 +87,12 @@ class VerificationCode(BaseModel):
         arbitrary_types_allowed = True
         json_encoders = {ObjectId: str}
 
-
 # --------------------
 # FoodCategory
 # --------------------
 class FoodCategory(BaseModel):
-    id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
+    id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")  # MongoDB _id
+    fc_cat_id: int = Field(..., description="Custom category ID from data dictionary")
     name: str = Field(..., max_length=80)
     desc: Optional[str] = None
 
