@@ -1,6 +1,7 @@
 import { Routes, Route } from "react-router-dom";
 import Navbar from "./components/navbar";
 import Footer from "./components/footer";
+import FoodInventory from "./WebPages/FoodInventory-Mamoudou/FoodInventory";
 
 // Temporary page components
 function HomePage() {
@@ -15,7 +16,7 @@ function BrowsePage() {
   return <h1>Browse Food Items</h1>;
 }
 
-function InventoryPage() {
+function FoodInventoryPage() {
   return <h1>Inventory Management</h1>;
 }
 
@@ -52,7 +53,7 @@ function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/browse" element={<BrowsePage />} />
-        <Route path="/inventory" element={<InventoryPage />} />
+        <Route path="/inventory" element={<FoodInventory />} />
         <Route path="/meals" element={<MealsPage />} />
         <Route path="/donations" element={<DonationPage />} />
         <Route path="/notifications" element={<NotificationsPage />} />

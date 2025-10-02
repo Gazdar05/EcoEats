@@ -88,3 +88,12 @@ html, body {
   overflow: hidden;   
 }
 
+/* Hide navbar and footer when popups are open */
+body.no-chrome nav {
+  display: none !important;
+}
+
+body.no-chrome footer {
+  display: none !important;
+}
+

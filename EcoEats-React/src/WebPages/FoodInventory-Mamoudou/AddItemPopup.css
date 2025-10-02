@@ -1,0 +1,233 @@
+/* AddItemPopup specific styles */
+
+/* Overlay */
+.add-popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000; /* ensure above navbar */
+}
+
+/* Popup Container */
+.add-popup-container {
+  background: #fff;
+  border-radius: 12px;
+  padding: 12px;
+  position: relative;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  width: 420px;
+  max-width: 90vw;
+}
+
+/* Header */
+.add-popup-header {
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 6px;
+  margin-bottom: 8px;
+}
+
+.add-popup-title {
+  font-size: 16px;
+  font-weight: 400;
+  color: #111827;
+  margin: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.add-popup-close {
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  color: #6b7280;
+  padding: 4px;
+  border-radius: 4px;
+}
+
+.add-popup-close:hover {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+/* Subtitle */
+.add-popup-subtitle {
+  color: #6b7280;
+  font-size: 13px;
+  margin: 6px 0 0 0;
+  line-height: 1.4;
+}
+
+/* Form Body */
+.add-popup-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Form Groups */
+.add-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.add-form-label {
+  font-size: 14px;
+  font-weight: 400;
+  color: #374151;
+}
+
+/* Input Fields */
+.add-form-input,
+.add-form-select,
+.add-form-textarea {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #111827;
+  background: #fff;
+  box-sizing: border-box;
+}
+
+.add-form-input:focus,
+.add-form-select:focus,
+.add-form-textarea:focus {
+  outline: none;
+  border-color: #94a3b8;
+  box-shadow: 0 0 0 3px rgba(148, 163, 184, 0.25);
+}
+
+.add-form-input::placeholder,
+.add-form-textarea::placeholder {
+  color: #9ca3af;
+  font-style: italic;
+}
+
+.add-form-textarea {
+  min-height: 60px;
+  resize: vertical;
+}
+
+/* Quantity Control */
+.add-quantity-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.add-quantity-btn {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+  cursor: pointer;
+  border-radius: 6px;
+  font-size: 16px;
+  line-height: 28px;
+  color: #6EA124;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.add-quantity-btn:hover {
+  background: #6EA124;
+}
+
+.add-quantity-display {
+  min-width: 40px;
+  text-align: center;
+  padding: 6px 8px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #fff;
+  font-size: 14px;
+  color: #111827;
+}
+
+/* Upload Area */
+.add-upload-area {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 95%;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 12px;
+  color: #6b7280;
+  cursor: pointer;
+  background: #fff;
+  transition: all 0.2s ease;
+}
+
+.add-upload-area:hover {
+  background: #f9fafb;
+  border-color: #d1d5db;
+}
+
+.add-upload-input {
+  display: none;
+}
+
+.add-upload-icon {
+  font-size: 16px;
+  color: #6b7280;
+}
+
+.add-upload-text {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+/* Footer Actions */
+.add-popup-footer {
+  margin-top: 20px;
+  padding-top: 12px;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.add-action-btn {
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 400;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.add-action-btn.secondary {
+  background: #6EA124;
+  color: #ffffff;
+  border: 1px solid #6EA124;
+}
+
+.add-action-btn.secondary:hover {
+  background: #5d8f1f;
+  border-color: #5d8f1f;
+}
+
+.add-action-btn.primary {
+  background: #6EA124;
+  color: #ffffff;
+  border: 1px solid #6EA124;
+}
+
+.add-action-btn.primary:hover {
+  background: #5d8f1f;
+  border-color: #5d8f1f;
+}

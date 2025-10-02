@@ -1,0 +1,178 @@
+/* ViewItemPopup specific styles */
+
+/* Overlay */
+.view-popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000; /* ensure above navbar */
+}
+
+/* Popup Container */
+.view-popup-container {
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  position: relative;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  width: 520px;
+  max-width: 90vw;
+}
+
+/* Header */
+.view-popup-header {
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 16px;
+  margin-bottom: 20px;
+}
+
+.view-popup-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.view-popup-close {
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  color: #6b7280;
+  padding: 4px;
+  border-radius: 4px;
+}
+
+.view-popup-close:hover {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+/* Main Content Layout */
+.view-popup-content {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+/* Image Placeholder */
+.view-image-placeholder {
+  width: 140px;
+  height: 140px;
+  background: #f3f4f6;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  color: #9ca3af;
+}
+
+/* Item Details */
+.view-item-details {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.view-detail-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.view-detail-icon {
+  width: 16px;
+  height: 16px;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.view-detail-text {
+  color: #374151;
+  font-weight: 400;
+}
+
+.view-detail-text.expiry-warning {
+  color: #ef4444;
+  font-weight: 500;
+}
+
+/* Donation Details Section */
+.view-donation-section {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.view-donation-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 12px 0;
+}
+
+/* Footer Actions */
+.view-popup-footer {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.view-action-btn {
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.view-action-btn.secondary {
+  background: #6EA124;
+  color: #ffffff;
+  border: 1px solid #6EA124;
+}
+
+.view-action-btn.secondary:hover {
+  background: #5d8f1f;
+  border-color: #5d8f1f;
+}
+
+.view-action-btn.primary {
+  background: #6EA124;
+  color: #ffffff;
+  border: 1px solid #6EA124;
+}
+
+.view-action-btn.primary:hover {
+  background: #5d8f1f;
+  border-color: #5d8f1f;
+}
+
+/* Icon styles using Unicode/emoji */
+.icon-cutlery::before { content: "🍴"; }
+.icon-calendar::before { content: "📅"; }
+.icon-box::before { content: "📦"; }
+.icon-fridge::before { content: "🧊"; }
+.icon-notes::before { content: "📝"; }
+.icon-location::before { content: "📍"; }
+.icon-clock::before { content: "🕐"; }
+.icon-email::before { content: "✉️"; }
