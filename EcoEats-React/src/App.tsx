@@ -2,14 +2,11 @@ import { Routes, Route } from "react-router-dom";
 import Navbar from "./components/navbar";
 import Footer from "./components/footer";
 import Register from "./WebPages/Register-Emmeline/Register";
+import LoginPage from "./WebPages/Register-Emmeline/Login";
 
 // Temporary page components
 function HomePage() {
   return <h1>Welcome to EcoEats!</h1>;
-}
-
-function LoginPage() {
-  return <h1>Login Page</h1>;
 }
 
 function BrowsePage() {
@@ -51,6 +48,7 @@ function App() {
       <Navbar />
       <Routes>
         <Route path="/" element={<HomePage />} />
+        <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<Register />} />
         <Route path="/browse" element={<BrowsePage />} />
         <Route path="/inventory" element={<InventoryPage />} />
