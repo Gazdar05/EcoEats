@@ -1,5 +1,12 @@
 # app/routers/browse.py
+# app/routers/browse.py
 from fastapi import APIRouter
+
+router = APIRouter()
+
+# TODO: Browse endpoints will be added by teammate
+
+'''from fastapi import APIRouter
 from app.database import db
 
 router = APIRouter()
@@ -26,3 +33,4 @@ async def browse_donations():
         d["_id"] = str(d["_id"])
         donations.append(d)
     return donations
+'''

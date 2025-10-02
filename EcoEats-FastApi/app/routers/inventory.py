@@ -1,5 +1,11 @@
 # app/routers/inventory.py
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
+
+router = APIRouter()
+
+# TODO: Inventory endpoints will be added by teammate
+
+'''from fastapi import APIRouter, HTTPException
 from app.models import FoodItem, FoodCategory
 from app.database import db
 from datetime import datetime
@@ -38,3 +44,4 @@ async def update_food_item(food_id: str, update: dict):
     if result.modified_count == 0:
         raise HTTPException(status_code=404, detail="Food item not found")
     return {"status": "updated"}
+'''

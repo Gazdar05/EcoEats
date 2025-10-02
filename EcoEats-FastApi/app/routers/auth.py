@@ -1,5 +1,10 @@
 # app/routers/auth.py
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
+
+router = APIRouter()
+
+# TODO: Auth endpoints will be added by teammate
+'''from fastapi import APIRouter, HTTPException
 from app.models import HouseholdUser, VerificationCode, PrivacySetting
 from app.database import db
 from datetime import datetime
@@ -36,3 +41,4 @@ async def verify_code(code: VerificationCode):
         {"_id": record["_id"]}, {"$set": {"vc_is_used": True}}
     )
     return {"status": "verified"}
+    '''
