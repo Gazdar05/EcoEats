@@ -1,7 +1,7 @@
 import { NavLink } from "react-router-dom";
 import "./Navbar.css";
 import profileImg from "./profile.jpg";
-import Logo from "./ecoeats.jpg";
+import Logo from "./logo2.png";
 
 function Navbar() {
   return (
@@ -42,13 +42,25 @@ function Navbar() {
         </li>
       </ul>
 
-      {/* Search + Profile */}
+{/* Login & Sign Up */}
+      {/* Login & Sign Up */}
       <div className="navbar-right">
-        <input
-          type="text"
-          placeholder="Search food items..."
-          className="navbar-search"
-        />
+        <NavLink
+          to="/login"
+          className={({ isActive }) =>
+            `navbar-btn ${isActive ? "active-btn" : ""}`
+          }
+        >
+          Login
+        </NavLink>
+        <NavLink
+          to="/register"
+          className={({ isActive }) =>
+            `navbar-btn signup-btn ${isActive ? "active-btn" : ""}`
+          }
+        >
+          Sign Up
+        </NavLink>
         <img src={profileImg} alt="Profile" className="navbar-profile" />
       </div>
     </nav>
