@@ -1,7 +1,7 @@
 import { NavLink } from "react-router-dom";
 import "./Navbar.css";
 import profileImg from "./profile.jpg";
-import Logo from "./logo2.png";
+import Logo from "./logo3.png";
 
 function Navbar() {
   return (
@@ -9,7 +9,7 @@ function Navbar() {
       {/* Logo */}
       <div className="navbar-logo">
         <img src={Logo} alt="EcoEats Logo" className="navbar-logo-img" />
-        <span className="navbar-logo-text">EcoEats</span>
+      
       </div>
 
       {/* Navigation links */}
@@ -28,9 +28,7 @@ function Navbar() {
         <li>
           <NavLink to="/meals">Meals</NavLink>
         </li>
-        <li>
-          <NavLink to="/donations">Donations</NavLink>
-        </li>
+        
         <li>
           <NavLink to="/notifications">Notifications</NavLink>
         </li>
