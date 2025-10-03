@@ -12,6 +12,9 @@ function HomePage() {
 function LoginPage() {
   return <h1>Login Page</h1>;
 }
+function RegisterPage() {
+  return <h1>Sign Up Page</h1>;
+}
 function InventoryPage() {
   return <h1>Inventory Management</h1>;
 }
@@ -46,8 +49,9 @@ function App() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
 
-        {/* ✅ Now using your actual feature */}
+        {/* ✅ Use your actual feature here */}
         <Route path="/browse" element={<BrowseFood />} />
 
         <Route path="/inventory" element={<InventoryPage />} />
