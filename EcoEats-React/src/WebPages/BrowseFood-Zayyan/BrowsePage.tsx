@@ -1,14 +1,18 @@
 // src/WebPage/BrowseFood/BrowsePage.tsx
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { sampleItems } from "./mockData";
 import type { FoodItem } from "./mockData";
 import FilterPanel from "./FilterPanel";
 import ItemList from "./ItemList";
 import ItemDetailModal from "./ItemDetailModal";
 import "./BrowseFood.css";
+import { API_BASE_URL } from "../../config"; // new config file
+
+const ITEMS_PER_PAGE = 12; // ✅ number of items per page
 
 const BrowsePage: React.FC = () => {
   const [items, setItems] = useState<FoodItem[]>(
+    // keep a fallback to sampleItems for dev if fetch fails
     sampleItems.map((i) => ({ ...i }))
   );
   const [source, setSource] = useState<"inventory" | "donation">("inventory");
@@ -17,7 +21,55 @@ const BrowsePage: React.FC = () => {
   const [sortBy, setSortBy] = useState<"" | "expiry" | "category">("");
   const [selectedItem, setSelectedItem] = useState<FoodItem | null>(null);
 
-  // Apply filters, search and source
+  // ✅ pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // Normalize backend doc -> frontend FoodItem shape (id, expiry)
+  function normalizeBackendDoc(doc: any): FoodItem {
+    return {
+      id: doc._id ?? doc.id ?? "",
+      name: doc.name ?? "",
+      expiry:
+        doc.expiry_date !== undefined && doc.expiry_date !== null
+          ? String(doc.expiry_date)
+          : doc.expiry ?? "",
+      category: doc.category ?? "",
+      storage: doc.storage ?? "",
+      notes: doc.notes ?? "",
+      quantity:
+        typeof doc.quantity === "number"
+          ? doc.quantity
+          : Number(doc.quantity ?? 1),
+      source: doc.source === "donation" ? "donation" : "inventory",
+      reserved: !!doc.reserved,
+      donationDetails: doc.donationDetails ?? doc.donationDetails ?? undefined,
+    };
+  }
+
+  // Fetch items from backend
+  useEffect(() => {
+    const fetchItems = async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/browse/items`);
+        if (!res.ok) {
+          console.warn("Failed to fetch items from backend, using mock data");
+          return;
+        }
+        const data = await res.json();
+        if (!Array.isArray(data)) {
+          console.warn("Unexpected items response, using mock data");
+          return;
+        }
+        const norm = data.map(normalizeBackendDoc);
+        setItems(norm);
+      } catch (err) {
+        console.error("Error fetching items:", err);
+      }
+    };
+    fetchItems();
+  }, []);
+
+  // Apply filters, search, sort
   const filtered = useMemo(() => {
     const now = new Date();
     let list = items.filter((i) => i.source === source);
@@ -34,8 +86,7 @@ const BrowsePage: React.FC = () => {
 
     if (filters.expiryDays) {
       const today = new Date();
-      today.setHours(0, 0, 0, 0); // strip time
-
+      today.setHours(0, 0, 0, 0);
       if (filters.expiryDays === "expired") {
         list = list.filter((i) => new Date(i.expiry) < today);
       } else if (filters.expiryDays === "0") {
@@ -50,6 +101,7 @@ const BrowsePage: React.FC = () => {
         );
       }
     }
+
     if (search && search.trim() !== "") {
       const q = search.trim().toLowerCase();
       list = list.filter((i) => i.name.toLowerCase().includes(q));
@@ -68,73 +120,143 @@ const BrowsePage: React.FC = () => {
     return list;
   }, [items, source, filters, search, sortBy]);
 
+  // ✅ pagination logic applied on filtered data
+  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+  const paginatedItems = filtered.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
+  // reset page to 1 when filters/search change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filters, search, sortBy, source]);
+
   function handleApplyFilters(f: any) {
-    setFilters(f); // ✅ store filters in state
+    setFilters(f);
   }
 
   function handleClearFilters() {
-    setFilters({}); // ✅ reset filters
+    setFilters({});
   }
 
-  function handleMarkUsed(id: string) {
-    setItems((prev) =>
-      prev.reduce<FoodItem[]>((acc, it) => {
-        if (it.id !== id) {
-          acc.push(it);
+  // === Backend-connected action handlers ===
+  async function handleMarkUsed(id: string) {
+    try {
+      const res = await fetch(`${API_BASE_URL}/browse/item/${id}/mark-used`, {
+        method: "PUT",
+      });
+      if (!res.ok) {
+        const txt = await res.text();
+        throw new Error(txt || "Mark-used failed");
+      }
+      const data = await res.json();
+      alert(data.status);
+
+      setItems((prev) =>
+        prev.reduce<FoodItem[]>((acc, it) => {
+          if (it.id !== id) {
+            acc.push(it);
+            return acc;
+          }
+          if (it.quantity > 1) {
+            acc.push({ ...it, quantity: it.quantity - 1 });
+            alert(`Marked ${it.name} as used. Quantity decreased.`);
+          } else {
+            alert(`${it.name} fully used and removed from inventory`);
+          }
           return acc;
-        }
-        if (it.quantity > 1) {
-          acc.push({ ...it, quantity: it.quantity - 1 });
-          alert(`Marked ${it.name} as used. Quantity decreased.`);
-        } else {
-          alert(`${it.name} fully used and removed from inventory`);
-        }
-        return acc;
-      }, [])
-    );
-    setSelectedItem(null);
+        }, [])
+      );
+
+      setSelectedItem(null);
+    } catch (err) {
+      console.error("Error marking used:", err);
+      alert("Failed to mark item as used. See console for details.");
+    }
   }
 
-  function handlePlanMeal(id: string) {
-    setItems((prev) =>
-      prev.map((it) => {
-        if (it.id !== id) return it;
-        if (it.reserved) {
-          alert("This item is already reserved for a meal.");
-          return it;
-        }
-        alert(`${it.name} reserved for meal`);
-        return { ...it, reserved: true };
-      })
-    );
-    setSelectedItem(null);
+  async function handlePlanMeal(id: string) {
+    try {
+      const res = await fetch(`${API_BASE_URL}/browse/item/${id}/plan-meal`, {
+        method: "PUT",
+      });
+      if (!res.ok) {
+        const txt = await res.text();
+        throw new Error(txt || "Plan-meal failed");
+      }
+      const data = await res.json();
+      alert(data.status);
+
+      setItems((prev) =>
+        prev.map((it) => (it.id === id ? { ...it, reserved: true } : it))
+      );
+      setSelectedItem(null);
+    } catch (err) {
+      console.error("Error planning meal:", err);
+      alert("Failed to reserve item. See console for details.");
+    }
   }
 
-  function handleFlagDonation(
+  async function handleFlagDonation(
     id: string,
     details: { location: string; availability: string; contact: string }
   ) {
-    setItems((prev) =>
-      prev.map((it) =>
-        it.id === id
-          ? { ...it, source: "donation", donationDetails: details }
-          : it
-      )
-    );
-    alert("Item flagged for donation.");
-    setSelectedItem(null);
+    try {
+      const res = await fetch(
+        `${API_BASE_URL}/browse/item/${id}/flag-donation`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(details),
+        }
+      );
+      if (!res.ok) {
+        const txt = await res.text();
+        throw new Error(txt || "Flag-donation failed");
+      }
+      const data = await res.json();
+      alert(data.status);
+
+      setItems((prev) =>
+        prev.map((it) =>
+          it.id === id
+            ? { ...it, source: "donation", donationDetails: details }
+            : it
+        )
+      );
+      setSelectedItem(null);
+    } catch (err) {
+      console.error("Error flagging donation:", err);
+      alert("Failed to flag donation. See console for details.");
+    }
   }
 
-  function handleRemoveDonation(id: string) {
-    setItems((prev) =>
-      prev.map((it) =>
-        it.id === id
-          ? { ...it, source: "inventory", donationDetails: undefined } // 👈 reset back to inventory
-          : it
-      )
-    );
-    alert("Item removed from donation list and moved back to inventory.");
-    setSelectedItem(null);
+  async function handleRemoveDonation(id: string) {
+    try {
+      const res = await fetch(
+        `${API_BASE_URL}/browse/item/${id}/remove-donation`,
+        { method: "PUT" }
+      );
+      if (!res.ok) {
+        const txt = await res.text();
+        throw new Error(txt || "Remove-donation failed");
+      }
+      const data = await res.json();
+      alert(data.status);
+
+      setItems((prev) =>
+        prev.map((it) =>
+          it.id === id
+            ? { ...it, source: "inventory", donationDetails: undefined }
+            : it
+        )
+      );
+      setSelectedItem(null);
+    } catch (err) {
+      console.error("Error removing donation:", err);
+      alert("Failed to remove from donation. See console for details.");
+    }
   }
 
   return (
@@ -165,14 +287,43 @@ const BrowsePage: React.FC = () => {
             >
               <option value="">📊 Sort by: Default</option>
               <option value="expiry">📅 Sort by: Expiry Date</option>
-              <option value="category">🍴 Sort by: Category</option>📊📅🍴
+              <option value="category">🍴 Sort by: Category</option>
             </select>
           </div>
         </div>
 
-        <ItemList items={filtered} onItemClick={setSelectedItem} />
-      </section>
+        {/* ✅ Main item list area */}
+        <div className="item-list-container">
+          <ItemList items={paginatedItems} onItemClick={setSelectedItem} />
+        </div>
 
+        {/* ✅ Fixed-bottom pagination */}
+        {totalPages > 1 && (
+          <div className="pagination-container">
+            <button
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage((p) => p - 1)}
+            >
+              Prev
+            </button>
+            {Array.from({ length: totalPages }).map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setCurrentPage(i + 1)}
+                className={currentPage === i + 1 ? "active-page" : ""}
+              >
+                {i + 1}
+              </button>
+            ))}
+            <button
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage((p) => p + 1)}
+            >
+              Next
+            </button>
+          </div>
+        )}
+      </section>
       <ItemDetailModal
         item={selectedItem}
         onClose={() => setSelectedItem(null)}

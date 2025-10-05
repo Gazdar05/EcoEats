@@ -105,20 +105,27 @@ class FoodCategory(BaseModel):
 # --------------------
 # FoodItem
 # --------------------
+
 class FoodItem(BaseModel):
     id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
-    user_id: PyObjectId
-    category_id: PyObjectId
+    user_id: Optional[PyObjectId] = None
     name: str = Field(..., max_length=200)
-    qty: int
-    reserved_qty: int = 0
-    unit: str = Field(..., max_length=32)
-    storage_loc: Optional[str] = None  # fridge, freezer, pantry, other
     expiry_date: Optional[date] = None
-    status: str = Field(default="active", max_length=20)  # active, used, donation, archived
+    category: str = Field(..., max_length=100)
+    storage: str = Field(..., max_length=50)
+    quantity: int = 1
     notes: Optional[str] = None
+    source: str = Field(default="inventory")  # inventory or donation
+    reserved: bool = False
+    donationDetails: Optional[dict] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+    class Config:
+        populate_by_name = True
+        arbitrary_types_allowed = True
+        json_encoders = {ObjectId: str}
+
 
     class Config:
         allow_population_by_field_name = True
