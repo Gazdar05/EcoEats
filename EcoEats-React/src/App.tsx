@@ -9,6 +9,10 @@ function HomePage() {
   return <h1>Welcome to EcoEats!</h1>;
 }
 
+function RegisterPage() {
+  return <h1>Sign Up Page</h1>;
+}
+
 function BrowsePage() {
   return <h1>Browse Food Items</h1>;
 }

@@ -92,7 +92,7 @@ class VerificationCode(BaseModel):
 # --------------------
 class FoodCategory(BaseModel):
     id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")  # MongoDB _id
-    fc_cat_id: int = Field(..., description="Custom category ID from data dictionary")
+    fc_cat_id: Optional[int] = Field(None, description="Custom category ID from data dictionary")
     name: str = Field(..., max_length=80)
     desc: Optional[str] = None
 
