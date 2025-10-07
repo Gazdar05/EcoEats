@@ -12,6 +12,10 @@ function LoginPage() {
   return <h1>Login Page</h1>;
 }
 
+function RegisterPage() {
+  return <h1>Sign Up Page</h1>;
+}
+
 function BrowsePage() {
   return <h1>Browse Food Items</h1>;
 }
@@ -52,6 +56,7 @@ function App() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
         <Route path="/browse" element={<BrowsePage />} />
         <Route path="/inventory" element={<FoodInventory />} />
         <Route path="/meals" element={<MealsPage />} />

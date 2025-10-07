@@ -3,7 +3,7 @@
   align-items: center;
   justify-content: space-between;
   background: white !important;
-  padding: 0.5rem 1.5rem;
+  padding: 0.1rem 1.2rem;
   border-bottom: 1px solid #e5e5e5;
   font-family: Arial, sans-serif;
 
@@ -13,10 +13,12 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
+
 }
 
 .navbar-logo-img {
-  height: 32px;
+  height: 50px;
+  width: 120px;
 }
 
 .navbar-logo-text {
@@ -28,9 +30,10 @@
 .navbar-links {
   list-style: none;
   display: flex;
-  gap: 1.5rem;
+  gap: 1.6rem;
   margin: 0;
   padding: 0;
+  
 }
 
 .navbar-links li {
@@ -74,4 +77,43 @@
   width: 32px;
   height: 32px;
   cursor: pointer;
+}
+
+/* Normal button */
+.navbar-btn {
+  padding: 0.2rem 1rem;
+  border: 1px solid #6EA124;
+  border-radius: 15px;
+  text-decoration: none;
+  font-weight: 500;
+  color: #6EA124;
+  background: white;
+  transition: all 0.3s;
+}
+
+.navbar-btn:hover {
+  background: #6EA124;
+  color: white;
+}
+
+/* Sign Up style */
+.signup-btn {
+  border: 1px solid #6EA124;
+  color: #6EA124;
+}
+
+.signup-btn:hover {
+  background: #6EA124;
+  color: white;
+}
+
+/* Active (clicked/current route) */
+.active-btn {
+  background: #6EA124;
+  color: white !important;
+}
+
+.signup-btn.active-btn {
+  background: #6EA124;
+  color: white !important;
 }
