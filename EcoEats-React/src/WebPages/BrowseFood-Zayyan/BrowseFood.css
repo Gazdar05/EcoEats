@@ -200,16 +200,42 @@
   border: 1px solid #ddd;
 }
 
-/* Sort dropdown */
+/* Sort dropdown - styled like a button */
 .sort {
-  background: whitesmoke;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background: linear-gradient(135deg, #ffffff, #f8f8f8);
+  border: 1px solid var(--border);
   color: #111;
-  padding: 10px 14px;
+  padding: 10px 38px 10px 14px; /* add space for arrow */
   border-radius: 8px;
-  border: 1px solid #ddd;
+  cursor: pointer;
+  width: 220px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  position: relative;
   margin-left: auto;
-  width: 190px;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6'><path fill='%236EA124' d='M0 0l5 6 5-6z'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  background-size: 10px;
 }
+
+/* Hover + Focus effects */
+.sort:hover,
+.sort:focus {
+  border-color: var(--eco-green);
+  box-shadow: 0 0 0 3px rgba(110,161,36,0.15);
+}
+
+/* Optional active/focused state */
+.sort:active {
+  background: #f1f8ea;
+}
+
 
 /* GRID */
 .item-grid {
