@@ -29,6 +29,19 @@ const FoodInventory: React.FC = () => {
     status: "",
     storage: ""
   });
+  
+  // Local state (no backend)
+  const [inventory, setInventory] = useState<InventoryItem[]>([]);
+  const [categories, setCategories] = useState<{ id: string; name: string }[]>([
+    { id: "produce", name: "Produce" },
+    { id: "dairy", name: "Dairy" },
+    { id: "bakery", name: "Bakery" },
+    { id: "meat", name: "Meat" },
+    { id: "seafood", name: "Seafood" },
+    { id: "dry", name: "Dry Goods" },
+    { id: "frozen", name: "Frozen" },
+  ]);
+  
 
   // Function to calculate status based on expiry date
   const calculateStatus = (expiryDate: string): string => {
@@ -45,68 +58,39 @@ const FoodInventory: React.FC = () => {
       return "Fresh";
     }
   };
-  const [inventory, setInventory] = useState<InventoryItem[]>([
-    {
-      id: 1,
-      name: "Fresh Carrots",
-      category: "Fruit",
-      quantity: "5 pcs",
-      expiry: "2025-09-15",
-      storage: "Fridge",
-      status: "Expiring Soon", // This will be calculated dynamically
-      notes: "Organic carrots from local farm",
-    },
-    {
-      id: 2,
-      name: "Milk",
-      category: "Dairy",
-      quantity: "1 L",
-      expiry: "2025-10-15",
-      storage: "Fridge",
-      status: "Fresh", // This will be calculated dynamically
-      notes: "Whole milk, 3.25% fat",
-    },
-    {
-      id: 3,
-      name: "Whole Wheat Bread",
-      category: "Bakery",
-      quantity: "1 loaf",
-      expiry: "2025-09-13",
-      storage: "Pantry",
-      status: "Expiring Soon", // This will be calculated dynamically
-      notes: "Artisan bread from local bakery",
-    },
-    {
-      id: 4,
-      name: "Spinach",
-      category: "Vegetable",
-      quantity: "200 g",
-      expiry: "2025-09-05",
-      storage: "Fridge",
-      status: "Expired", // This will be calculated dynamically
-      notes: "Baby spinach leaves",
-    },
-    {
-      id: 5,
-      name: "Cheddar Cheese",
-      category: "Dairy",
-      quantity: "250 g",
-      expiry: "2025-10-01",
-      storage: "Fridge",
-      status: "Fresh", // This will be calculated dynamically
-      notes: "Aged cheddar, sharp flavor",
-    },
-    {
-      id: 6,
-      name: "Spaghetti Pasta",
-      category: "Dry Goods",
-      quantity: "500 g",
-      expiry: "2025-10-05",
-      storage: "Pantry",
-      status: "Fresh", // This will be calculated dynamically
-      notes: "Whole wheat pasta",
-    },
-  ]);
+
+  // Initialize with mock data (no backend)
+  const loadInventory = async () => {
+    // Seed with a couple of sample items
+    const sample: InventoryItem[] = [
+      {
+        id: 1,
+        name: "Organic Apples",
+        category: "Produce",
+        quantity: "4 pcs",
+        expiry: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+        storage: "Fridge",
+        status: "",
+        notes: "Crisp and sweet",
+      },
+      {
+        id: 2,
+        name: "Milk",
+        category: "Dairy",
+        quantity: "1 L",
+        expiry: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+        storage: "Fridge",
+        status: "",
+        notes: "Low fat",
+      },
+    ];
+    setInventory(sample);
+  };
+
+  // Load data on component mount
+  useEffect(() => {
+    loadInventory();
+  }, []);
 
   // Function to get inventory items with dynamically calculated status
   const getInventoryWithStatus = (items: InventoryItem[]): InventoryItem[] => {
@@ -175,30 +159,25 @@ const FoodInventory: React.FC = () => {
     setShowEditPopup(true);
   };
 
-  const handleDeleteItem = (itemId: number) => {
+  const handleDeleteItem = async (itemId: number) => {
     if (window.confirm('Are you sure you want to delete this item?')) {
-      setInventory(inventory.filter(item => item.id !== itemId));
+      // Local delete
+      setInventory(prev => prev.filter(i => i.id !== itemId));
     }
   };
 
-  const handleAddItem = (newItem: Omit<InventoryItem, 'id'>) => {
-    const item: InventoryItem = {
-      ...newItem,
-      id: Math.max(...inventory.map(i => i.id), 0) + 1,
-      status: calculateStatus(newItem.expiry), // Calculate status dynamically
-    };
-    setInventory([...inventory, item]);
+  const handleAddItem = async (newItem: Omit<InventoryItem, 'id'>) => {
+    // Local create
+    setInventory(prev => {
+      const nextId = (prev.reduce((max, i) => Math.max(max, i.id), 0) || 0) + 1;
+      return [...prev, { id: nextId, ...newItem }];
+    });
     setShowAddPopup(false);
   };
 
-  const handleUpdateItem = (updatedItem: InventoryItem) => {
-    const itemWithStatus: InventoryItem = {
-      ...updatedItem,
-      status: calculateStatus(updatedItem.expiry), // Calculate status dynamically
-    };
-    setInventory(inventory.map(item => 
-      item.id === itemWithStatus.id ? itemWithStatus : item
-    ));
+  const handleUpdateItem = async (updatedItem: InventoryItem) => {
+    // Local update
+    setInventory(prev => prev.map(i => (i.id === updatedItem.id ? updatedItem : i)));
     setShowEditPopup(false);
     setSelectedItem(null);
   };
@@ -242,8 +221,12 @@ const FoodInventory: React.FC = () => {
 
   return (
     <div className="inventory-container">
+      {/* Auth Test Component removed (no backend) */}
+      
       {/* Page Title */}
       <h1 className="inventory-title">Inventory</h1>
+      
+      {/* Error/Loading removed due to no backend */}
 
       {/* Search + Buttons */}
       <div className="inventory-controls">
@@ -273,11 +256,11 @@ const FoodInventory: React.FC = () => {
                     onChange={(e) => handleFilterChange('category', e.target.value)}
                   >
                     <option value="">All Categories</option>
-                    <option value="Fruit">Fruit</option>
-                    <option value="Vegetable">Vegetable</option>
-                    <option value="Dairy">Dairy</option>
-                    <option value="Bakery">Bakery</option>
-                    <option value="Dry Goods">Dry Goods</option>
+                    {categories.map(category => (
+                      <option key={category.id} value={category.name}>
+                        {category.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
                 <div className="filter-section">
@@ -390,6 +373,7 @@ const FoodInventory: React.FC = () => {
         <AddItemPopup 
           onClose={() => setShowAddPopup(false)}
           onSave={handleAddItem}
+          categories={categories}
         />
       )}
     </div>

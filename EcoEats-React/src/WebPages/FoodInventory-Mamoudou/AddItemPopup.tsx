@@ -16,9 +16,10 @@ interface InventoryItem {
 interface AddItemPopupProps {
   onClose: () => void;
   onSave: (item: Omit<InventoryItem, 'id'>) => void;
+  categories?: { id: string; name: string }[];
 }
 
-const AddItemPopup: React.FC<AddItemPopupProps> = ({ onClose, onSave }) => {
+const AddItemPopup: React.FC<AddItemPopupProps> = ({ onClose, onSave, categories = [] }) => {
   const [formData, setFormData] = useState({
     name: '',
     category: 'Produce',
@@ -106,13 +107,23 @@ const AddItemPopup: React.FC<AddItemPopupProps> = ({ onClose, onSave }) => {
                 value={formData.category}
                 onChange={handleInputChange}
               >
-                <option value="Produce">Produce</option>
-                <option value="Dairy">Dairy</option>
-                <option value="Bakery">Bakery</option>
-                <option value="Meat">Meat</option>
-                <option value="Seafood">Seafood</option>
-                <option value="Dry Goods">Dry Goods</option>
-                <option value="Frozen">Frozen</option>
+                {categories.length > 0 ? (
+                  categories.map(category => (
+                    <option key={category.id} value={category.name}>
+                      {category.name}
+                    </option>
+                  ))
+                ) : (
+                  <>
+                    <option value="Produce">Produce</option>
+                    <option value="Dairy">Dairy</option>
+                    <option value="Bakery">Bakery</option>
+                    <option value="Meat">Meat</option>
+                    <option value="Seafood">Seafood</option>
+                    <option value="Dry Goods">Dry Goods</option>
+                    <option value="Frozen">Frozen</option>
+                  </>
+                )}
               </select>
             </div>
 
