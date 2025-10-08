@@ -17,12 +17,6 @@
         }
 
        
-
-
-
-
-
-
         .header {
             text-align: center;
             margin-bottom: 40px;
@@ -103,6 +97,8 @@
             border-radius: 8px;
             font-size: 14px;
             transition: all 0.2s;
+            background-color: #ffffff; /* background */
+            color: #111827;
         }
 
         .form-control:focus {
