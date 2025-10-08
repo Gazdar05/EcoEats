@@ -6,5 +6,6 @@ class Settings(BaseSettings):
 
     class Config:
         env_file = ".env"
+        ALLOW_ORIGINS: list[str] = ["*"]  # change in production
 
 settings = Settings()
