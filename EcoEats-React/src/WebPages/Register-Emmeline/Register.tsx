@@ -146,7 +146,7 @@ const Register: React.FC = () => {
           {isCreating ? 'Creating account...' : 'Create Account'}
         </button>
 
-        <p>Already have an account? <a href="/login">Sign in</a></p>
+        <p>Already have an account? <a href="/login">Log in</a></p>
 
         {/* Verification Modal */}
         {isVerificationOpen && (

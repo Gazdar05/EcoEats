@@ -22,6 +22,18 @@
             margin-bottom: 40px;
         }
 
+        .container {
+            width: 100%;
+            max-width: 400px;
+            background: rgba(255, 255, 255, 0.65);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            padding: 30px;
+            
+            
+        }
+
         .logo {
             width: 60px;
             height: 60px;
@@ -42,7 +54,7 @@
         .header h1 {
             font-size: 32px;
             color: #1f2937;
-            margin-bottom: 8px;
+            margin-bottom: 9px;
         }
 
         .header p {
@@ -63,8 +75,9 @@
             margin-bottom: 30px;
         }
 
-        .form-group {
-            margin-bottom: 20px;
+        .login-container .form-group {
+            margin-top: 20px;
+            margin-bottom: 30px;
         
         }
 
@@ -119,12 +132,28 @@
             background: none;
             border: none;
             cursor: pointer;
-            color: #9ca3af;
             padding: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #9ca3af;
+            transition: color 0.2s ease;
+            z-index: 2;
         }
 
-        .password-toggle:hover {
-            color: #4b5563;
+        .input-wrapper input[type="password"],
+        .input-wrapper input[type="text"] {
+        padding-right: 40px; /* adds space for the icon on the right */
+        }
+
+        .password-toggle svg {
+            width: 20px;
+            height: 20px;
+            stroke: #6b7280; /* eye icon color */
+            }
+
+        .password-toggle:hover svg {
+        stroke: #047857; /* dark green on hover */
         }
 
         .error-message {

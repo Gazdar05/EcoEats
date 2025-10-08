@@ -81,6 +81,7 @@ const LoginPage: React.FC = () => {
   return (
     <div className="login-container">
       <div className="login-wrapper">
+        <div className="container">
         <div className="login-header">
           <h1>EcoEats</h1>
           <p>Reduce waste, save money, help the planet</p>
@@ -185,6 +186,7 @@ const LoginPage: React.FC = () => {
           By continuing, you agree to EcoEats' 
           <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>
         </p>
+      </div>
       </div>
     </div>
   );
