@@ -1,1 +1,1 @@
-ÿþ
+# app package initializer
