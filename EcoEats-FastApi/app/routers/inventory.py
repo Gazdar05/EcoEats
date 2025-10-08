@@ -4,6 +4,29 @@ from fastapi import APIRouter
 router = APIRouter()
 
 # TODO: Inventory endpoints will be added by teammate
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 '''from fastapi import APIRouter, HTTPException
 from app.models import FoodItem, FoodCategory
 from app.database import db
