@@ -30,9 +30,8 @@ const FoodInventory: React.FC = () => {
     storage: ""
   });
   
-  // Local state (no backend)
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
-  const [categories, setCategories] = useState<{ id: string; name: string }[]>([
+  const [categories] = useState<{ id: string; name: string }[]>([
     { id: "produce", name: "Produce" },
     { id: "dairy", name: "Dairy" },
     { id: "bakery", name: "Bakery" },
@@ -41,7 +40,6 @@ const FoodInventory: React.FC = () => {
     { id: "dry", name: "Dry Goods" },
     { id: "frozen", name: "Frozen" },
   ]);
-  
 
   // Function to calculate status based on expiry date
   const calculateStatus = (expiryDate: string): string => {
@@ -59,9 +57,8 @@ const FoodInventory: React.FC = () => {
     }
   };
 
-  // Initialize with mock data (no backend)
+  // Initialize with mock data
   const loadInventory = async () => {
-    // Seed with a couple of sample items
     const sample: InventoryItem[] = [
       {
         id: 1,
@@ -83,7 +80,10 @@ const FoodInventory: React.FC = () => {
         status: "",
         notes: "Low fat",
       },
+
     ];
+
+    // ✅ Now it actually loads data
     setInventory(sample);
   };
 
@@ -161,13 +161,11 @@ const FoodInventory: React.FC = () => {
 
   const handleDeleteItem = async (itemId: number) => {
     if (window.confirm('Are you sure you want to delete this item?')) {
-      // Local delete
       setInventory(prev => prev.filter(i => i.id !== itemId));
     }
   };
 
   const handleAddItem = async (newItem: Omit<InventoryItem, 'id'>) => {
-    // Local create
     setInventory(prev => {
       const nextId = (prev.reduce((max, i) => Math.max(max, i.id), 0) || 0) + 1;
       return [...prev, { id: nextId, ...newItem }];
@@ -176,7 +174,6 @@ const FoodInventory: React.FC = () => {
   };
 
   const handleUpdateItem = async (updatedItem: InventoryItem) => {
-    // Local update
     setInventory(prev => prev.map(i => (i.id === updatedItem.id ? updatedItem : i)));
     setShowEditPopup(false);
     setSelectedItem(null);
@@ -189,7 +186,6 @@ const FoodInventory: React.FC = () => {
     setSelectedItem(null);
   };
 
-  // Handle escape key to close popups
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -204,7 +200,6 @@ const FoodInventory: React.FC = () => {
     }
   }, [showViewPopup, showEditPopup, showAddPopup]);
 
-  // Close filter dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       const target = e.target as Element;
@@ -221,14 +216,8 @@ const FoodInventory: React.FC = () => {
 
   return (
     <div className="inventory-container">
-      {/* Auth Test Component removed (no backend) */}
-      
-      {/* Page Title */}
       <h1 className="inventory-title">Inventory</h1>
-      
-      {/* Error/Loading removed due to no backend */}
 
-      {/* Search + Buttons */}
       <div className="inventory-controls">
         <div className="search-bar">
           <Search size={18} />
@@ -297,7 +286,6 @@ const FoodInventory: React.FC = () => {
         </div>
       </div>
 
-      {/* Table */}
       <table className="inventory-table">
         <thead>
           <tr>
@@ -316,11 +304,7 @@ const FoodInventory: React.FC = () => {
               <td className="item-name">{item.name}</td>
               <td>{item.category}</td>
               <td>{item.quantity}</td>
-              <td
-                className={
-                  item.status === "Expired" ? "expired-date" : undefined
-                }
-              >
+              <td className={item.status === "Expired" ? "expired-date" : undefined}>
                 {item.expiry}
               </td>
               <td>{item.storage}</td>
@@ -355,7 +339,6 @@ const FoodInventory: React.FC = () => {
         </tbody>
       </table>
 
-      {/* Popups */}
       {showViewPopup && selectedItem && (
         <ViewItemPopup 
           item={selectedItem} 
