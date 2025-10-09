@@ -7,13 +7,9 @@ from app.database import db
 
 app = FastAPI()
 
-origins = [
-    "http://localhost:5173",  # if you're using Vite
-]
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.ALLOW_ORIGINS,
+    allow_origins=["http://localhost:5173"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
