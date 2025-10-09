@@ -5,6 +5,11 @@ from datetime import datetime, date
 from bson import ObjectId
 from pydantic_core import core_schema
 from typing import Any
+from pydantic import BaseModel, Field
+from datetime import date
+from typing import Optional
+
+
 
 
 # Helper for Mongo ObjectId serialization
@@ -124,3 +129,21 @@ class FoodItem(BaseModel):
         allow_population_by_field_name = True
         arbitrary_types_allowed = True
         json_encoders = {ObjectId: str}
+
+class InventoryItemModel(BaseModel):
+    id: Optional[str] = Field(alias="_id", default=None)
+    name: str
+    category: str
+    quantity: str
+    expiry: date
+    storage: str
+    status: Optional[str] = None
+    notes: Optional[str] = None
+    image: Optional[str] = None
+
+    class Config:
+        populate_by_name = True
+        json_encoders = {ObjectId: str}
+        arbitrary_types_allowed = True
+    
+    

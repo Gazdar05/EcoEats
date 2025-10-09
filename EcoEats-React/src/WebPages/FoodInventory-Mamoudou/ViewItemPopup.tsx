@@ -1,3 +1,4 @@
+// C:\GitHub\EcoEats\EcoEats-React\src\WebPages\FoodInventory-Mamoudou\ViewItemPopup.tsx
 import React, { useEffect } from "react";
 import "./ViewItemPopup.css";
 

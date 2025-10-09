@@ -1,11 +1,126 @@
-# app/routers/inventory.py
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException, status
+from app.database import db
+from app.schemas.inventory_schema import InventoryCreate, InventoryUpdate, InventoryResponse
+from app.models import InventoryItemModel
+from bson import ObjectId
+from datetime import date, datetime
 
-router = APIRouter()
+router = APIRouter(prefix="/inventory", tags=["Inventory"])
 
-# TODO: Inventory endpoints will be added by teammate
-# app/routers/inventory.py
-from fastapi import APIRouter, HTTPException, status, Depends, UploadFile, File, Form
+# Helper to calculate status dynamically
+def calculate_status(expiry: date) -> str:
+    today = date.today()
+    diff_days = (expiry - today).days
+    if diff_days < 0:
+        return "Expired"
+    elif diff_days <= 3:
+        return "Expiring Soon"
+    else:
+        return "Fresh"
+
+
+# ✅ Get all inventory items
+@router.get("/", response_model=list[InventoryResponse])
+async def get_inventory():
+    items_cursor = db.inventory.find()
+    items = []
+    async for item in items_cursor:
+        # Convert _id to id for Pydantic model
+        item["id"] = str(item["_id"])
+        del item["_id"]
+
+        # Ensure expiry is date type (Mongo stores as datetime)
+        expiry_value = item.get("expiry")
+        if isinstance(expiry_value, datetime):
+            expiry_value = expiry_value.date()
+
+        item["status"] = calculate_status(expiry_value)
+        items.append(InventoryResponse(**item))
+    return items
+
+
+# ✅ Add a new inventory item
+@router.post("/", response_model=InventoryResponse, status_code=status.HTTP_201_CREATED)
+async def add_inventory_item(item: InventoryCreate):
+    item_dict = item.dict()
+
+    # Convert date → datetime for MongoDB
+    for key, value in item_dict.items():
+        if isinstance(value, date) and not isinstance(value, datetime):
+            item_dict[key] = datetime.combine(value, datetime.min.time())
+
+    item_dict["status"] = calculate_status(item.expiry)
+    result = await db.inventory.insert_one(item_dict)
+    new_item = await db.inventory.find_one({"_id": result.inserted_id})
+
+    # Convert MongoDB _id → id
+    new_item["id"] = str(new_item["_id"])
+    del new_item["_id"]
+
+    # Convert expiry datetime → date before returning
+    if isinstance(new_item.get("expiry"), datetime):
+        new_item["expiry"] = new_item["expiry"].date()
+
+    return InventoryResponse(**new_item)
+
+
+# ✅ Get one inventory item by ID
+@router.get("/{item_id}", response_model=InventoryResponse)
+async def get_inventory_item(item_id: str):
+    item = await db.inventory.find_one({"_id": ObjectId(item_id)})
+    if not item:
+        raise HTTPException(status_code=404, detail="Item not found")
+
+    item["id"] = str(item["_id"])
+    del item["_id"]
+
+    expiry_value = item.get("expiry")
+    if isinstance(expiry_value, datetime):
+        expiry_value = expiry_value.date()
+
+    item["status"] = calculate_status(expiry_value)
+    item["expiry"] = expiry_value
+    return InventoryResponse(**item)
+
+
+# ✅ Update an existing inventory item
+@router.put("/{item_id}", response_model=InventoryResponse)
+async def update_inventory_item(item_id: str, update_data: InventoryUpdate):
+    updates = {k: v for k, v in update_data.dict().items() if v is not None}
+
+    # Convert date → datetime if updating expiry
+    if "expiry" in updates:
+        expiry_val = updates["expiry"]
+        if isinstance(expiry_val, date) and not isinstance(expiry_val, datetime):
+            updates["expiry"] = datetime.combine(expiry_val, datetime.min.time())
+        updates["status"] = calculate_status(update_data.expiry)
+
+    result = await db.inventory.update_one({"_id": ObjectId(item_id)}, {"$set": updates})
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Item not found or no changes made")
+
+    updated_item = await db.inventory.find_one({"_id": ObjectId(item_id)})
+
+    updated_item["id"] = str(updated_item["_id"])
+    del updated_item["_id"]
+
+    if isinstance(updated_item.get("expiry"), datetime):
+        updated_item["expiry"] = updated_item["expiry"].date()
+
+    return InventoryResponse(**updated_item)
+
+
+# ✅ Delete an inventory item
+@router.delete("/{item_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_inventory_item(item_id: str):
+    result = await db.inventory.delete_one({"_id": ObjectId(item_id)})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Item not found")
+    return None
+
+
+
+''' from fastapi import APIRouter, HTTPException, status, Depends, UploadFile, File, Form
 from typing import Optional
 from app.database import db
 from app.utils import to_objectid, food_status_from_date
@@ -182,7 +297,7 @@ async def delete_item(item_id: str):
 
 
 
-'''from fastapi import APIRouter, HTTPException
+ from fastapi import APIRouter, HTTPException
 from app.models import FoodItem, FoodCategory
 from app.database import db
 from datetime import datetime

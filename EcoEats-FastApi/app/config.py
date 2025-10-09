@@ -1,13 +1,11 @@
-from pydantic_settings import BaseSettings
+# app/config.py
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
-    MONGO_URI: str = "your-mongodb-atlas-uri"
-    DB_NAME: str = "ecoeats"
-    ALLOW_ORIGINS: list[str] = ["*"]  # change in production
+    MONGO_URI: str
+    DB_NAME: str
+    ALLOW_ORIGINS: str
 
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-
+    model_config = SettingsConfigDict(env_file="app/.env")  # ✅ point to correct path
 
 settings = Settings()

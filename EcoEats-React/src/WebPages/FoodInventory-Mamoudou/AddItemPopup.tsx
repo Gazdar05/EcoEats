@@ -1,3 +1,4 @@
+// C:\GitHub\EcoEats\EcoEats-React\src\WebPages\FoodInventory-Mamoudou\AddItemPopup.tsx
 import React, { useEffect, useState } from "react";
 import "./AddItemPopup.css";
 

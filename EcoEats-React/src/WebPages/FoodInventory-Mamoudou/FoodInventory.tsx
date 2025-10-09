@@ -1,3 +1,4 @@
+// C:\GitHub\EcoEats\EcoEats-React\src\WebPages\FoodInventory-Mamoudou\FoodInventory.tsx
 import React, { useState, useEffect } from "react";
 import "./FoodInventory.css";
 import { Plus, Filter, Search, Edit, Trash2, Eye } from "lucide-react";
