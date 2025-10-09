@@ -1,4 +1,3 @@
-//
 import React, { useState, useEffect } from "react";
 import "./FoodInventory.css";
 import { Plus, Filter, Search, Edit, Trash2, Eye } from "lucide-react";
@@ -17,6 +16,8 @@ interface InventoryItem {
   notes?: string;
   image?: string;
 }
+
+const API_BASE = "http://127.0.0.1:8000"; // ✅ FastAPI base URL
 
 const FoodInventory: React.FC = () => {
   const [showViewPopup, setShowViewPopup] = useState(false);
@@ -42,164 +43,67 @@ const FoodInventory: React.FC = () => {
     { id: "frozen", name: "Frozen" },
   ]);
 
-  // Function to calculate status based on expiry date
+  // ✅ Calculate item status based on expiry date
   const calculateStatus = (expiryDate: string): string => {
     const today = new Date();
     const expiry = new Date(expiryDate);
     const diffTime = expiry.getTime() - today.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     
-    if (diffDays < 0) {
-      return "Expired";
-    } else if (diffDays <= 3) {
-      return "Expiring Soon";
-    } else {
-      return "Fresh";
+    if (diffDays < 0) return "Expired";
+    if (diffDays <= 3) return "Expiring Soon";
+    return "Fresh";
+  };
+
+  // ✅ Load inventory from FastAPI backend
+  const loadInventory = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/inventory`);
+      if (!res.ok) throw new Error("Failed to load inventory");
+      const data = await res.json();
+      const itemsWithStatus = data.map((item: InventoryItem) => ({
+        ...item,
+        status: calculateStatus(item.expiry),
+      }));
+      setInventory(itemsWithStatus);
+    } catch (err) {
+      console.error(err);
     }
   };
 
-  // Initialize with mock data
-  const loadInventory = async () => {
-    const sample: InventoryItem[] = [
-      {
-        id: 1,
-        name: "Organic Apples",
-        category: "Produce",
-        quantity: "4 pcs",
-        expiry: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
-        storage: "Fridge",
-        status: "",
-        notes: "Crisp and sweet",
-      },
-      {
-        id: 2,
-        name: "Milk",
-        category: "Dairy",
-        quantity: "1 L",
-        expiry: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
-        storage: "Fridge",
-        status: "",
-        notes: "Low fat",
-      },
-      {
-        id: 3,
-        name: "Fresh carrots",
-        category: "Fruit",
-        quantity: "5 pcs",
-        expiry: "2025-09-10",
-        storage: "Fridge",
-        status: "",
-        notes: "Organic and crunchy",
-      },
-      {
-        id: 4,
-        name: "Whole Wheat Bread",
-        category: "Bakery",
-        quantity: "1 loaf",
-        expiry: "2025-09-13",
-        storage: "Pantry",
-        status: "",
-        notes: "Freshly baked",
-      },
-      {
-        id: 5,
-        name: "Spinach",
-        category: "Vegetables",
-        quantity: "200 g",
-        expiry: "2025-09-05",
-        storage: "Fridge",
-        status: "",
-        notes: "Organic and fresh",
-      },
-      {
-        id: 6,
-        name: "Cheddar Cheese",
-        category: "Dairy",
-        quantity: "250 g",
-        expiry: "2025-10-01",
-        storage: "Fridge",
-        status: "",
-        notes: "Aged and sharp",
-      },
-      {
-        id: 7,
-        name: "Spagehetti Pasta",
-        category: "Dry Goods",
-        quantity: "500 g",
-        expiry: "2025-10-05",
-        storage: "Pantry",
-        status: "",
-        notes: "Whole grain",
-      },
-
-    ];
-
-    // ✅ Now it actually loads data
-    setInventory(sample);
-  };
-
-  // Load data on component mount
   useEffect(() => {
     loadInventory();
   }, []);
 
-  // Function to get inventory items with dynamically calculated status
-  const getInventoryWithStatus = (items: InventoryItem[]): InventoryItem[] => {
-    return items.map(item => ({
-      ...item,
-      status: calculateStatus(item.expiry)
-    }));
-  };
-
-  // Get inventory with dynamically calculated status
-  const inventoryWithStatus = getInventoryWithStatus(inventory);
-
-  // Search and filter logic
-  const filteredInventory = inventoryWithStatus.filter(item => {
-    // Search filter
-    const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  // ✅ Search and filter logic
+  const filteredInventory = inventory.filter(item => {
+    const matchesSearch =
+      item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.quantity.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.storage.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.status.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (item.notes && item.notes.toLowerCase().includes(searchTerm.toLowerCase()));
 
-    // Category filter
     const matchesCategory = !filters.category || item.category === filters.category;
-    
-    // Status filter
     const matchesStatus = !filters.status || item.status === filters.status;
-    
-    // Storage filter
     const matchesStorage = !filters.storage || item.storage === filters.storage;
 
     return matchesSearch && matchesCategory && matchesStatus && matchesStorage;
   });
 
+  // ✅ Event handlers
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
   };
 
   const handleFilterChange = (filterType: keyof typeof filters, value: string) => {
-    setFilters(prev => ({
-      ...prev,
-      [filterType]: value
-    }));
+    setFilters(prev => ({ ...prev, [filterType]: value }));
   };
 
-  const clearFilters = () => {
-    setFilters({
-      category: "",
-      status: "",
-      storage: ""
-    });
-  };
+  const clearFilters = () => setFilters({ category: "", status: "", storage: "" });
+  const toggleFilterDropdown = () => setShowFilterDropdown(!showFilterDropdown);
 
-  const toggleFilterDropdown = () => {
-    setShowFilterDropdown(!showFilterDropdown);
-  };
-
-  // Handler functions
   const handleViewItem = (item: InventoryItem) => {
     setSelectedItem(item);
     setShowViewPopup(true);
@@ -210,24 +114,50 @@ const FoodInventory: React.FC = () => {
     setShowEditPopup(true);
   };
 
+  // ✅ Delete item (API + local update)
   const handleDeleteItem = async (itemId: number) => {
-    if (window.confirm('Are you sure you want to delete this item?')) {
+    if (!window.confirm("Are you sure you want to delete this item?")) return;
+    try {
+      await fetch(`${API_BASE}/inventory/${itemId}`, { method: "DELETE" });
       setInventory(prev => prev.filter(i => i.id !== itemId));
+    } catch (err) {
+      console.error(err);
     }
   };
 
-  const handleAddItem = async (newItem: Omit<InventoryItem, 'id'>) => {
-    setInventory(prev => {
-      const nextId = (prev.reduce((max, i) => Math.max(max, i.id), 0) || 0) + 1;
-      return [...prev, { id: nextId, ...newItem }];
-    });
-    setShowAddPopup(false);
+  // ✅ Add item (API + local update)
+  const handleAddItem = async (newItem: Omit<InventoryItem, "id">) => {
+    try {
+      const res = await fetch(`${API_BASE}/inventory`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newItem),
+      });
+      const created = await res.json();
+      setInventory(prev => [...prev, { ...created, status: calculateStatus(created.expiry) }]);
+      setShowAddPopup(false);
+    } catch (err) {
+      console.error(err);
+    }
   };
 
+  // ✅ Update item (API + local update)
   const handleUpdateItem = async (updatedItem: InventoryItem) => {
-    setInventory(prev => prev.map(i => (i.id === updatedItem.id ? updatedItem : i)));
-    setShowEditPopup(false);
-    setSelectedItem(null);
+    try {
+      const res = await fetch(`${API_BASE}/inventory/${updatedItem.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updatedItem),
+      });
+      const saved = await res.json();
+      setInventory(prev =>
+        prev.map(i => (i.id === saved.id ? { ...saved, status: calculateStatus(saved.expiry) } : i))
+      );
+      setShowEditPopup(false);
+      setSelectedItem(null);
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const closePopups = () => {
@@ -237,44 +167,41 @@ const FoodInventory: React.FC = () => {
     setSelectedItem(null);
   };
 
+  // Close popups on ESC
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
+      if (e.key === "Escape") {
         closePopups();
         setShowFilterDropdown(false);
       }
     };
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
+  }, []);
 
-    if (showViewPopup || showEditPopup || showAddPopup) {
-      document.addEventListener('keydown', handleEscape);
-      return () => document.removeEventListener('keydown', handleEscape);
-    }
-  }, [showViewPopup, showEditPopup, showAddPopup]);
-
+  // Close filter dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       const target = e.target as Element;
-      if (showFilterDropdown && !target.closest('.filter-container')) {
+      if (showFilterDropdown && !target.closest(".filter-container")) {
         setShowFilterDropdown(false);
       }
     };
-
-    if (showFilterDropdown) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
-    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [showFilterDropdown]);
 
   return (
     <div className="inventory-container">
       <h1 className="inventory-title">Inventory</h1>
 
+      {/* Controls */}
       <div className="inventory-controls">
         <div className="search-bar">
           <Search size={18} />
-          <input 
-            type="text" 
-            placeholder="Search inventory..." 
+          <input
+            type="text"
+            placeholder="Search inventory..."
             value={searchTerm}
             onChange={handleSearchChange}
           />
@@ -291,9 +218,9 @@ const FoodInventory: React.FC = () => {
               <div className="filter-dropdown">
                 <div className="filter-section">
                   <label>Category</label>
-                  <select 
-                    value={filters.category} 
-                    onChange={(e) => handleFilterChange('category', e.target.value)}
+                  <select
+                    value={filters.category}
+                    onChange={(e) => handleFilterChange("category", e.target.value)}
                   >
                     <option value="">All Categories</option>
                     {categories.map(category => (
@@ -305,9 +232,9 @@ const FoodInventory: React.FC = () => {
                 </div>
                 <div className="filter-section">
                   <label>Status</label>
-                  <select 
-                    value={filters.status} 
-                    onChange={(e) => handleFilterChange('status', e.target.value)}
+                  <select
+                    value={filters.status}
+                    onChange={(e) => handleFilterChange("status", e.target.value)}
                   >
                     <option value="">All Status</option>
                     <option value="Fresh">Fresh</option>
@@ -317,9 +244,9 @@ const FoodInventory: React.FC = () => {
                 </div>
                 <div className="filter-section">
                   <label>Storage</label>
-                  <select 
-                    value={filters.storage} 
-                    onChange={(e) => handleFilterChange('storage', e.target.value)}
+                  <select
+                    value={filters.storage}
+                    onChange={(e) => handleFilterChange("storage", e.target.value)}
                   >
                     <option value="">All Storage</option>
                     <option value="Fridge">Fridge</option>
@@ -337,6 +264,7 @@ const FoodInventory: React.FC = () => {
         </div>
       </div>
 
+      {/* Table */}
       <table className="inventory-table">
         <thead>
           <tr>
@@ -350,8 +278,8 @@ const FoodInventory: React.FC = () => {
           </tr>
         </thead>
         <tbody>
-          {filteredInventory.map((item, index) => (
-            <tr key={index}>
+          {filteredInventory.map((item) => (
+            <tr key={item.id}>
               <td className="item-name">{item.name}</td>
               <td>{item.category}</td>
               <td>{item.quantity}</td>
@@ -360,51 +288,41 @@ const FoodInventory: React.FC = () => {
               </td>
               <td>{item.storage}</td>
               <td>
-                {item.status === "Expired" ? (
-                  <span className="status expired">Expired</span>
-                ) : item.status === "Expiring Soon" ? (
-                  <span className="status expiring">Expiring Soon</span>
-                ) : (
-                  <span className="status fresh">Fresh</span>
-                )}
+                <span
+                  className={`status ${
+                    item.status === "Expired"
+                      ? "expired"
+                      : item.status === "Expiring Soon"
+                      ? "expiring"
+                      : "fresh"
+                  }`}
+                >
+                  {item.status}
+                </span>
               </td>
               <td className="actions">
-                <Edit
-                  size={16}
-                  className="action-icon"
-                  onClick={() => handleEditItem(item)}
-                />
-                <Trash2 
-                  size={16} 
-                  className="action-icon" 
-                  onClick={() => handleDeleteItem(item.id)}
-                />
-                <Eye
-                  size={16}
-                  className="action-icon"
-                  onClick={() => handleViewItem(item)}
-                />
+                <Edit size={16} className="action-icon" onClick={() => handleEditItem(item)} />
+                <Trash2 size={16} className="action-icon" onClick={() => handleDeleteItem(item.id)} />
+                <Eye size={16} className="action-icon" onClick={() => handleViewItem(item)} />
               </td>
             </tr>
           ))}
         </tbody>
       </table>
 
+      {/* Popups */}
       {showViewPopup && selectedItem && (
-        <ViewItemPopup 
-          item={selectedItem} 
-          onClose={() => setShowViewPopup(false)} 
-        />
+        <ViewItemPopup item={selectedItem} onClose={() => setShowViewPopup(false)} />
       )}
       {showEditPopup && selectedItem && (
-        <EditItemPopup 
-          item={selectedItem} 
+        <EditItemPopup
+          item={selectedItem}
           onClose={() => setShowEditPopup(false)}
           onSave={handleUpdateItem}
         />
       )}
       {showAddPopup && (
-        <AddItemPopup 
+        <AddItemPopup
           onClose={() => setShowAddPopup(false)}
           onSave={handleAddItem}
           categories={categories}
