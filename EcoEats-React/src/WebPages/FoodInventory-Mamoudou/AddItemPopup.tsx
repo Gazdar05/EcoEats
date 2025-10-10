@@ -1,6 +1,11 @@
-// C:\GitHub\EcoEats\EcoEats-React\src\WebPages\FoodInventory-Mamoudou\AddItemPopup.tsx
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import "./AddItemPopup.css";
+
+interface AddItemPopupProps {
+  onClose: () => void;
+  onSave: (newItem: Omit<InventoryItem, "id">) => Promise<void>;
+  categories: { id: string; name: string }[];
+}
 
 interface InventoryItem {
   id: number;
@@ -14,195 +19,108 @@ interface InventoryItem {
   image?: string;
 }
 
-interface AddItemPopupProps {
-  onClose: () => void;
-  onSave: (item: Omit<InventoryItem, 'id'>) => void;
-  categories?: { id: string; name: string }[];
-}
-
-const AddItemPopup: React.FC<AddItemPopupProps> = ({ onClose, onSave, categories = [] }) => {
-  const [formData, setFormData] = useState({
-    name: '',
-    category: 'Produce',
-    quantity: '1 pcs',
-    expiry: '',
-    storage: 'Fridge',
-    notes: '',
+const AddItemPopup: React.FC<AddItemPopupProps> = ({ onClose, onSave, categories }) => {
+  const [formData, setFormData] = useState<Omit<InventoryItem, "id">>({
+    name: "",
+    category: "",
+    quantity: "",
+    expiry: "",
+    storage: "",
+    status: "Fresh",
+    notes: "",
+    image: "",
   });
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
-  const [quantity, setQuantity] = useState<number>(1);
-
-  useEffect(() => {
-    document.body.classList.add("no-chrome");
-    return () => {
-      document.body.classList.remove("no-chrome");
-    };
-  }, []);
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleQuantityChange = (newQuantity: number) => {
-    setQuantity(newQuantity);
-    setFormData(prev => ({
-      ...prev,
-      quantity: `${newQuantity} pcs`
-    }));
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const newItem: Omit<InventoryItem, 'id'> = {
-      ...formData,
-      quantity: `${quantity} pcs`,
-      status: '', // Status will be calculated dynamically in parent component
-    };
-    onSave(newItem);
-  };
-
-  const handleOverlayClick = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget) {
-      onClose();
-    }
+    onSave(formData);
   };
 
   return (
-    <div className="add-popup-overlay" onClick={handleOverlayClick}>
-      <div className="add-popup-container">
-        <div className="add-popup-header">
-          <h2 className="add-popup-title">
-            Add New Item
-            <button className="add-popup-close" onClick={onClose}>✕</button>
-          </h2>
+    <div className="popup-overlay">
+      <div className="popup-container">
+        <div className="popup-header">
+          <h2>Add New Item</h2>
+          <button className="close-btn" onClick={onClose}>✕</button>
         </div>
 
-        <p className="add-popup-subtitle">
-          Add a new food item to your inventory.
-        </p>
-
-        <form onSubmit={handleSubmit}>
-          <div className="add-popup-body">
-            <div className="add-form-group">
-              <label className="add-form-label">Item Name</label>
-              <input 
-                type="text" 
-                className="add-form-input"
-                name="name"
-                value={formData.name}
-                onChange={handleInputChange}
-                placeholder="e.g. Organic Apples"
-                required
-              />
-            </div>
-
-            <div className="add-form-group">
-              <label className="add-form-label">Category</label>
-              <select 
-                className="add-form-select"
-                name="category"
-                value={formData.category}
-                onChange={handleInputChange}
-              >
-                {categories.length > 0 ? (
-                  categories.map(category => (
-                    <option key={category.id} value={category.name}>
-                      {category.name}
-                    </option>
-                  ))
-                ) : (
-                  <>
-                    <option value="Produce">Produce</option>
-                    <option value="Dairy">Dairy</option>
-                    <option value="Bakery">Bakery</option>
-                    <option value="Meat">Meat</option>
-                    <option value="Seafood">Seafood</option>
-                    <option value="Dry Goods">Dry Goods</option>
-                    <option value="Frozen">Frozen</option>
-                  </>
-                )}
-              </select>
-            </div>
-
-            <div className="add-form-group">
-              <label className="add-form-label">Quantity</label>
-              <div className="add-quantity-control">
-                <button 
-                  type="button"
-                  className="add-quantity-btn"
-                  onClick={() => handleQuantityChange(Math.max(1, quantity - 1))}
-                >
-                  -
-                </button>
-                <span className="add-quantity-display">{quantity}</span>
-                <button 
-                  type="button"
-                  className="add-quantity-btn"
-                  onClick={() => handleQuantityChange(quantity + 1)}
-                >
-                  +
-                </button>
-              </div>
-            </div>
-
-            <div className="add-form-group">
-              <label className="add-form-label">Expiry Date</label>
-              <input 
-                type="date" 
-                className="add-form-input"
-                name="expiry"
-                value={formData.expiry}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
-
-            <div className="add-form-group">
-              <label className="add-form-label">Storage Location</label>
-              <select 
-                className="add-form-select"
-                name="storage"
-                value={formData.storage}
-                onChange={handleInputChange}
-              >
-                <option value="Fridge">Fridge</option>
-                <option value="Pantry">Pantry</option>
-                <option value="Freezer">Freezer</option>
-              </select>
-            </div>
-
-            <div className="add-form-group">
-              <label className="add-form-label">Notes</label>
-              <textarea 
-                className="add-form-textarea"
-                name="notes"
-                value={formData.notes}
-                onChange={handleInputChange}
-                placeholder="Add any specific notes about the item…"
-              />
-            </div>
-
-          <div className="add-form-group">
-            <label className="add-form-label">Image</label>
-            <label className="add-upload-area">
-              <input type="file" accept="image/*" className="add-upload-input" />
-              <span className="add-upload-icon">⬆</span>
-              <span className="add-upload-text">Upload Image</span>
-            </label>
+        <form onSubmit={handleSubmit} className="popup-form">
+          <div className="form-group">
+            <label>Name</label>
+            <input name="name" value={formData.name} onChange={handleChange} required />
           </div>
-        </div>
 
-          <div className="add-popup-footer">
-            <button type="button" className="add-action-btn secondary" onClick={onClose}>
-              Cancel
-            </button>
-            <button type="submit" className="add-action-btn primary">
-              Save Item
-            </button>
+          <div className="form-group">
+            <label>Category</label>
+            <select name="category" value={formData.category} onChange={handleChange} required>
+              <option value="">Select Category</option>
+              {categories.map(cat => (
+                <option key={cat.id} value={cat.name}>{cat.name}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="form-group">
+            <label>Quantity</label>
+            <input name="quantity" value={formData.quantity} onChange={handleChange} required />
+          </div>
+
+          <div className="form-group">
+            <label>Expiry Date</label>
+            <input type="date" name="expiry" value={formData.expiry} onChange={handleChange} required />
+          </div>
+
+          <div className="form-group">
+            <label>Storage</label>
+            <select name="storage" value={formData.storage} onChange={handleChange} required>
+              <option value="">Select Storage</option>
+              <option value="Fridge">Fridge</option>
+              <option value="Pantry">Pantry</option>
+            </select>
+          </div>
+
+          <div className="form-group">
+            <label>Notes</label>
+            <textarea name="notes" value={formData.notes} onChange={handleChange} placeholder="Add any details..." />
+          </div>
+
+          <div className="form-group">
+            <label>Item Image</label>
+            <div className="upload-section">
+              {imagePreview ? (
+                <div className="image-preview">
+                  <img src={imagePreview} alt="Preview" />
+                  <button type="button" onClick={() => setImagePreview(null)}>Remove</button>
+                </div>
+              ) : (
+                <label className="upload-label">
+                  Upload Image
+                  <input type="file" accept="image/*" onChange={handleImageUpload} />
+                </label>
+              )}
+            </div>
+          </div>
+
+          <div className="popup-actions">
+            <button type="submit" className="btn-primary">Save Item</button>
+            <button type="button" className="btn-secondary" onClick={onClose}>Cancel</button>
           </div>
         </form>
       </div>

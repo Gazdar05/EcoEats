@@ -1,263 +1,132 @@
-/* EditItemPopup specific styles */
-
-/* Overlay */
+/* Overlay background */
 .edit-popup-overlay {
   position: fixed;
   top: 0;
   left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.45);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 10000; /* ensure above navbar */
+  z-index: 1000;
 }
 
-/* Popup Container */
-.edit-popup-container {
+/* Popup box */
+.edit-popup {
   background: #fff;
-  border-radius: 12px;
-  padding: 12px;
-  position: relative;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-  width: 420px;
-  max-width: 90vw;
-}
-
-/* Header */
-.edit-popup-header {
-  border-bottom: 1px solid #e5e7eb;
-  padding-bottom: 6px;
-  margin-bottom: 6px;
+  border-radius: 16px;
+  width: 600px;
+  max-width: 90%;
+  padding: 30px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  animation: fadeIn 0.25s ease-in-out;
 }
 
 .edit-popup-title {
-  font-size: 16px;
-  font-weight: 400;
-  color: #111827;
-  margin: 0;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.edit-popup-close {
-  background: none;
-  border: none;
-  font-size: 16px;
-  cursor: pointer;
-  color: #6b7280;
-  padding: 4px;
-  border-radius: 4px;
-}
-
-.edit-popup-close:hover {
-  background: #f3f4f6;
-  color: #374151;
-}
-
-/* Subtitle */
-.edit-popup-subtitle {
-  color: #6b7280;
-  font-size: 13px;
-  margin: 6px 0 0 0;
-  line-height: 1.4;
-}
-
-/* Form Body */
-.edit-popup-body {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-/* Form Groups */
-.edit-form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.edit-form-label {
-  font-size: 14px;
-  font-weight: 400;
-  color: #374151;
-}
-
-/* Input Fields */
-.edit-form-input,
-.edit-form-select,
-.edit-form-textarea {
-  width: 100%;
-  padding: 8px 12px;
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  font-size: 14px;
-  color: #111827;
-  background: #fff;
-  box-sizing: border-box;
-}
-
-.edit-form-input:focus,
-.edit-form-select:focus,
-.edit-form-textarea:focus {
-  outline: none;
-  border-color: #94a3b8;
-  box-shadow: 0 0 0 3px rgba(148, 163, 184, 0.25);
-}
-
-.edit-form-textarea {
-  min-height: 60px;
-  resize: vertical;
-}
-
-/* Quantity Control */
-.edit-quantity-control {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.edit-quantity-btn {
-  width: 28px;
-  height: 28px;
-  padding: 0;
-  border: 1px solid #e5e7eb;
-  background: #f9fafb;
-  cursor: pointer;
-  border-radius: 6px;
-  font-size: 16px;
-  line-height: 28px;
-  color: #111827;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.edit-quantity-btn:hover {
-  background: #e5e7eb;
-}
-
-.edit-quantity-display {
-  min-width: 40px;
   text-align: center;
-  padding: 6px 8px;
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  background: #fff;
-  font-size: 14px;
-  color: #111827;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #6ea124;
+  margin-bottom: 20px;
 }
 
-/* Error Message */
-.edit-expiry-warning {
-  color: #ef4444;
-  font-size: 12px;
-  margin: 4px 0 0 0;
-}
-
-/* Item Image Section */
-.edit-image-section {
+/* Form layout */
+.edit-popup-form {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 20px;
 }
 
-.edit-image-container {
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px 20px;
+}
+
+.form-group {
   display: flex;
-  align-items: flex-start;
-  gap: 12px;
+  flex-direction: column;
 }
 
-.edit-image-placeholder {
-  width: 80px;
-  height: 80px;
-  background: #f3f4f6;
-  border: 2px solid #e5e7eb;
+.form-group label {
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 6px;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  border: 1.8px solid #ccc;
   border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 20px;
-  color: #9ca3af;
-  flex-shrink: 0;
-}
-
-.edit-image-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-top: 4px;
-}
-
-.edit-image-btn {
-  padding: 6px 12px;
-  border-radius: 6px;
+  padding: 8px 10px;
   font-size: 14px;
-  font-weight: 400;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  border: 1px solid #e5e7eb;
-  background: #f9fafb;
-  color: #374151;
+  outline: none;
+  transition: border-color 0.2s;
 }
 
-.edit-image-btn:hover {
-  background: #e5e7eb;
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  border-color: #6ea124;
 }
 
-.edit-remove-btn {
-  background: transparent;
-  color: #ef4444;
-  border: none;
-  padding: 0;
-  font-size: 14px;
-  cursor: pointer;
-  text-align: left;
+.notes-group {
+  grid-column: 1 / span 2;
 }
 
-.edit-remove-btn:hover {
-  text-decoration: underline;
+.form-group textarea {
+  resize: none;
+  min-height: 80px;
 }
 
-/* Footer Actions */
-.edit-popup-footer {
-  margin-top: 12px;
-  padding-top: 10px;
-  border-top: 1px solid #e5e7eb;
+/* Buttons */
+.edit-popup-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 10px;
+  gap: 12px;
+  margin-top: 10px;
 }
 
-.edit-action-btn {
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 400;
+.btn-save {
+  background-color: #6ea124;
+  color: #fff;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 8px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  font-weight: 600;
+  transition: 0.2s;
 }
 
-.edit-action-btn.secondary {
-  background: #6EA124;
-  color: #ffffff;
-  border: 1px solid #6EA124;
+.btn-save:hover {
+  background-color: #5c8f1d;
 }
 
-.edit-action-btn.secondary:hover {
-  background: #5d8f1f;
-  border-color: #5d8f1f;
+.btn-cancel {
+  background-color: #f2f2f2;
+  color: #555;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: 0.2s;
 }
 
-.edit-action-btn.primary {
-  background: #6EA124;
-  color: #ffffff;
-  border: 1px solid #6EA124;
+.btn-cancel:hover {
+  background-color: #e5e5e5;
 }
 
-.edit-action-btn.primary:hover {
-  background: #5d8f1f;
-  border-color: #5d8f1f;
+/* Animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
