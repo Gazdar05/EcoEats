@@ -343,3 +343,36 @@
 .btn-clear:hover {
   background: #e5e7eb;
 }
+
+/* === Item Image beside Name in Table === */
+.item-name-with-image {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.item-image-thumb {
+  width: 45px;
+  height: 45px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 1px solid #ddd;
+}
+
+.item-image-placeholder {
+  width: 45px;
+  height: 45px;
+  border-radius: 8px;
+  background-color: #f7f7f7;
+  color: #aaa;
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed #ccc;
+}
+
+.item-name-text {
+  font-weight: 500;
+  color: #333;
+}

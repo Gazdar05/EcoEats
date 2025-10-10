@@ -15,6 +15,7 @@ const EditItemPopup: React.FC<EditItemPopupProps> = ({ item, onClose, onSave }) 
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  // ✅ Ensures preview shows immediately after upload
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -46,52 +47,87 @@ const EditItemPopup: React.FC<EditItemPopupProps> = ({ item, onClose, onSave }) 
         <form onSubmit={handleSubmit}>
           <div className="edit-form-group">
             <label>Name</label>
-            <input type="text" name="name" value={formData.name} onChange={handleChange} required />
+            <input
+              type="text"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              required
+            />
           </div>
 
           <div className="edit-form-group">
             <label>Category</label>
-            <input type="text" name="category" value={formData.category} onChange={handleChange} required />
+            <input
+              type="text"
+              name="category"
+              value={formData.category}
+              onChange={handleChange}
+              required
+            />
           </div>
 
           <div className="edit-form-group">
             <label>Quantity</label>
-            <input type="text" name="quantity" value={formData.quantity} onChange={handleChange} required />
+            <input
+              type="text"
+              name="quantity"
+              value={formData.quantity}
+              onChange={handleChange}
+              required
+            />
           </div>
 
           <div className="edit-form-group">
             <label>Expiry Date</label>
-            <input type="date" name="expiry" value={formData.expiry} onChange={handleChange} required />
+            <input
+              type="date"
+              name="expiry"
+              value={formData.expiry}
+              onChange={handleChange}
+              required
+            />
           </div>
 
+          {/* ✅ Updated image upload section */}
           <div className="edit-form-group">
             <label>Item Image</label>
             <div className="edit-image-section">
               {imagePreview ? (
                 <div className="edit-image-container">
-                  <img src={imagePreview} alt="Preview" className="edit-image-preview" />
-                  <button
-                    type="button"
-                    className="edit-image-overlay-btn"
-                    onClick={() => document.getElementById("imageInput")?.click()}
-                  >
-                    ✏️ Edit Image
-                  </button>
+                  <img
+                    src={imagePreview}
+                    alt="Preview"
+                    className="edit-image-preview"
+                  />
+                  <div className="edit-image-actions">
+                    <label className="edit-image-btn">
+                      Change Photo
+                      <input
+                        type="file"
+                        accept="image/*"
+                        style={{ display: "none" }}
+                        onChange={handleImageUpload}
+                      />
+                    </label>
+                    <button
+                      type="button"
+                      className="edit-remove-btn"
+                      onClick={handleRemoveImage}
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <label className="edit-image-btn">
+                  Upload Image
                   <input
-                    id="imageInput"
                     type="file"
                     accept="image/*"
                     style={{ display: "none" }}
                     onChange={handleImageUpload}
                   />
-                  <button type="button" className="edit-remove-btn" onClick={handleRemoveImage}>
-                    Remove Image
-                  </button>
-                </div>
-              ) : (
-                <label className="edit-image-btn">
-                  Upload Image
-                  <input type="file" accept="image/*" style={{ display: "none" }} onChange={handleImageUpload} />
                 </label>
               )}
             </div>

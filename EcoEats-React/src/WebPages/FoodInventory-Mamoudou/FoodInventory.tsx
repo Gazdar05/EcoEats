@@ -17,7 +17,7 @@ interface InventoryItem {
   image?: string;
 }
 
-const API_BASE = "http://127.0.0.1:8000";
+const API_BASE = "http://127.0.0.1:8000"; // ✅ FastAPI base URL
 
 const FoodInventory: React.FC = () => {
   const [showViewPopup, setShowViewPopup] = useState(false);
@@ -29,7 +29,7 @@ const FoodInventory: React.FC = () => {
   const [filters, setFilters] = useState({
     category: "",
     status: "",
-    storage: "",
+    storage: ""
   });
 
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
@@ -43,12 +43,7 @@ const FoodInventory: React.FC = () => {
     { id: "frozen", name: "Frozen" },
   ]);
 
-  // ✅ Hide navbar & footer when popup is open
-  useEffect(() => {
-    const popupOpen = showAddPopup || showEditPopup || showViewPopup;
-    document.body.classList.toggle("popup-active", popupOpen);
-  }, [showAddPopup, showEditPopup, showViewPopup]);
-
+  // ✅ Calculate item status based on expiry date
   const calculateStatus = (expiryDate: string): string => {
     const today = new Date();
     const expiry = new Date(expiryDate);
@@ -60,6 +55,7 @@ const FoodInventory: React.FC = () => {
     return "Fresh";
   };
 
+  // ✅ Load inventory from FastAPI backend
   const loadInventory = async () => {
     try {
       const res = await fetch(`${API_BASE}/inventory`);
@@ -79,7 +75,8 @@ const FoodInventory: React.FC = () => {
     loadInventory();
   }, []);
 
-  const filteredInventory = inventory.filter((item) => {
+  // ✅ Search and filter logic
+  const filteredInventory = inventory.filter(item => {
     const matchesSearch =
       item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -95,12 +92,13 @@ const FoodInventory: React.FC = () => {
     return matchesSearch && matchesCategory && matchesStatus && matchesStorage;
   });
 
+  // ✅ Event handlers
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
   };
 
   const handleFilterChange = (filterType: keyof typeof filters, value: string) => {
-    setFilters((prev) => ({ ...prev, [filterType]: value }));
+    setFilters(prev => ({ ...prev, [filterType]: value }));
   };
 
   const clearFilters = () => setFilters({ category: "", status: "", storage: "" });
@@ -116,16 +114,18 @@ const FoodInventory: React.FC = () => {
     setShowEditPopup(true);
   };
 
+  // ✅ Delete item (API + local update)
   const handleDeleteItem = async (itemId: number) => {
     if (!window.confirm("Are you sure you want to delete this item?")) return;
     try {
       await fetch(`${API_BASE}/inventory/${itemId}`, { method: "DELETE" });
-      setInventory((prev) => prev.filter((i) => i.id !== itemId));
+      setInventory(prev => prev.filter(i => i.id !== itemId));
     } catch (err) {
       console.error(err);
     }
   };
 
+  // ✅ Add item (API + local update)
   const handleAddItem = async (newItem: Omit<InventoryItem, "id">) => {
     try {
       const res = await fetch(`${API_BASE}/inventory`, {
@@ -134,13 +134,14 @@ const FoodInventory: React.FC = () => {
         body: JSON.stringify(newItem),
       });
       const created = await res.json();
-      setInventory((prev) => [...prev, { ...created, status: calculateStatus(created.expiry) }]);
+      setInventory(prev => [...prev, { ...created, status: calculateStatus(created.expiry) }]);
       setShowAddPopup(false);
     } catch (err) {
       console.error(err);
     }
   };
 
+  // ✅ Update item (API + local update)
   const handleUpdateItem = async (updatedItem: InventoryItem) => {
     try {
       const res = await fetch(`${API_BASE}/inventory/${updatedItem.id}`, {
@@ -149,8 +150,8 @@ const FoodInventory: React.FC = () => {
         body: JSON.stringify(updatedItem),
       });
       const saved = await res.json();
-      setInventory((prev) =>
-        prev.map((i) => (i.id === saved.id ? { ...saved, status: calculateStatus(saved.expiry) } : i))
+      setInventory(prev =>
+        prev.map(i => (i.id === saved.id ? { ...saved, status: calculateStatus(saved.expiry) } : i))
       );
       setShowEditPopup(false);
       setSelectedItem(null);
@@ -166,6 +167,7 @@ const FoodInventory: React.FC = () => {
     setSelectedItem(null);
   };
 
+  // Close popups on ESC
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -177,6 +179,7 @@ const FoodInventory: React.FC = () => {
     return () => document.removeEventListener("keydown", handleEscape);
   }, []);
 
+  // Close filter dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       const target = e.target as Element;
@@ -220,7 +223,7 @@ const FoodInventory: React.FC = () => {
                     onChange={(e) => handleFilterChange("category", e.target.value)}
                   >
                     <option value="">All Categories</option>
-                    {categories.map((category) => (
+                    {categories.map(category => (
                       <option key={category.id} value={category.name}>
                         {category.name}
                       </option>
@@ -277,7 +280,16 @@ const FoodInventory: React.FC = () => {
         <tbody>
           {filteredInventory.map((item) => (
             <tr key={item.id}>
-              <td className="item-name">{item.name}</td>
+              {/* ✅ Only this cell changed */}
+              <td className="item-name-with-image">
+                {item.image ? (
+                  <img src={item.image} alt={item.name} className="item-image-thumb" />
+                ) : (
+                  <div className="item-image-placeholder">No Image</div>
+                )}
+                <span className="item-name-text">{item.name}</span>
+              </td>
+
               <td>{item.category}</td>
               <td>{item.quantity}</td>
               <td className={item.status === "Expired" ? "expired-date" : undefined}>
