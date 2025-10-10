@@ -1,8 +1,10 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useNavigate } from "react-router-dom";
 import Navbar from "./components/navbar";
 import Footer from "./components/footer";
 import Register from "./WebPages/Register-Emmeline/Register";
 import LoginPage from "./WebPages/Register-Emmeline/Login";
+import { useEffect } from "react";
+
 
 // Temporary page components
 function HomePage() {
@@ -44,6 +46,42 @@ function AboutPage() {
 }
 
 function App() {
+  const navigate = useNavigate();
+  useEffect(() => {
+    // ✅ Auto logout after 30 seconds (30,000 ms)
+    const timeoutDuration = 30 * 1000; // 30 seconds
+    let logoutTimer: NodeJS.Timeout;
+
+    const resetTimer = () => {
+      clearTimeout(logoutTimer);
+      logoutTimer = setTimeout(() => {
+        const token = localStorage.getItem("token");
+        if (token) {
+          // Remove token + user info
+          localStorage.removeItem("token");
+          localStorage.removeItem("userEmail");
+          localStorage.removeItem("userName");
+
+          alert("You have been logged out due to inactivity.");
+          navigate("/login");
+        }
+      }, timeoutDuration);
+    };
+
+    // ✅ Reset timer when user interacts
+    const activityEvents = ["mousemove", "keydown", "click", "scroll"];
+    activityEvents.forEach(event => window.addEventListener(event, resetTimer));
+
+    // Start initial timer
+    resetTimer();
+
+    // Cleanup on unmount
+    return () => {
+      clearTimeout(logoutTimer);
+      activityEvents.forEach(event => window.removeEventListener(event, resetTimer));
+    };
+  }, [navigate]);
+
   return (
     <>
       <Navbar />
