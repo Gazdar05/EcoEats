@@ -12,10 +12,10 @@ interface AddItemPopupProps {
     notes?: string;
     image?: string;
   }) => void;
-  categories: { id: string; name: string }[];
+  categories?: { id: string; name: string }[]; // ✅ made optional
 }
 
-const AddItemPopup: React.FC<AddItemPopupProps> = ({ onClose, onSave, categories }) => {
+const AddItemPopup: React.FC<AddItemPopupProps> = ({ onClose, onSave, categories = [] }) => {
   const [formData, setFormData] = useState({
     name: "",
     category: "",
@@ -26,7 +26,9 @@ const AddItemPopup: React.FC<AddItemPopupProps> = ({ onClose, onSave, categories
     image: "",
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
@@ -35,7 +37,8 @@ const AddItemPopup: React.FC<AddItemPopupProps> = ({ onClose, onSave, categories
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
-      reader.onload = () => setFormData({ ...formData, image: reader.result as string });
+      reader.onload = () =>
+        setFormData({ ...formData, image: reader.result as string });
       reader.readAsDataURL(file);
     }
   };
@@ -51,10 +54,21 @@ const AddItemPopup: React.FC<AddItemPopupProps> = ({ onClose, onSave, categories
         <h2>Add New Item</h2>
         <form onSubmit={handleSubmit} className="popup-form">
           <label>Name</label>
-          <input type="text" name="name" value={formData.name} onChange={handleChange} required />
+          <input
+            type="text"
+            name="name"
+            value={formData.name}
+            onChange={handleChange}
+            required
+          />
 
           <label>Category</label>
-          <select name="category" value={formData.category} onChange={handleChange} required>
+          <select
+            name="category"
+            value={formData.category}
+            onChange={handleChange}
+            required
+          >
             <option value="">Select Category</option>
             {categories.map((cat) => (
               <option key={cat.id} value={cat.name}>
@@ -64,20 +78,41 @@ const AddItemPopup: React.FC<AddItemPopupProps> = ({ onClose, onSave, categories
           </select>
 
           <label>Quantity</label>
-          <input type="text" name="quantity" value={formData.quantity} onChange={handleChange} required />
+          <input
+            type="text"
+            name="quantity"
+            value={formData.quantity}
+            onChange={handleChange}
+            required
+          />
 
           <label>Expiry Date</label>
-          <input type="date" name="expiry" value={formData.expiry} onChange={handleChange} required />
+          <input
+            type="date"
+            name="expiry"
+            value={formData.expiry}
+            onChange={handleChange}
+            required
+          />
 
           <label>Storage</label>
-          <select name="storage" value={formData.storage} onChange={handleChange} required>
+          <select
+            name="storage"
+            value={formData.storage}
+            onChange={handleChange}
+            required
+          >
             <option value="">Select Storage</option>
             <option value="Fridge">Fridge</option>
             <option value="Pantry">Pantry</option>
           </select>
 
           <label>Notes</label>
-          <textarea name="notes" value={formData.notes} onChange={handleChange} />
+          <textarea
+            name="notes"
+            value={formData.notes}
+            onChange={handleChange}
+          />
 
           <label>Image</label>
           <input type="file" accept="image/*" onChange={handleImageUpload} />

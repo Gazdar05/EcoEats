@@ -4,6 +4,8 @@ import { Plus, Filter, Search, Edit, Trash2, Eye } from "lucide-react";
 import ViewItemPopup from "./ViewItemPopup";
 import EditItemPopup from "./EditItemPopup";
 import AddItemPopup from "./AddItemPopup";
+import Navbar from "../../components/navbar";
+import Footer from "../../components/footer";
 
 interface InventoryItem {
   id: number;
@@ -17,7 +19,7 @@ interface InventoryItem {
   image?: string;
 }
 
-const API_BASE = "http://127.0.0.1:8000"; // ✅ FastAPI base URL
+const API_BASE = "http://127.0.0.1:8000"; // FastAPI backend URL
 
 const FoodInventory: React.FC = () => {
   const [showViewPopup, setShowViewPopup] = useState(false);
@@ -43,18 +45,7 @@ const FoodInventory: React.FC = () => {
     { id: "frozen", name: "Frozen" },
   ]);
 
-  const isPopupOpen = showViewPopup || showEditPopup || showAddPopup; // ✅ Check if any popup is open
-
-  // ✅ Hide navbar/footer dynamically when popup is open
-  useEffect(() => {
-    if (isPopupOpen) {
-      document.body.classList.add("hide-layout");
-    } else {
-      document.body.classList.remove("hide-layout");
-    }
-  }, [isPopupOpen]);
-
-  // ✅ Calculate item status based on expiry date
+  // Calculate status
   const calculateStatus = (expiryDate: string): string => {
     const today = new Date();
     const expiry = new Date(expiryDate);
@@ -66,7 +57,7 @@ const FoodInventory: React.FC = () => {
     return "Fresh";
   };
 
-  // ✅ Load inventory from FastAPI backend
+  // Load inventory
   const loadInventory = async () => {
     try {
       const res = await fetch(`${API_BASE}/inventory`);
@@ -86,7 +77,6 @@ const FoodInventory: React.FC = () => {
     loadInventory();
   }, []);
 
-  // ✅ Search and filter logic
   const filteredInventory = inventory.filter((item) => {
     const matchesSearch =
       item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -103,7 +93,6 @@ const FoodInventory: React.FC = () => {
     return matchesSearch && matchesCategory && matchesStatus && matchesStorage;
   });
 
-  // ✅ Event handlers
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
   };
@@ -125,7 +114,6 @@ const FoodInventory: React.FC = () => {
     setShowEditPopup(true);
   };
 
-  // ✅ Delete item (API + local update)
   const handleDeleteItem = async (itemId: number) => {
     if (!window.confirm("Are you sure you want to delete this item?")) return;
     try {
@@ -136,8 +124,15 @@ const FoodInventory: React.FC = () => {
     }
   };
 
-  // ✅ Add item (API + local update)
-  const handleAddItem = async (newItem: Omit<InventoryItem, "id" | "status">) => {
+  const handleAddItem = async (newItem: {
+    name: string;
+    category: string;
+    quantity: string;
+    expiry: string;
+    storage: string;
+    notes?: string;
+    image?: string;
+  }) => {
     try {
       const res = await fetch(`${API_BASE}/inventory`, {
         method: "POST",
@@ -155,7 +150,6 @@ const FoodInventory: React.FC = () => {
     }
   };
 
-  // ✅ Update item (API + local update)
   const handleUpdateItem = async (updatedItem: InventoryItem) => {
     try {
       const res = await fetch(`${API_BASE}/inventory/${updatedItem.id}`, {
@@ -166,7 +160,9 @@ const FoodInventory: React.FC = () => {
       const saved = await res.json();
       setInventory((prev) =>
         prev.map((i) =>
-          i.id === saved.id ? { ...saved, status: calculateStatus(saved.expiry) } : i
+          i.id === saved.id
+            ? { ...saved, status: calculateStatus(saved.expiry) }
+            : i
         )
       );
       setShowEditPopup(false);
@@ -183,159 +179,171 @@ const FoodInventory: React.FC = () => {
     setSelectedItem(null);
   };
 
-  // Close popups on ESC
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        closePopups();
-        setShowFilterDropdown(false);
-      }
-    };
-    document.addEventListener("keydown", handleEscape);
-    return () => document.removeEventListener("keydown", handleEscape);
-  }, []);
-
-  // Close filter dropdown on outside click
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      const target = e.target as Element;
-      if (showFilterDropdown && !target.closest(".filter-container")) {
-        setShowFilterDropdown(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [showFilterDropdown]);
+  // ✅ Hide navbar/footer if any popup is open
+  const isPopupOpen = showViewPopup || showEditPopup || showAddPopup;
 
   return (
-    <div className="inventory-container">
-      <h1 className="inventory-title">Inventory</h1>
+    <div className="food-inventory-page">
+      {/* ✅ Navbar only visible if no popup is open */}
+      {!isPopupOpen && <Navbar />}
 
-      {/* Controls */}
-      <div className="inventory-controls">
-        <div className="search-bar">
-          <Search size={18} />
-          <input
-            type="text"
-            placeholder="Search inventory..."
-            value={searchTerm}
-            onChange={handleSearchChange}
-          />
-        </div>
-        <div className="control-buttons">
-          <button className="btn-add" onClick={() => setShowAddPopup(true)}>
-            <Plus size={16} /> Add Item
-          </button>
-          <div className="filter-container">
-            <button className="btn-filter" onClick={toggleFilterDropdown}>
-              <Filter size={16} /> Filter by
+      <div className="inventory-container">
+        <h1 className="inventory-title">Inventory</h1>
+
+        {/* Controls */}
+        <div className="inventory-controls">
+          <div className="search-bar">
+            <Search size={18} />
+            <input
+              type="text"
+              placeholder="Search inventory..."
+              value={searchTerm}
+              onChange={handleSearchChange}
+            />
+          </div>
+          <div className="control-buttons">
+            <button className="btn-add" onClick={() => setShowAddPopup(true)}>
+              <Plus size={16} /> Add Item
             </button>
-            {showFilterDropdown && (
-              <div className="filter-dropdown">
-                <div className="filter-section">
-                  <label>Category</label>
-                  <select
-                    value={filters.category}
-                    onChange={(e) => handleFilterChange("category", e.target.value)}
-                  >
-                    <option value="">All Categories</option>
-                    {categories.map((category) => (
-                      <option key={category.id} value={category.name}>
-                        {category.name}
-                      </option>
-                    ))}
-                  </select>
+            <div className="filter-container">
+              <button className="btn-filter" onClick={toggleFilterDropdown}>
+                <Filter size={16} /> Filter by
+              </button>
+              {showFilterDropdown && (
+                <div className="filter-dropdown">
+                  <div className="filter-section">
+                    <label>Category</label>
+                    <select
+                      value={filters.category}
+                      onChange={(e) =>
+                        handleFilterChange("category", e.target.value)
+                      }
+                    >
+                      <option value="">All Categories</option>
+                      {categories.map((category) => (
+                        <option key={category.id} value={category.name}>
+                          {category.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="filter-section">
+                    <label>Status</label>
+                    <select
+                      value={filters.status}
+                      onChange={(e) =>
+                        handleFilterChange("status", e.target.value)
+                      }
+                    >
+                      <option value="">All Status</option>
+                      <option value="Fresh">Fresh</option>
+                      <option value="Expiring Soon">Expiring Soon</option>
+                      <option value="Expired">Expired</option>
+                    </select>
+                  </div>
+                  <div className="filter-section">
+                    <label>Storage</label>
+                    <select
+                      value={filters.storage}
+                      onChange={(e) =>
+                        handleFilterChange("storage", e.target.value)
+                      }
+                    >
+                      <option value="">All Storage</option>
+                      <option value="Fridge">Fridge</option>
+                      <option value="Pantry">Pantry</option>
+                    </select>
+                  </div>
+                  <div className="filter-actions">
+                    <button className="btn-clear" onClick={clearFilters}>
+                      Clear Filters
+                    </button>
+                  </div>
                 </div>
-                <div className="filter-section">
-                  <label>Status</label>
-                  <select
-                    value={filters.status}
-                    onChange={(e) => handleFilterChange("status", e.target.value)}
-                  >
-                    <option value="">All Status</option>
-                    <option value="Fresh">Fresh</option>
-                    <option value="Expiring Soon">Expiring Soon</option>
-                    <option value="Expired">Expired</option>
-                  </select>
-                </div>
-                <div className="filter-section">
-                  <label>Storage</label>
-                  <select
-                    value={filters.storage}
-                    onChange={(e) => handleFilterChange("storage", e.target.value)}
-                  >
-                    <option value="">All Storage</option>
-                    <option value="Fridge">Fridge</option>
-                    <option value="Pantry">Pantry</option>
-                  </select>
-                </div>
-                <div className="filter-actions">
-                  <button className="btn-clear" onClick={clearFilters}>
-                    Clear Filters
-                  </button>
-                </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
+
+        {/* Table */}
+        <table className="inventory-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Category</th>
+              <th>Quantity</th>
+              <th>Expiry</th>
+              <th>Storage</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredInventory.map((item) => (
+              <tr key={item.id}>
+                <td className="item-name-with-image">
+                  {item.image ? (
+                    <img
+                      src={item.image}
+                      alt={item.name}
+                      className="item-image-thumb"
+                    />
+                  ) : (
+                    <div className="item-image-placeholder">No Image</div>
+                  )}
+                  <span className="item-name-text">{item.name}</span>
+                </td>
+                <td>{item.category}</td>
+                <td>{item.quantity}</td>
+                <td className={item.status === "Expired" ? "expired-date" : ""}>
+                  {item.expiry}
+                </td>
+                <td>{item.storage}</td>
+                <td>
+                  <span
+                    className={`status ${
+                      item.status === "Expired"
+                        ? "expired"
+                        : item.status === "Expiring Soon"
+                        ? "expiring"
+                        : "fresh"
+                    }`}
+                  >
+                    {item.status}
+                  </span>
+                </td>
+                <td className="actions">
+                  <Edit
+                    size={16}
+                    className="action-icon"
+                    onClick={() => handleEditItem(item)}
+                  />
+                  <Trash2
+                    size={16}
+                    className="action-icon"
+                    onClick={() => handleDeleteItem(item.id)}
+                  />
+                  <Eye
+                    size={16}
+                    className="action-icon"
+                    onClick={() => handleViewItem(item)}
+                  />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
 
-      {/* Table */}
-      <table className="inventory-table">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Category</th>
-            <th>Quantity</th>
-            <th>Expiry</th>
-            <th>Storage</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filteredInventory.map((item) => (
-            <tr key={item.id}>
-              <td className="item-name-with-image">
-                {item.image ? (
-                  <img src={item.image} alt={item.name} className="item-image-thumb" />
-                ) : (
-                  <div className="item-image-placeholder">No Image</div>
-                )}
-                <span className="item-name-text">{item.name}</span>
-              </td>
-              <td>{item.category}</td>
-              <td>{item.quantity}</td>
-              <td className={item.status === "Expired" ? "expired-date" : undefined}>
-                {item.expiry}
-              </td>
-              <td>{item.storage}</td>
-              <td>
-                <span
-                  className={`status ${
-                    item.status === "Expired"
-                      ? "expired"
-                      : item.status === "Expiring Soon"
-                      ? "expiring"
-                      : "fresh"
-                  }`}
-                >
-                  {item.status}
-                </span>
-              </td>
-              <td className="actions">
-                <Edit size={16} className="action-icon" onClick={() => handleEditItem(item)} />
-                <Trash2 size={16} className="action-icon" onClick={() => handleDeleteItem(item.id)} />
-                <Eye size={16} className="action-icon" onClick={() => handleViewItem(item)} />
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      {/* ✅ Footer only visible if no popup is open */}
+      {!isPopupOpen && <Footer />}
 
       {/* Popups */}
       {showViewPopup && selectedItem && (
-        <ViewItemPopup item={selectedItem} onClose={() => setShowViewPopup(false)} />
+        <ViewItemPopup
+          item={selectedItem}
+          onClose={() => setShowViewPopup(false)}
+        />
       )}
       {showEditPopup && selectedItem && (
         <EditItemPopup

@@ -1,12 +1,10 @@
 /* Food Inventory page styles */
 
-/* (reverted) No global height overrides */
-
 /* Layout */
 .inventory-container {
   padding: 24px;
   position: fixed;
-  top: 58px; /* account for fixed navbar (see body padding-top in index.css) */
+  top: 58px; /* account for fixed navbar */
   left: 0;
   right: 0;
   bottom: 80px; /* leave room for fixed footer */
@@ -189,7 +187,7 @@
   gap: 12px;
 }
 
-/* Placeholder circular icon like avatar checkbox */
+/* Placeholder circular icon */
 .item-name::before {
   content: "";
   width: 28px;
@@ -230,7 +228,7 @@
   background: #dc2626;
 }
 
-/* Actions */
+/* Actions (base styles kept) */
 .actions {
   display: flex;
   align-items: center;
@@ -375,4 +373,60 @@
 .item-name-text {
   font-weight: 500;
   color: #333;
+}
+
+/* ===== Precise Actions column alignment fixes ONLY ===== */
+
+/* Give the actions column a stable width and consistent padding */
+.inventory-table thead th:last-child {
+  text-align: left;
+  width: 140px; /* consistent width */
+  padding-left: 16px;
+}
+
+.inventory-table tbody td.actions {
+  display: flex;              /* ensure the cell is a flex container */
+  align-items: center;        /* vertical center */
+  justify-content: flex-start;/* align horizontally like other text cells */
+  padding: 14px 16px;         /* match other td padding exactly */
+  width: 140px;
+  box-sizing: border-box;
+  vertical-align: middle;
+}
+
+/* Keep the action icons tightly centered inside their boxes and remove SVG baseline whitespace */
+.actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  height: 100%;
+}
+
+.action-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  line-height: 0; /* remove any line-height influence */
+  color: #6b7280;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+/* This is the key: force the actual SVG to be a block so no baseline / descender gaps remain */
+.action-icon svg {
+  display: block;
+  width: 18px;
+  height: 18px;
+}
+
+.action-icon:hover {
+  color: #111827;
+}
+
+/* ✅ Hide global navbar & footer when popup is open */
+.popup-open nav,
+.popup-open footer {
+  display: none !important;
 }
