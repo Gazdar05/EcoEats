@@ -97,8 +97,8 @@ body.no-chrome footer {
   display: none !important;
 }
 
-/* Hide navbar and footer only when a popup is active */
-body.popup-active nav,
-body.popup-active footer {
+/* ✅ Hide navbar and footer when popups are open */
+body.hide-layout nav,
+body.hide-layout footer {
   display: none !important;
 }

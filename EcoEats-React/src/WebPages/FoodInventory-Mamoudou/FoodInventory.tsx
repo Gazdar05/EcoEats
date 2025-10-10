@@ -29,7 +29,7 @@ const FoodInventory: React.FC = () => {
   const [filters, setFilters] = useState({
     category: "",
     status: "",
-    storage: ""
+    storage: "",
   });
 
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
@@ -42,6 +42,17 @@ const FoodInventory: React.FC = () => {
     { id: "dry", name: "Dry Goods" },
     { id: "frozen", name: "Frozen" },
   ]);
+
+  const isPopupOpen = showViewPopup || showEditPopup || showAddPopup; // ✅ Check if any popup is open
+
+  // ✅ Hide navbar/footer dynamically when popup is open
+  useEffect(() => {
+    if (isPopupOpen) {
+      document.body.classList.add("hide-layout");
+    } else {
+      document.body.classList.remove("hide-layout");
+    }
+  }, [isPopupOpen]);
 
   // ✅ Calculate item status based on expiry date
   const calculateStatus = (expiryDate: string): string => {
@@ -76,7 +87,7 @@ const FoodInventory: React.FC = () => {
   }, []);
 
   // ✅ Search and filter logic
-  const filteredInventory = inventory.filter(item => {
+  const filteredInventory = inventory.filter((item) => {
     const matchesSearch =
       item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -98,7 +109,7 @@ const FoodInventory: React.FC = () => {
   };
 
   const handleFilterChange = (filterType: keyof typeof filters, value: string) => {
-    setFilters(prev => ({ ...prev, [filterType]: value }));
+    setFilters((prev) => ({ ...prev, [filterType]: value }));
   };
 
   const clearFilters = () => setFilters({ category: "", status: "", storage: "" });
@@ -119,14 +130,14 @@ const FoodInventory: React.FC = () => {
     if (!window.confirm("Are you sure you want to delete this item?")) return;
     try {
       await fetch(`${API_BASE}/inventory/${itemId}`, { method: "DELETE" });
-      setInventory(prev => prev.filter(i => i.id !== itemId));
+      setInventory((prev) => prev.filter((i) => i.id !== itemId));
     } catch (err) {
       console.error(err);
     }
   };
 
   // ✅ Add item (API + local update)
-  const handleAddItem = async (newItem: Omit<InventoryItem, "id">) => {
+  const handleAddItem = async (newItem: Omit<InventoryItem, "id" | "status">) => {
     try {
       const res = await fetch(`${API_BASE}/inventory`, {
         method: "POST",
@@ -134,7 +145,10 @@ const FoodInventory: React.FC = () => {
         body: JSON.stringify(newItem),
       });
       const created = await res.json();
-      setInventory(prev => [...prev, { ...created, status: calculateStatus(created.expiry) }]);
+      setInventory((prev) => [
+        ...prev,
+        { ...created, status: calculateStatus(created.expiry) },
+      ]);
       setShowAddPopup(false);
     } catch (err) {
       console.error(err);
@@ -150,8 +164,10 @@ const FoodInventory: React.FC = () => {
         body: JSON.stringify(updatedItem),
       });
       const saved = await res.json();
-      setInventory(prev =>
-        prev.map(i => (i.id === saved.id ? { ...saved, status: calculateStatus(saved.expiry) } : i))
+      setInventory((prev) =>
+        prev.map((i) =>
+          i.id === saved.id ? { ...saved, status: calculateStatus(saved.expiry) } : i
+        )
       );
       setShowEditPopup(false);
       setSelectedItem(null);
@@ -223,7 +239,7 @@ const FoodInventory: React.FC = () => {
                     onChange={(e) => handleFilterChange("category", e.target.value)}
                   >
                     <option value="">All Categories</option>
-                    {categories.map(category => (
+                    {categories.map((category) => (
                       <option key={category.id} value={category.name}>
                         {category.name}
                       </option>
@@ -280,7 +296,6 @@ const FoodInventory: React.FC = () => {
         <tbody>
           {filteredInventory.map((item) => (
             <tr key={item.id}>
-              {/* ✅ Only this cell changed */}
               <td className="item-name-with-image">
                 {item.image ? (
                   <img src={item.image} alt={item.name} className="item-image-thumb" />
@@ -289,7 +304,6 @@ const FoodInventory: React.FC = () => {
                 )}
                 <span className="item-name-text">{item.name}</span>
               </td>
-
               <td>{item.category}</td>
               <td>{item.quantity}</td>
               <td className={item.status === "Expired" ? "expired-date" : undefined}>
