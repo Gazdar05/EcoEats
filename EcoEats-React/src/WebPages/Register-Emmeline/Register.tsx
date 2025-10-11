@@ -238,9 +238,9 @@ const Register: React.FC = () => {
         </button>
 
         <div className="login-link">
-          Already have an account? <a href="/login">Sign in</a>
+          Already have an account? <a href="/login">  Sign in</a>
         </div>
-        
+
         {/* 2FA Modal */}
         {isVerificationOpen && (
           <div className="modal active">

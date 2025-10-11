@@ -104,8 +104,7 @@ button.btn-primary:hover {
 }
 
 .login-link {
-  display: flex;
-  justify-content: center;
+  
   text-align: center;
   margin-top: 1.5rem; /* spacing after button */
   font-size: 14px;
