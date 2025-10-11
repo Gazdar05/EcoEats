@@ -175,7 +175,7 @@ async def verify_2fa(request: Verify2FARequest):
     # ✅ Activate user and mark code used
     await db.household_users.update_one(
         {"_id": user["_id"]},
-        {"$set": {"acct_status": "active"}}
+        {"$set": {"acct_status": "pending"}}
     )
     await db.verification_codes.update_one(
         {"_id": record["_id"]},
@@ -213,10 +213,10 @@ async def login_user(request: LoginRequest):
             detail="Your account is not activated. Please verify your email or contact support.",
         )
 
-    # 🕒 Step 4: Generate JWT access token (valid for 30 seconds)
+    # 🕒 Step 4: Generate JWT access token (valid for 15 minutes)
     payload = {
         "sub": str(user["_id"]),
-        "exp": datetime.now(timezone.utc) + timedelta(seconds=30),
+        "exp": datetime.now(timezone.utc) + timedelta(minutes=15),
     }
     token = jwt.encode(payload, SECRET_KEY, algorithm="HS256")
 

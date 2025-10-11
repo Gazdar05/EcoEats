@@ -48,8 +48,8 @@ function AboutPage() {
 function App() {
   const navigate = useNavigate();
   useEffect(() => {
-    // ✅ Auto logout after 30 seconds (30,000 ms)
-    const timeoutDuration = 30 * 1000; // 30 seconds
+    // ✅ Auto logout after 15 minutes (15 * 60 * 1000 ms)
+    const timeoutDuration = 15 * 60 * 1000; // 15 minutes
     let logoutTimer: NodeJS.Timeout;
 
     const resetTimer = () => {

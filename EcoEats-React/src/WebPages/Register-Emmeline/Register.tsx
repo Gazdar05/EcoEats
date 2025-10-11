@@ -255,44 +255,61 @@ const Register: React.FC = () => {
                 className={errors.verificationCode ? "error" : ""}
               />
               {errors.verificationCode && <div className="error-message">{errors.verificationCode}</div>}
-              <button className="btn-primary" onClick={handleVerification} disabled={isCreating}>
+              <button onClick={handleVerification} disabled={isCreating}>
                 {isCreating ? "Verifying..." : "Verify Code"}
               </button>
-              <button className="btn-primary" onClick={resendCode}>Resend Code</button>
+              <button onClick={resendCode}>Resend Code</button>
             </div>
           </div>
         )}
 
         {/* ✅ Set New Password Modal */}
         {isSetPasswordOpen && (
-          <div className="modal active">
-            <div className="modal-content">
-              <h2>Set New Password</h2>
-              <p>Email: <strong>{registrationEmail}</strong></p>
+        <div className="modal active">
+          <div className="modal-content">
+            <h2>Set New Password</h2>
+            <p>Email: <strong>{registrationEmail}</strong></p>
+
+            {/* New Password Field */}
+            <div className="modal-password-row">
               <input
                 type="password"
+                id="newPassword"
                 placeholder="Enter new password"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 className={errors.newPassword ? "error" : ""}
               />
-              {errors.newPassword && <div className="error-message">{errors.newPassword}</div>}
+                <button type="button" className="modal-show-btn" onClick={() => togglePassword("newPassword")}>Show</button>
+              </div>
+            {errors.newPassword  && <div className="error-message">{errors.newPassword}</div>}
 
+            <div className="modal-password-row">
               <input
                 type="password"
+                id="confirmNewPassword"
                 placeholder="Confirm new password"
                 value={confirmNewPassword}
                 onChange={(e) => setConfirmNewPassword(e.target.value)}
                 className={errors.confirmNewPassword ? "error" : ""}
               />
-              {errors.confirmNewPassword && <div className="error-message">{errors.confirmNewPassword}</div>}
-
-              <button className="btn-primary" onClick={handleSetPassword} disabled={isCreating}>
-                {isCreating ? "Saving..." : "Save Password"}
+              <button
+                type="button"
+                className="modal-show-btn" 
+                onClick={() => togglePassword("confirmNewPassword")}
+              >
+                Show
               </button>
             </div>
+            {errors.confirmNewPassword && <div className="error-message">{errors.confirmNewPassword}</div>}
+
+            <button onClick={handleSetPassword} disabled={isCreating}>
+              {isCreating ? "Saving..." : "Save Password"}
+            </button>
           </div>
-        )}
+        </div>
+      )}
+
       </div>
     </div>
   );

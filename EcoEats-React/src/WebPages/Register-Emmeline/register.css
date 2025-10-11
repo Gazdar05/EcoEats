@@ -150,15 +150,69 @@ button.btn-primary:hover {
   text-align: center;
 }
 
-.modal-content input {
+.modal-content > input {
   width: 100%;
   margin: 1rem 0;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 1rem;
+  background-color: #ffffff;
+  color: #000;
 }
 
-.modal-content button {
+.modal-content > button {
   width: 100%;
   margin-top: 0.5rem;
+  padding: 0.75rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  color: white;
+  cursor: pointer;
 }
+
+
+
+
+/* --- Set New Password Modal Fields --- */
+.modal-password-row {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.8rem;
+  margin-top: 1rem;
+}
+
+.modal-password-row input {
+  flex: 1;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 1rem;
+  color: #000;
+  background-color: #fff;
+  margin: 0 !important;
+  width: auto;
+}
+
+.modal-password-row input:focus {
+  border-color: #6EA124;
+  outline: none;
+}
+.modal-show-btn {
+  flex-shrink: 0;
+  padding: 0.65rem 0.8rem;
+  font-size: 0.9rem;
+  background-color: #6EA124;
+  color: white;
+  border-radius: 8px; 
+  border: none;
+  cursor: pointer;
+}
+
 
 /* Responsive adjustments */
 @media (max-width: 480px) {
@@ -174,3 +228,5 @@ button.btn-primary:hover {
     font-size: 0.95rem;
   }
 }
+
+
