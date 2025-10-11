@@ -233,12 +233,14 @@ const Register: React.FC = () => {
           </label>
         </div>
 
-        <button onClick={handleRegister} disabled={isCreating}>
+        <button className="btn-primary" onClick={handleRegister} disabled={isCreating}>
           {isCreating ? "Creating account..." : "Create Account"}
         </button>
 
-        <p>Already have an account? <a href="/login">Log in</a></p>
-
+        <div className="login-link">
+          Already have an account? <a href="/login">Sign in</a>
+        </div>
+        
         {/* 2FA Modal */}
         {isVerificationOpen && (
           <div className="modal active">
@@ -253,10 +255,10 @@ const Register: React.FC = () => {
                 className={errors.verificationCode ? "error" : ""}
               />
               {errors.verificationCode && <div className="error-message">{errors.verificationCode}</div>}
-              <button onClick={handleVerification} disabled={isCreating}>
+              <button className="btn-primary" onClick={handleVerification} disabled={isCreating}>
                 {isCreating ? "Verifying..." : "Verify Code"}
               </button>
-              <button onClick={resendCode}>Resend Code</button>
+              <button className="btn-primary" onClick={resendCode}>Resend Code</button>
             </div>
           </div>
         )}
@@ -285,7 +287,7 @@ const Register: React.FC = () => {
               />
               {errors.confirmNewPassword && <div className="error-message">{errors.confirmNewPassword}</div>}
 
-              <button onClick={handleSetPassword} disabled={isCreating}>
+              <button className="btn-primary" onClick={handleSetPassword} disabled={isCreating}>
                 {isCreating ? "Saving..." : "Save Password"}
               </button>
             </div>

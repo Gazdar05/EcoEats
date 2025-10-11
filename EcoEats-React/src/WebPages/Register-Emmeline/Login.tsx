@@ -22,7 +22,7 @@ const LoginPage: React.FC = () => {
   const [errors, setErrors] = useState<LoginErrors>({});
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [rememberMe, setRememberMe] = useState<boolean>(false);
+  
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>): void => {
     const { name, value } = e.target;
@@ -135,6 +135,7 @@ const LoginPage: React.FC = () => {
               {/* Password Field */}
               <div className="form-group">
                 <label htmlFor="password">Password</label>
+                <div className="input-wrapper">
                 <input
                   type={showPassword ? 'text' : 'password'}
                   id="password"
@@ -147,24 +148,16 @@ const LoginPage: React.FC = () => {
                 />
                 <button
                   type="button"
-                  className="password-toggle"
+                  className="password-toggle-outside"
                   onClick={() => setShowPassword(!showPassword)}
                 >
-                  {showPassword ? 'Hide' : 'Show'}
+                  Show
                 </button>
+              </div>
                 {errors.password && <div className="error-message"><span>{errors.password}</span></div>}
               </div>
 
-              <div className="form-options">
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={rememberMe}
-                    onChange={(e: ChangeEvent<HTMLInputElement>) => setRememberMe(e.target.checked)}
-                  />
-                  Remember me
-                </label>
-              </div>
+            
 
               <button type="submit" className="btn-primary" disabled={isSubmitting}>
                 {isSubmitting ? 'Signing in...' : 'Sign In'}

@@ -31,6 +31,7 @@ h1 {
   flex-direction: column;
   margin-bottom: 10px; /* increase spacing between fields */
   margin-top: 10px;
+  
 }
 
 .form-group label {
@@ -94,7 +95,7 @@ button.btn-primary {
   background-color: #6EA124;
   color: white;
   cursor: pointer;
-  margin-top: 1.5rem; /* more space above button */
+  margin-top: 0.8rem; /* more space above button */
   transition: background-color 0.2s;
 }
 
@@ -103,14 +104,18 @@ button.btn-primary:hover {
 }
 
 .login-link {
+  display: flex;
+  justify-content: center;
   text-align: center;
   margin-top: 1.5rem; /* spacing after button */
+  font-size: 14px;
 }
 
 .login-link a {
+  position: center;
   color: #6EA124;
   text-decoration: none;
-  font-weight: 500;
+  font-size: 14px;
 }
 
 .login-link a:hover {
@@ -123,6 +128,7 @@ button.btn-primary:hover {
 }
 
 /* Modal */
+
 .modal.active {
   position: fixed;
   top: 0; left: 0;
@@ -133,6 +139,7 @@ button.btn-primary:hover {
   align-items: center;
   padding: 1rem;
 }
+
 
 .modal-content {
   background: #ffffff;

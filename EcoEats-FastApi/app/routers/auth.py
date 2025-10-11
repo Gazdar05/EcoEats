@@ -109,7 +109,7 @@ async def register_user(request: RegisterRequest):
         send_email(
             request.email,
             "EcoEats Account Verification",
-            f"Your verification code is {code}. It expires in 5 minutes.\n\nUse this code to activate your account."
+            f"Welcome to EcoEats!\n\nYour verification code is {code}. It expires in 5 minutes.\n\nUse this code to activate your account."
         )
 
         return {"message": "2FA code sent. Please verify your email.", "user_id": user_id}
