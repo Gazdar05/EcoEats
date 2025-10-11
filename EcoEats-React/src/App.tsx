@@ -53,15 +53,16 @@ function App() {
     let logoutTimer: NodeJS.Timeout;
 
     const resetTimer = () => {
+       // 🧩 Don't set timer if user is already on login/register
+      const excludedPaths = ["/login", "/register"];
+      if (excludedPaths.includes(window.location.pathname)) return;
+      
       clearTimeout(logoutTimer);
       logoutTimer = setTimeout(() => {
         const token = localStorage.getItem("token");
         if (token) {
           // Remove token + user info
-          localStorage.removeItem("token");
-          localStorage.removeItem("userEmail");
-          localStorage.removeItem("userName");
-
+          localStorage.clear(); // remove token and all user info
           alert("You have been logged out due to inactivity.");
           navigate("/login");
         }

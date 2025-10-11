@@ -1,4 +1,4 @@
-import React, { useState, useEffect, type ChangeEvent, type FormEvent, type KeyboardEvent } from 'react';
+import React, { useState, type ChangeEvent, type FormEvent, type KeyboardEvent } from 'react';
 import './login.css';
 import { API_BASE_URL } from '../../config'; // ✅ Use your existing config setup
 
@@ -18,14 +18,11 @@ const LoginPage: React.FC = () => {
     email: '',
     password: ''
   });
-  
+
   const [errors, setErrors] = useState<LoginErrors>({});
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [rememberMe, setRememberMe] = useState<boolean>(false);
-
-  // 🕒 Store logout timer globally in this component
-  let logoutTimer: NodeJS.Timeout;
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>): void => {
     const { name, value } = e.target;
@@ -39,30 +36,6 @@ const LoginPage: React.FC = () => {
     const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return re.test(email);
   };
-
-  const startInactivityTimer = (): void => {
-    // Clear any existing timer before starting a new one
-    if (logoutTimer) clearTimeout(logoutTimer);
-
-    // ⏳ 15 minutes (900,000 ms)
-    logoutTimer = setTimeout(() => {
-      localStorage.removeItem('token');
-      alert('You have been logged out due to 30 seconds of inactivity.');
-      window.location.href = '/login';
-    }, 30 * 1000);
-  };
-
-  const resetInactivityTimer = (): void => {
-    clearTimeout(logoutTimer);
-    startInactivityTimer();
-  };
-
-  useEffect(() => {
-    // 🧠 When the page loads or user logs in, track activity
-    const events = ['mousemove', 'keypress', 'click'];
-    events.forEach(evt => window.addEventListener(evt, resetInactivityTimer));
-    return () => events.forEach(evt => window.removeEventListener(evt, resetInactivityTimer));
-  }, []);
 
   const handleLogin = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
@@ -84,9 +57,7 @@ const LoginPage: React.FC = () => {
     try {
       const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
       });
 
@@ -100,13 +71,12 @@ const LoginPage: React.FC = () => {
 
       // ✅ Store token in localStorage
       localStorage.setItem('token', data.access_token);
+      localStorage.setItem('userEmail', data.user.email);
+      localStorage.setItem('userName', data.user.full_name);
 
       alert('Login successful!');
-      
-      // ✅ Start inactivity timer after login
-      startInactivityTimer();
 
-      // Redirect user after successful login
+      // ✅ Redirect user after login
       window.location.href = '/';
 
     } catch (error) {

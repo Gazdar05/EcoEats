@@ -213,10 +213,10 @@ async def login_user(request: LoginRequest):
             detail="Your account is not activated. Please verify your email or contact support.",
         )
 
-    # 🕒 Step 4: Generate JWT access token (valid for 15 minutes)
+    # 🕒 Step 4: Generate JWT access token (valid for 30 seconds)
     payload = {
         "sub": str(user["_id"]),
-        "exp": datetime.now(timezone.utc) + timedelta(minutes=15),
+        "exp": datetime.now(timezone.utc) + timedelta(seconds=30),
     }
     token = jwt.encode(payload, SECRET_KEY, algorithm="HS256")
 
