@@ -21,7 +21,7 @@ def make_item(
     item = {
         "name": name,
         "expiry_date": utc_now() + timedelta(days=days_to_expiry),
-        "category": category,
+        "category": category,  # must match FilterPanel
         "storage": storage,
         "quantity": quantity,
         "notes": notes,
@@ -68,32 +68,46 @@ sample_items = [
     make_item("Oranges", 7, "Fruits", "Pantry", 10, notes="Sweet seedless oranges"),
     make_item("Strawberries", -1, "Fruits", "Fridge", 3, notes="Expired strawberries"),
 
-    # 🍝 Pantry / Grains
+    # 🍝 Grains
     make_item("Rice Bag", 180, "Grains", "Pantry", 1, notes="10kg white rice"),
     make_item("Pasta Pack", 60, "Grains", "Pantry", 5, notes="Fusilli pasta"),
-    make_item("Canned Beans", 365, "Canned Goods", "Pantry", 8, notes="Long shelf life"),
 
-    # 🥫 Donations
-    make_item(" Noodles", 20, "Canned Goods", "Pantry", 12, "donation",
+    # 🥫 Canned
+    make_item("Canned Beans", 365, "Canned", "Pantry", 8, notes="Long shelf life"),
+    make_item("Noodles", 20, "Canned", "Pantry", 12, "donation",
               donation_details={
                   "location": "Drop Point B",
                   "availability": "Weekend 10-4",
                   "contact": "013-8765432",
               },
-              notes="Ready for donation"),
-    make_item("Peanut Butter", 30, "Canned Goods", "Pantry", 3, "donation",
+              notes="Instant noodles donation"),
+    make_item("Peanut Butter", 30, "Canned", "Pantry", 3, "donation",
               donation_details={
                   "location": "Drop Point C",
                   "availability": "Everyday 8-8",
                   "contact": "011-9988776",
               },
               notes="Crunchy peanut butter donation"),
+
+    # 🧂 Pantry Staples
+    make_item("Cooking Oil", 90, "Pantry Staples", "Pantry", 2, notes="Sunflower oil"),
+    make_item("Salt Pack", 365, "Pantry Staples", "Pantry", 1, notes="Iodized salt"),
+
+    # 🥤 Beverages
+    make_item("Orange Juice", 5, "Beverages", "Fridge", 3, notes="Fresh juice bottle"),
+    make_item("Tea Bags", 200, "Beverages", "Pantry", 2, notes="Green tea pack"),
+
+    # 🐟 Seafood
+    make_item("Salmon Fillet", 3, "Seafood", "Freezer", 4, notes="Norwegian salmon"),
+    make_item("Shrimp Pack", 7, "Seafood", "Freezer", 6, notes="Frozen shrimps"),
 ]
+
 
 async def seed():
     await db.food_items.delete_many({})  # clear existing
     result = await db.food_items.insert_many(sample_items)
     print(f"✅ Inserted {len(result.inserted_ids)} sample items")
+
 
 if __name__ == "__main__":
     asyncio.run(seed())

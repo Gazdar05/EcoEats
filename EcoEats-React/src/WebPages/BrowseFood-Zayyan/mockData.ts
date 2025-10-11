@@ -14,7 +14,9 @@ export type FoodItem = {
     availability: string;
     contact: string;
   };
+  donated?: boolean; // 👈 add this
 };
+
 
 export const sampleItems: FoodItem[] = [
   { id: "1", name: "Bagels", expiry: "2025-07-04", category: "Bakery", storage: "Pantry", quantity: 6, source: "inventory" },

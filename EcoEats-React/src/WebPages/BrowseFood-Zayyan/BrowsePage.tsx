@@ -1,4 +1,3 @@
-// src/WebPage/BrowseFood/BrowsePage.tsx
 import React, { useMemo, useState, useEffect } from "react";
 import { sampleItems } from "./mockData";
 import type { FoodItem } from "./mockData";
@@ -12,7 +11,6 @@ const ITEMS_PER_PAGE = 12; // ✅ number of items per page
 
 const BrowsePage: React.FC = () => {
   const [items, setItems] = useState<FoodItem[]>(
-    // keep a fallback to sampleItems for dev if fetch fails
     sampleItems.map((i) => ({ ...i }))
   );
   const [source, setSource] = useState<"inventory" | "donation">("inventory");
@@ -23,6 +21,9 @@ const BrowsePage: React.FC = () => {
 
   // ✅ pagination states
   const [currentPage, setCurrentPage] = useState(1);
+
+  // ✅ donated toggle state
+  const [showDonated, setShowDonated] = useState(false);
 
   // Normalize backend doc -> frontend FoodItem shape (id, expiry)
   function normalizeBackendDoc(doc: any): FoodItem {
@@ -42,7 +43,8 @@ const BrowsePage: React.FC = () => {
           : Number(doc.quantity ?? 1),
       source: doc.source === "donation" ? "donation" : "inventory",
       reserved: !!doc.reserved,
-      donationDetails: doc.donationDetails ?? doc.donationDetails ?? undefined,
+      donationDetails: doc.donationDetails ?? undefined,
+      donated: !!doc.donated, // ✅ support donated flag
     };
   }
 
@@ -71,8 +73,60 @@ const BrowsePage: React.FC = () => {
 
   // Apply filters, search, sort
   const filtered = useMemo(() => {
-    const now = new Date();
-    let list = items.filter((i) => i.source === source);
+    let list = [...items];
+
+    // ✅ if showing donated items, only those
+    if (showDonated) {
+      list = list.filter((i) => i.donated);
+
+      // ✅ still apply filters/search/sort on donated list
+      if (filters.categories?.length) {
+        list = list.filter((i) => filters.categories.includes(i.category));
+      }
+      if (filters.storage) {
+        list = list.filter(
+          (i) => i.storage.toLowerCase() === filters.storage.toLowerCase()
+        );
+      }
+      if (filters.expiryDays) {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        if (filters.expiryDays === "expired") {
+          list = list.filter((i) => new Date(i.expiry) < today);
+        } else if (filters.expiryDays === "0") {
+          list = list.filter(
+            (i) => new Date(i.expiry).toDateString() === today.toDateString()
+          );
+        } else {
+          const max = new Date(today);
+          max.setDate(today.getDate() + Number(filters.expiryDays));
+          list = list.filter(
+            (i) => new Date(i.expiry) >= today && new Date(i.expiry) <= max
+          );
+        }
+      }
+      if (search?.trim()) {
+        const q = search.trim().toLowerCase();
+        list = list.filter((i) => i.name.toLowerCase().includes(q));
+      }
+      if (sortBy === "expiry") {
+        list = list
+          .slice()
+          .sort(
+            (a, b) =>
+              new Date(a.expiry).getTime() - new Date(b.expiry).getTime()
+          );
+      } else if (sortBy === "category") {
+        list = list
+          .slice()
+          .sort((a, b) => a.category.localeCompare(b.category));
+      }
+
+      return list;
+    }
+
+    // otherwise filter by normal source (inventory / donation)
+    list = list.filter((i) => i.source === source && !i.donated);
 
     if (filters.categories && filters.categories.length) {
       list = list.filter((i) => filters.categories.includes(i.category));
@@ -118,7 +172,7 @@ const BrowsePage: React.FC = () => {
     }
 
     return list;
-  }, [items, source, filters, search, sortBy]);
+  }, [items, source, filters, search, sortBy, showDonated]);
 
   // ✅ pagination logic applied on filtered data
   const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
@@ -127,10 +181,10 @@ const BrowsePage: React.FC = () => {
     currentPage * ITEMS_PER_PAGE
   );
 
-  // reset page to 1 when filters/search change
+  // reset page to 1 when filters/search/source/donated view changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [filters, search, sortBy, source]);
+  }, [filters, search, sortBy, source, showDonated]);
 
   function handleApplyFilters(f: any) {
     setFilters(f);
@@ -146,12 +200,8 @@ const BrowsePage: React.FC = () => {
       const res = await fetch(`${API_BASE_URL}/browse/item/${id}/mark-used`, {
         method: "PUT",
       });
-      if (!res.ok) {
-        const txt = await res.text();
-        throw new Error(txt || "Mark-used failed");
-      }
+      if (!res.ok) throw new Error(await res.text());
       const data = await res.json();
-      alert(data.status);
 
       setItems((prev) =>
         prev.reduce<FoodItem[]>((acc, it) => {
@@ -161,18 +211,16 @@ const BrowsePage: React.FC = () => {
           }
           if (it.quantity > 1) {
             acc.push({ ...it, quantity: it.quantity - 1 });
-            alert(`Marked ${it.name} as used. Quantity decreased.`);
-          } else {
-            alert(`${it.name} fully used and removed from inventory`);
           }
           return acc;
         }, [])
       );
 
       setSelectedItem(null);
+      alert(data.status);
     } catch (err) {
       console.error("Error marking used:", err);
-      alert("Failed to mark item as used. See console for details.");
+      alert("Failed to mark item as used.");
     }
   }
 
@@ -181,10 +229,7 @@ const BrowsePage: React.FC = () => {
       const res = await fetch(`${API_BASE_URL}/browse/item/${id}/plan-meal`, {
         method: "PUT",
       });
-      if (!res.ok) {
-        const txt = await res.text();
-        throw new Error(txt || "Plan-meal failed");
-      }
+      if (!res.ok) throw new Error(await res.text());
       const data = await res.json();
       alert(data.status);
 
@@ -194,7 +239,7 @@ const BrowsePage: React.FC = () => {
       setSelectedItem(null);
     } catch (err) {
       console.error("Error planning meal:", err);
-      alert("Failed to reserve item. See console for details.");
+      alert("Failed to reserve item.");
     }
   }
 
@@ -211,10 +256,7 @@ const BrowsePage: React.FC = () => {
           body: JSON.stringify(details),
         }
       );
-      if (!res.ok) {
-        const txt = await res.text();
-        throw new Error(txt || "Flag-donation failed");
-      }
+      if (!res.ok) throw new Error(await res.text());
       const data = await res.json();
       alert(data.status);
 
@@ -228,7 +270,28 @@ const BrowsePage: React.FC = () => {
       setSelectedItem(null);
     } catch (err) {
       console.error("Error flagging donation:", err);
-      alert("Failed to flag donation. See console for details.");
+      alert("Failed to flag donation.");
+    }
+  }
+
+  async function handleMarkDonated(id: string) {
+    try {
+      const res = await fetch(
+        `${API_BASE_URL}/browse/item/${id}/mark-donated`,
+        { method: "PUT" }
+      );
+      if (!res.ok) throw new Error(await res.text());
+      const data = await res.json();
+      alert(data.status);
+
+      setItems((prev) =>
+        prev.map((it) => (it.id === id ? { ...it, donated: true } : it))
+      );
+
+      setSelectedItem(null);
+    } catch (err) {
+      console.error("Error marking donated:", err);
+      alert("Failed to mark as donated.");
     }
   }
 
@@ -238,10 +301,7 @@ const BrowsePage: React.FC = () => {
         `${API_BASE_URL}/browse/item/${id}/remove-donation`,
         { method: "PUT" }
       );
-      if (!res.ok) {
-        const txt = await res.text();
-        throw new Error(txt || "Remove-donation failed");
-      }
+      if (!res.ok) throw new Error(await res.text());
       const data = await res.json();
       alert(data.status);
 
@@ -255,7 +315,7 @@ const BrowsePage: React.FC = () => {
       setSelectedItem(null);
     } catch (err) {
       console.error("Error removing donation:", err);
-      alert("Failed to remove from donation. See console for details.");
+      alert("Failed to remove from donation.");
     }
   }
 
@@ -264,7 +324,10 @@ const BrowsePage: React.FC = () => {
       <aside className="left-column">
         <FilterPanel
           source={source}
-          setSource={setSource}
+          setSource={(val) => {
+            setShowDonated(false);
+            setSource(val);
+          }}
           onApply={handleApplyFilters}
           onClear={handleClearFilters}
         />
@@ -272,32 +335,38 @@ const BrowsePage: React.FC = () => {
 
       <section className="main-column">
         <div className="main-top">
-          <h2>🍽️ Browse Items</h2>
-          <div className="main-controls">
-            <input
-              className="search"
-              placeholder="🔍 Search food items..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-            <select
-              className="sort"
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as any)}
-            >
-              <option value="">📊 Sort by: Default</option>
-              <option value="expiry">📅 Sort by: Expiry Date</option>
-              <option value="category">🍴 Sort by: Category</option>
-            </select>
-          </div>
+          <h2>
+            {showDonated
+              ? "Donated Items"
+              : source === "donation"
+              ? "🎁 Donation Listings"
+              : "🍽️ Browse Items"}
+          </h2>
+          {!showDonated && (
+            <div className="main-controls">
+              <input
+                className="search"
+                placeholder="🔍 Search food items..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+              <select
+                className="sort"
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as any)}
+              >
+                <option value="">📊 Sort by: Default</option>
+                <option value="expiry">📅 Expiry Date</option>
+                <option value="category">🍴 Category</option>
+              </select>
+            </div>
+          )}
         </div>
 
-        {/* ✅ Main item list area */}
         <div className="item-list-container">
           <ItemList items={paginatedItems} onItemClick={setSelectedItem} />
         </div>
 
-        {/* ✅ Fixed-bottom pagination */}
         {totalPages > 1 && (
           <div className="pagination-container">
             <button
@@ -324,6 +393,15 @@ const BrowsePage: React.FC = () => {
           </div>
         )}
       </section>
+
+      {/* ✅ Floating button */}
+      <button
+        className="donated-items-btn"
+        onClick={() => setShowDonated((s) => !s)}
+      >
+        {showDonated ? "⬅ Back to Listings" : "View Donated Items"}
+      </button>
+
       <ItemDetailModal
         item={selectedItem}
         onClose={() => setSelectedItem(null)}
@@ -331,6 +409,7 @@ const BrowsePage: React.FC = () => {
         onPlanMeal={handlePlanMeal}
         onFlagDonation={handleFlagDonation}
         onRemoveDonation={handleRemoveDonation}
+        onMarkDonated={handleMarkDonated}
       />
     </div>
   );

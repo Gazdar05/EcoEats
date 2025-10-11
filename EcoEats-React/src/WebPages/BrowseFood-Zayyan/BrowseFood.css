@@ -8,7 +8,9 @@
   --card-bg: #fff;
   --fp-width: 280px;
   --nav-height: 58px; /* adjust if your navbar differs */
+  /* remove this: position:fixed; */
 }
+
 
 /* page wrapper (full height minus navbar/footer if needed) */
 .browse-wrap {
@@ -427,6 +429,7 @@
   margin-bottom: 12px;
   font-size: 1.3rem;
   color: #111;
+  
 }
 .detail-info p {
   margin: 6px 0;
@@ -434,6 +437,7 @@
   align-items: center;
   gap: 6px;
   font-size: 0.95rem;
+  color: #111 !important; /* force black */
 }
 .detail-info .icon { font-size: 1rem; }
 
@@ -501,6 +505,7 @@
   margin-top: 8px;
   padding-top: 4px;
   font-size: 0.9rem;
+  color: #111 !important;
 }
 .donation-details h4 {
   margin: 0 0 8px;
@@ -599,4 +604,85 @@
 .pagination-container button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+html, body {
+  height: 100%;
+  overflow: hidden;  /* disable scroll */
+}
+.donated-status {
+  background: #ecfdf5; /* light green */
+  border: 1px solid #34d399; /* green-400 */
+  padding: 8px 12px;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.item-card.donated {
+  opacity: 0.7;
+  border: 2px solid #34d399;
+}
+
+.donated-items-btn {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: var(--eco-green);
+  color: white;
+  border: none;
+  padding: 12px 18px;
+  border-radius: 50px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+  transition: background 0.2s ease;
+  z-index: 2000;
+}
+
+.donated-items-btn:hover {
+  background: #5a8d1e
+}
+.confirm-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: flex-start; /* instead of center */
+  justify-content: center;
+  padding-top: 20vh; /* push it ~15% down */
+  z-index: 2000;
+}
+
+
+.confirm-card {
+  background: #fff;
+  padding: 1.5rem;
+  border-radius: 12px;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+  text-align: center;
+}
+
+.confirm-actions {
+  margin-top: 15px;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.confirm-yes {
+  background: var(--eco-green);
+  color: white;
+  padding: 6px 14px;
+  border-radius: 6px;
+}
+
+.confirm-no {
+  background: red;
+  padding: 6px 14px;
+  border-radius: 6px;
 }

@@ -11,7 +11,8 @@ type Props = {
     id: string,
     details: { location: string; availability: string; contact: string }
   ) => void;
-  onRemoveDonation: (id: string) => void; // 👈 added
+  onRemoveDonation: (id: string) => void;
+  onMarkDonated: (id: string) => void;
 };
 
 function formatDate(d: string) {
@@ -30,12 +31,19 @@ const ItemDetailModal: React.FC<Props> = ({
   onPlanMeal,
   onFlagDonation,
   onRemoveDonation,
+  onMarkDonated,
 }) => {
   const [showDonationForm, setShowDonationForm] = useState(false);
   const [location, setLocation] = useState("");
   const [availability, setAvailability] = useState("");
   const [contact, setContact] = useState("");
   const [error, setError] = useState("");
+
+  // ✅ confirmation modal state
+  const [confirmAction, setConfirmAction] = useState<{
+    type: "used" | "remove" | "donated" | null;
+    id?: string;
+  }>({ type: null });
 
   if (!item) return null;
 
@@ -88,25 +96,51 @@ const ItemDetailModal: React.FC<Props> = ({
 
         {/* Actions */}
         <div className="detail-actions">
-          {item.source === "inventory" ? (
-            <>
-              <button onClick={() => onMarkUsed(item.id)}>Mark as Used</button>
-              <button onClick={() => onPlanMeal(item.id)}>Plan for Meal</button>
-              <button onClick={() => setShowDonationForm((s) => !s)}>
-                Flag for Donation
-              </button>
-            </>
+          {item.donated ? (
+            <div className="donated-status">
+              <p className="text-green-700 font-semibold">
+                ✅ This item has been donated
+              </p>
+            </div>
           ) : (
             <>
-              <button onClick={() => onRemoveDonation(item.id)}>
-                Remove from Donation
-              </button>
-              <button onClick={() => setShowDonationForm((s) => !s)}>
-                Edit Donation Details
-              </button>
-              <button onClick={() => alert("Marked as donated (TODO)")}>
-                Mark as Donated
-              </button>
+              {item.source === "inventory" ? (
+                <>
+                  <button
+                    onClick={() =>
+                      setConfirmAction({ type: "used", id: item.id })
+                    }
+                  >
+                    Mark as Used
+                  </button>
+                  <button onClick={() => onPlanMeal(item.id)}>
+                    Plan for Meal
+                  </button>
+                  <button onClick={() => setShowDonationForm((s) => !s)}>
+                    Flag for Donation
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={() =>
+                      setConfirmAction({ type: "remove", id: item.id })
+                    }
+                  >
+                    Remove from Donation
+                  </button>
+                  <button onClick={() => setShowDonationForm((s) => !s)}>
+                    Edit Donation Details
+                  </button>
+                  <button
+                    onClick={() =>
+                      setConfirmAction({ type: "donated", id: item.id })
+                    }
+                  >
+                    Mark as Donated
+                  </button>
+                </>
+              )}
             </>
           )}
         </div>
@@ -152,6 +186,47 @@ const ItemDetailModal: React.FC<Props> = ({
           </div>
         )}
       </div>
+
+      {/* ✅ Confirmation Modal */}
+      {confirmAction.type && (
+        <div
+          className="confirm-overlay"
+          onClick={() => setConfirmAction({ type: null })}
+        >
+          <div className="confirm-card" onClick={(e) => e.stopPropagation()}>
+            <p>
+              {confirmAction.type === "used" &&
+                "Are you sure you want to mark this item as used?"}
+              {confirmAction.type === "remove" &&
+                "Are you sure you want to remove this item from donations?"}
+              {confirmAction.type === "donated" &&
+                "Are you sure you want to mark this item as donated?"}
+            </p>
+            <div className="confirm-actions">
+              <button
+                className="confirm-yes"
+                onClick={() => {
+                  if (confirmAction.type === "used" && confirmAction.id)
+                    onMarkUsed(confirmAction.id);
+                  if (confirmAction.type === "remove" && confirmAction.id)
+                    onRemoveDonation(confirmAction.id);
+                  if (confirmAction.type === "donated" && confirmAction.id)
+                    onMarkDonated(confirmAction.id);
+                  setConfirmAction({ type: null });
+                }}
+              >
+                Confirm
+              </button>
+              <button
+                className="confirm-no"
+                onClick={() => setConfirmAction({ type: null })}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

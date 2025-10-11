@@ -1,3 +1,4 @@
+#config.py inside app
 from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):

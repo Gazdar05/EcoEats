@@ -124,3 +124,13 @@ async def remove_donation(item_id: str):
     if result.modified_count == 0:
         raise HTTPException(status_code=404, detail="Item not found")
     return {"status": "removed from donation"}
+# ✅ Mark item as donated (Option 2: keep it, mark as donated)
+@router.put("/item/{item_id}/mark-donated")
+async def mark_donated(item_id: str):
+    result = await db.food_items.update_one(
+        {"_id": ObjectId(item_id)},
+        {"$set": {"donated": True}}
+    )
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Item not found or already donated")
+    return {"status": "marked as donated"}
