@@ -70,8 +70,8 @@ const AddItemPopup: React.FC<AddItemPopupProps> = ({ onClose, onSave, categories
             required
           >
             <option value="">Select Category</option>
-            {/* ✅ Added “Fruit” as a default option */}
             <option value="Fruit">Fruit</option>
+            <option value="Vegetable">Vegetable</option>
             {categories.map((cat) => (
               <option key={cat.id} value={cat.name}>
                 {cat.name}

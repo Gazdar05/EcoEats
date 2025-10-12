@@ -76,6 +76,7 @@ const EditItemPopup: React.FC<EditItemPopupProps> = ({ item, onClose, onSave }) 
               <option value="">Select category</option>
               <option value="Produce">Produce</option>
               <option value="Fruit">Fruit</option>
+              <option value="Vegetable">Vegetable</option>
               <option value="Dairy">Dairy</option>
               <option value="Bakery">Bakery</option>
               <option value="Meat">Meat</option>
