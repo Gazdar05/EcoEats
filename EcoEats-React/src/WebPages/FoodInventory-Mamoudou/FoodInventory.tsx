@@ -172,13 +172,6 @@ const FoodInventory: React.FC = () => {
     }
   };
 
-  const closePopups = () => {
-    setShowViewPopup(false);
-    setShowEditPopup(false);
-    setShowAddPopup(false);
-    setSelectedItem(null);
-  };
-
   // ✅ Hide navbar/footer if any popup is open
   const isPopupOpen = showViewPopup || showEditPopup || showAddPopup;
 

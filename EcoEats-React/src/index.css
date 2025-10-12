@@ -96,9 +96,3 @@ body.no-chrome nav {
 body.no-chrome footer {
   display: none !important;
 }
-
-/* ✅ Hide navbar and footer when popups are open */
-body.hide-layout nav,
-body.hide-layout footer {
-  display: none !important;
-}
