@@ -228,17 +228,43 @@
   background: #dc2626;
 }
 
-/* Actions (base styles kept) */
+/* ===== Aligned Actions column ===== */
+.inventory-table thead th:last-child {
+  text-align: center;
+  width: 140px;
+}
+
+.inventory-table tbody td.actions {
+  text-align: center;
+  vertical-align: middle; /* ✅ Ensures perfect vertical alignment */
+  padding: 0; /* tighter vertical centering */
+}
+
 .actions {
   display: flex;
   align-items: center;
+  justify-content: center; /* ✅ Horizontal center */
   gap: 10px;
+  height: 100%;
+  min-height: 45px; /* ✅ Matches row height for symmetry */
 }
 
 .action-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  line-height: 0;
   color: #6b7280;
   cursor: pointer;
   transition: color 0.2s ease;
+}
+
+.action-icon svg {
+  display: block;
+  width: 18px;
+  height: 18px;
 }
 
 .action-icon:hover {
@@ -264,9 +290,9 @@
     display: block;
     width: 100%;
   }
-  .inventory-table tr { 
-    border-bottom: 1px solid #e5e7eb; 
-    padding: 10px 0; 
+  .inventory-table tr {
+    border-bottom: 1px solid #e5e7eb;
+    padding: 10px 0;
   }
   .inventory-table tbody td {
     padding: 8px 12px;
@@ -373,56 +399,6 @@
 .item-name-text {
   font-weight: 500;
   color: #333;
-}
-
-/* ===== Precise Actions column alignment fixes ONLY ===== */
-
-/* Give the actions column a stable width and consistent padding */
-.inventory-table thead th:last-child {
-  text-align: left;
-  width: 140px; /* consistent width */
-  padding-left: 16px;
-}
-
-.inventory-table tbody td.actions {
-  display: flex;              /* ensure the cell is a flex container */
-  align-items: center;        /* vertical center */
-  justify-content: flex-start;/* align horizontally like other text cells */
-  padding: 14px 16px;         /* match other td padding exactly */
-  width: 140px;
-  box-sizing: border-box;
-  vertical-align: middle;
-}
-
-/* Keep the action icons tightly centered inside their boxes and remove SVG baseline whitespace */
-.actions {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  height: 100%;
-}
-
-.action-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  line-height: 0; /* remove any line-height influence */
-  color: #6b7280;
-  cursor: pointer;
-  transition: color 0.2s ease;
-}
-
-/* This is the key: force the actual SVG to be a block so no baseline / descender gaps remain */
-.action-icon svg {
-  display: block;
-  width: 18px;
-  height: 18px;
-}
-
-.action-icon:hover {
-  color: #111827;
 }
 
 /* ✅ Hide global navbar & footer when popup is open */

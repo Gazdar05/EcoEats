@@ -308,22 +308,26 @@ const FoodInventory: React.FC = () => {
                     {item.status}
                   </span>
                 </td>
-                <td className="actions">
-                  <Edit
-                    size={16}
-                    className="action-icon"
-                    onClick={() => handleEditItem(item)}
-                  />
-                  <Trash2
-                    size={16}
-                    className="action-icon"
-                    onClick={() => handleDeleteItem(item.id)}
-                  />
-                  <Eye
-                    size={16}
-                    className="action-icon"
-                    onClick={() => handleViewItem(item)}
-                  />
+
+                {/* ✅ Wrap icons inside a div for perfect alignment */}
+                <td>
+                  <div className="actions">
+                    <Edit
+                      size={16}
+                      className="action-icon"
+                      onClick={() => handleEditItem(item)}
+                    />
+                    <Trash2
+                      size={16}
+                      className="action-icon"
+                      onClick={() => handleDeleteItem(item.id)}
+                    />
+                    <Eye
+                      size={16}
+                      className="action-icon"
+                      onClick={() => handleViewItem(item)}
+                    />
+                  </div>
                 </td>
               </tr>
             ))}
