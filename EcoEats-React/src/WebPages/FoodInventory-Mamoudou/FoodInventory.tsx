@@ -212,6 +212,7 @@ const FoodInventory: React.FC = () => {
                       }
                     >
                       <option value="">All Categories</option>
+                      <option value="Fruit">Fruit</option>
                       {categories.map((category) => (
                         <option key={category.id} value={category.name}>
                           {category.name}
