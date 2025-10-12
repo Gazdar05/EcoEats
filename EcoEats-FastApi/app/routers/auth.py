@@ -72,7 +72,7 @@ def send_email_html(to_email: str, subject: str, html_content: str):
         server.send_message(msg)
 
 # ---------------------------
-# 1️⃣ Register User
+# Register User
 # ---------------------------
 @router.post("/register")
 async def register_user(request: RegisterRequest):
@@ -181,7 +181,7 @@ async def register_user(request: RegisterRequest):
 
 
 # ---------------------------
-# 2️⃣ Enable/Resend 2FA
+#  Enable/Resend 2FA
 # ---------------------------
 @router.post("/enable-2fa/{user_id}")
 async def enable_2fa(user_id: str):
@@ -243,6 +243,7 @@ async def enable_2fa(user_id: str):
 
     return {"message": "Verification code sent successfully."}
 
+# ---------------------------
 #Get User ID by Email (for resend functionality)
 # ---------------------------
 @router.get("/get-user-by-email")
@@ -256,7 +257,7 @@ async def get_user_by_email(email: EmailStr):
 
 
 # ---------------------------
-# 3️⃣ Verify 2FA
+#  Verify 2FA
 # ---------------------------
 @router.post("/verify-2fa")
 async def verify_2fa(request: Verify2FARequest):
@@ -294,7 +295,7 @@ async def verify_2fa(request: Verify2FARequest):
 
 
 # ---------------------------
-# 4️⃣ Login
+#  Login
 # ---------------------------
 
 @router.post("/login")
@@ -345,7 +346,7 @@ async def login_user(request: LoginRequest):
 
 
 # ---------------------------
-# 5️⃣ Set Password (After Register)
+#  Set Password (After Register)
 # ---------------------------
 @router.post("/set-password")
 async def set_password(request: SetPasswordRequest):
@@ -360,3 +361,23 @@ async def set_password(request: SetPasswordRequest):
     )
 
     return {"message": "Password updated successfully."}
+
+# ---------------------------
+# Get User Profile
+# ---------------------------
+@router.get("/profile")
+async def get_user_profile(email: EmailStr):
+    """Get user profile information by email"""
+    user = await db.household_users.find_one({"email": email})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    return {
+        "full_name": user["full_name"],
+        "email": user["email"],
+        "household_size": user.get("household_size"),
+        "enable_2fa": user.get("enable_2fa", False),
+        "acct_status": user.get("acct_status", "active"),
+        "created_at": user["created_at"].isoformat() if user.get("created_at") else None,
+        "last_login_at": user["last_login_at"].isoformat() if user.get("last_login_at") else None
+    }

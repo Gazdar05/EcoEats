@@ -4,6 +4,7 @@ import Footer from "./components/footer";
 import Register from "./WebPages/Register-Emmeline/Register";
 import LoginPage from "./WebPages/Register-Emmeline/Login";
 import VerifyAccountPage from "./WebPages/Register-Emmeline/VerifyAccount";
+import ProfilePage from "./WebPages/Register-Emmeline/ProfilePage";
 import { useEffect } from "react";
 
 
@@ -32,9 +33,7 @@ function DonationPage() {
 function NotificationsPage() {
   return <h1>User Notifications</h1>;
 }
-function ProfilePage() {
-  return <h1>User Profile</h1>;
-}
+
 function AnalyticsPage() {
   return <h1>Track and Record of User</h1>;
 }
