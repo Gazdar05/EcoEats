@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "./FoodInventory.css";
-import { Plus, Filter, Search, Edit, Trash2, Eye } from "lucide-react";
+import { Plus, Filter, Search, Edit, Trash2, Eye, CheckSquare } from "lucide-react";
 import ViewItemPopup from "./ViewItemPopup";
 import EditItemPopup from "./EditItemPopup";
 import AddItemPopup from "./AddItemPopup";
@@ -35,6 +35,8 @@ const FoodInventory: React.FC = () => {
   });
 
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
+  const [selectedItems, setSelectedItems] = useState<number[]>([]); // ✅ For bulk actions
+
   const [categories] = useState<{ id: string; name: string }[]>([
     { id: "produce", name: "Produce" },
     { id: "dairy", name: "Dairy" },
@@ -172,6 +174,54 @@ const FoodInventory: React.FC = () => {
     }
   };
 
+  // ✅ Bulk selection toggle
+  const toggleSelectItem = (id: number) => {
+    setSelectedItems((prev) =>
+      prev.includes(id) ? prev.filter((itemId) => itemId !== id) : [...prev, id]
+    );
+  };
+
+  const handleMarkAsUsed = async () => {
+    const updatedInventory = await Promise.all(
+      inventory.map(async (item) => {
+        if (!selectedItems.includes(item.id)) return item;
+
+        const currentQty = parseInt(item.quantity, 10);
+        if (isNaN(currentQty)) return item;
+
+        const newQty = currentQty - 1;
+        if (newQty <= 0) {
+          await fetch(`${API_BASE}/inventory/${item.id}`, { method: "DELETE" });
+          return null; // remove item
+        } else {
+          const updatedItem = { ...item, quantity: newQty.toString() };
+          await fetch(`${API_BASE}/inventory/${item.id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(updatedItem),
+          });
+          return updatedItem;
+        }
+      })
+    );
+
+    setInventory(
+      updatedInventory.filter((item): item is InventoryItem => item !== null)
+    );
+    setSelectedItems([]);
+  };
+
+  const handleDeleteSelected = async () => {
+    if (!window.confirm("Are you sure you want to delete the selected items?")) return;
+
+    await Promise.all(
+      selectedItems.map((id) => fetch(`${API_BASE}/inventory/${id}`, { method: "DELETE" }))
+    );
+
+    setInventory((prev) => prev.filter((item) => !selectedItems.includes(item.id)));
+    setSelectedItems([]);
+  };
+
   // ✅ Hide navbar/footer if any popup is open
   const isPopupOpen = showViewPopup || showEditPopup || showAddPopup;
 
@@ -197,6 +247,16 @@ const FoodInventory: React.FC = () => {
             <button className="btn-add" onClick={() => setShowAddPopup(true)}>
               <Plus size={16} /> Add Item
             </button>
+            {selectedItems.length > 0 && (
+              <>
+                <button className="btn-filter" onClick={handleMarkAsUsed}>
+                  <CheckSquare size={16} /> Mark as Used
+                </button>
+                <button className="btn-filter" onClick={handleDeleteSelected}>
+                  <Trash2 size={16} /> Delete Selected
+                </button>
+              </>
+            )}
             <div className="filter-container">
               <button className="btn-filter" onClick={toggleFilterDropdown}>
                 <Filter size={16} /> Filter by
@@ -212,8 +272,6 @@ const FoodInventory: React.FC = () => {
                       }
                     >
                       <option value="">All Categories</option>
-                      <option value="Fruit">Fruit</option>
-                      <option value="Vegetable">Vegetable</option>
                       {categories.map((category) => (
                         <option key={category.id} value={category.name}>
                           {category.name}
@@ -265,6 +323,7 @@ const FoodInventory: React.FC = () => {
         <table className="inventory-table">
           <thead>
             <tr>
+              <th></th> {/* ✅ checkbox column */}
               <th>Name</th>
               <th>Category</th>
               <th>Quantity</th>
@@ -277,6 +336,13 @@ const FoodInventory: React.FC = () => {
           <tbody>
             {filteredInventory.map((item) => (
               <tr key={item.id}>
+                <td style={{ textAlign: "center" }}>
+                  <input
+                    type="checkbox"
+                    checked={selectedItems.includes(item.id)}
+                    onChange={() => toggleSelectItem(item.id)}
+                  />
+                </td>
                 <td className="item-name-with-image">
                   {item.image ? (
                     <img
