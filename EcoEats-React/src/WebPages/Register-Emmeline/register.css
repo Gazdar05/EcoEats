@@ -22,15 +22,16 @@
 h1 {
   text-align: center;
   font-size: 2rem;
-  margin-bottom: 0.1rem; /* more space above form */
+  margin-bottom: 0.02rem; /* more space above form */
+  margin-top:0rem; /* more space below form */
   color: #2a5d14;
 }
 
 .form-group {
   display: flex;
   flex-direction: column;
-  margin-bottom: 10px; /* increase spacing between fields */
-  margin-top: 10px;
+  margin-bottom: 8px; /* increase spacing between fields */
+  margin-top: 6px;
   
 }
 

@@ -283,6 +283,9 @@
             font-size: 14px;
         }
 
+        .signup-link a:hover {
+            text-decoration: underline;
+        }
         
 
         .footer {
