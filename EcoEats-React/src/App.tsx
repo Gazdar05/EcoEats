@@ -5,6 +5,7 @@ import Register from "./WebPages/Register-Emmeline/Register";
 import LoginPage from "./WebPages/Register-Emmeline/Login";
 import VerifyAccountPage from "./WebPages/Register-Emmeline/VerifyAccount";
 import ProfilePage from "./WebPages/Register-Emmeline/ProfilePage";
+import ProtectedRoute from "./components/ProtectedRoute.tsx";
 import { useEffect } from "react";
 
 
@@ -87,23 +88,61 @@ function App() {
     <>
       <Navbar />
       <Routes>
+        {/* Public Routes - No login required */}
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/browse" element={<BrowsePage />} />
-        <Route path="/inventory" element={<InventoryPage />} />
-        <Route path="/meals" element={<MealsPage />} />
-        <Route path="/donations" element={<DonationPage />} />
-        <Route path="/notifications" element={<NotificationsPage />} />
-        <Route path="/profile" element={<ProfilePage />} />
-        <Route path="/analytics" element={<AnalyticsPage />} />
-        <Route path="/support" element={<SupportPage />} />
-        <Route path="/about" element={<AboutPage />} />
         <Route path="/verify-account" element={<VerifyAccountPage />} />
+        <Route path="/about" element={<AboutPage />} />
+        <Route path="/support" element={<SupportPage />} />
+
+        {/* Protected Routes - Login required */}
+        <Route path="/browse" element={
+          <ProtectedRoute>
+            <BrowsePage />
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/inventory" element={
+          <ProtectedRoute>
+            <InventoryPage />
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/meals" element={
+          <ProtectedRoute>
+            <MealsPage />
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/donations" element={
+          <ProtectedRoute>
+            <DonationPage />
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/notifications" element={
+          <ProtectedRoute>
+            <NotificationsPage />
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/profile" element={
+          <ProtectedRoute>
+            <ProfilePage />
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/analytics" element={
+          <ProtectedRoute>
+            <AnalyticsPage />
+          </ProtectedRoute>
+        } />
       </Routes>
       <Footer />
     </>
   );
 }
+
 
 export default App;
