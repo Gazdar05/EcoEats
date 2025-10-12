@@ -3,6 +3,7 @@ import Navbar from "./components/navbar";
 import Footer from "./components/footer";
 import Register from "./WebPages/Register-Emmeline/Register";
 import LoginPage from "./WebPages/Register-Emmeline/Login";
+import VerifyAccountPage from "./WebPages/Register-Emmeline/VerifyAccount";
 import { useEffect } from "react";
 
 
@@ -99,6 +100,7 @@ function App() {
         <Route path="/analytics" element={<AnalyticsPage />} />
         <Route path="/support" element={<SupportPage />} />
         <Route path="/about" element={<AboutPage />} />
+        <Route path="/verify-account" element={<VerifyAccountPage />} />
       </Routes>
       <Footer />
     </>

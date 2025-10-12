@@ -23,23 +23,38 @@
         }
 
         .login-header p {
-            color: #6EA124;
+            color: #666;
             font-size: 16px;
-            margin-bottom: 40px; /* increase spacing */
+            margin-bottom: 20px; /* increase spacing */
+            margin-top: 1px;
         }
 
-
         .container {
-            width: 100%;
-            max-width: 400px;
             background: rgba(255, 255, 255, 0.65);
             backdrop-filter: blur(10px);
             border-radius: 12px;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            box-shadow:  0 5px 20px rgba(0,0,0,0.08);
             padding: 30px;
-            
-            
-        }
+            width: 100%;
+            max-width: 400px; 
+            margin-bottom: 2rem; /* ensures space for signup link */
+            }
+
+
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center; /* prevent squeezing */
+            min-height: 100vh;
+            padding-top: 60px;
+            padding-bottom: 60px;
+            overflow-y: auto; /* allow scrolling if needed */
+            }
+
+            .login-wrapper {
+            width: 100%;
+            max-width: 420px;
+            }
 
         .logo {
             width: 60px;
@@ -61,12 +76,13 @@
         .header h1 {
             font-size: 32px;
             color: #1f2937;
-            margin-bottom: 9px;
+            margin-bottom: 5px;
         }
 
-        .header p {
-            color: #6b7280;
+        .login-header p {
+            color: #0e1015;
             font-size: 16px;
+            margin-bottom: 1rem;
         }
 
         .card {
@@ -273,6 +289,7 @@
         .signup-link {
             text-align: center;
             margin-top: 24px;
+            margin-bottom: 3rem; /* ✅ adds space above footer */
             font-size: 14px;
             color: #6EA124;
         }
@@ -324,4 +341,24 @@
     font-size: 14px;
     transition: all 0.2s;
     background-color: #ffffff; /* <-- makes it pure white */
+}
+
+.success-message-container {
+  text-align: center;
+  padding: 40px;
+  width: 100%;
+  max-width: 400px;
+  margin: 6rem auto 2rem;
+}
+
+.success-message-container h1 {
+  color: #2a5d14;
+  font-size: 2rem;
+  margin-bottom: 1rem;
+}
+
+.success-message-container p {
+  color: #333;
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
 }

@@ -7,7 +7,7 @@ class Settings(BaseSettings):
     EMAIL_SENDER: str
     EMAIL_PASSWORD: str
 
-
+    FRONTEND_URL: str = "http://localhost:5173"
     class Config:
         env_file = ".env"
 

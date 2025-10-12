@@ -1,3 +1,4 @@
+from email.mime.multipart import MIMEMultipart
 from fastapi import APIRouter, HTTPException, status, Depends
 from pydantic import BaseModel, EmailStr
 from passlib.context import CryptContext
@@ -19,6 +20,7 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 SECRET_KEY = os.getenv("JWT_SECRET", "supersecret")
 EMAIL_SENDER = os.getenv("EMAIL_SENDER")
 EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD")
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
 
 # ---------------------------
 # Pydantic Models
@@ -55,12 +57,15 @@ def verify_password(plain: str, hashed: str):
         plain = plain[:72]
     return pwd_context.verify(plain, hashed)
 
-def send_email(to_email: str, subject: str, message: str):
-    """Send email via Gmail SMTP"""
-    msg = MIMEText(message)
+def send_email_html(to_email: str, subject: str, html_content: str):
+    """Send HTML email via Gmail SMTP"""
+    msg = MIMEMultipart("alternative")
     msg["Subject"] = subject
     msg["From"] = EMAIL_SENDER
     msg["To"] = to_email
+
+    html_part = MIMEText(html_content, "html")
+    msg.attach(html_part)
 
     with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
         server.login(EMAIL_SENDER, EMAIL_PASSWORD)
@@ -92,7 +97,7 @@ async def register_user(request: RegisterRequest):
     result = await db.household_users.insert_one(user)
     user_id = str(result.inserted_id)
 
-    # ✅ Send code only if 2FA enabled
+    # ✅ Send verification email with link only if 2FA enabled
     if request.enable_2fa:
         code = "".join(random.choices(string.digits, k=6))
         expires_at = datetime.now(timezone.utc) + timedelta(minutes=5)
@@ -106,14 +111,71 @@ async def register_user(request: RegisterRequest):
             "created_at": datetime.now(timezone.utc)
         })
 
-        send_email(
+        # Create verification link
+        verification_link = f"{FRONTEND_URL}/verify-account?email={request.email}"
+
+         # HTML email template
+        html_content = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <style>
+                body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+                .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+                .header {{ background-color: #6EA124; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }}
+                .content {{ background-color: #f9f9f9; padding: 30px; border-radius: 0 0 8px 8px; }}
+                .code-box {{ background-color: #fff; border: 2px dashed #6EA124; padding: 15px; text-align: center; font-size: 32px; font-weight: bold; letter-spacing: 5px; margin: 20px 0; color: #2a5d14; }}
+                .button {{ display: inline-block; background-color: #6EA124; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; font-weight: bold; }}
+                .footer {{ text-align: center; color: #666; font-size: 12px; margin-top: 20px; }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1>Welcome to EcoEats! </h1>
+                </div>
+                <div class="content">
+                    <p>Hi {request.full_name},</p>
+                    <p>Thank you for registering with EcoEats! We're excited to have you join our community of environmentally conscious food lovers.</p>
+                    
+                    <p><strong>To complete your registration, please follow these steps:</strong></p>
+                    <ol>
+                        <li>Click the confirmation link below</li>
+                        <li>Enter your 6-digit verification code</li>
+                        <li>Set your new password</li>
+                    </ol>
+
+                    <div class="code-box">
+                        {code}
+                    </div>
+
+                    <p style="text-align: center;">
+                        <a href="{verification_link}" class="button">Verify My Account</a>
+                    </p>
+
+                    <p style="color: #dc3545; font-weight: bold;"> This code expires in 5 minutes</p>
+
+                    <p>If you didn't create an account with EcoEats, please ignore this email.</p>
+                </div>
+                <div class="footer">
+                    <p>© 2025 EcoEats. All rights reserved.</p>
+                    <p>If the button doesn't work, copy and paste this link into your browser:<br>
+                    {verification_link}</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+        send_email_html(
             request.email,
-            "EcoEats Account Verification",
-            f"Welcome to EcoEats!\n\nYour verification code is {code}. It expires in 5 minutes.\n\nUse this code to activate your account."
+            "EcoEats - Verify Your Account",
+            html_content
         )
 
-        return {"message": "2FA code sent. Please verify your email.", "user_id": user_id}
-
+        return {
+            "message": "Registration successful! Please check your email to verify your account.",
+            "user_id": user_id
+        }
     # ✅ If no 2FA, immediate login allowed
     return {"message": "Registration successful. You can now log in.", "user_id": user_id}
 
@@ -140,13 +202,57 @@ async def enable_2fa(user_id: str):
         "created_at": datetime.now(timezone.utc)
     })
 
-    send_email(
+    verification_link = f"{FRONTEND_URL}/verify-account?email={user['email']}"
+
+    html_content = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <style>
+            body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+            .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+            .header {{ background-color: #6EA124; color: white; padding: 20px; text-align: center; }}
+            .content {{ background-color: #f9f9f9; padding: 30px; }}
+            .code-box {{ background-color: #fff; border: 2px dashed #6EA124; padding: 15px; text-align: center; font-size: 32px; font-weight: bold; letter-spacing: 5px; margin: 20px 0; color: #2a5d14; }}
+            .button {{ display: inline-block; background-color: #6EA124; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h2>New Verification Code</h2>
+            </div>
+            <div class="content">
+                <p>Your new verification code is:</p>
+                <div class="code-box">{code}</div>
+                <p style="text-align: center;">
+                    <a href="{verification_link}" class="button">Verify My Account</a>
+                </p>
+                <p style="color: #dc3545;"> This code expires in 5 minutes.</p>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+
+    send_email_html(
         user["email"],
-        "EcoEats Account Verification",
-        f"Your new verification code is {code}. It expires in 5 minutes."
+        "EcoEats - New Verification Code",
+        html_content
     )
 
     return {"message": "Verification code sent successfully."}
+
+#Get User ID by Email (for resend functionality)
+# ---------------------------
+@router.get("/get-user-by-email")
+async def get_user_by_email(email: EmailStr):
+    """Get user ID by email - used for resending verification codes"""
+    user = await db.household_users.find_one({"email": email})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    return {"user_id": str(user["_id"]), "email": user["email"]}
 
 
 # ---------------------------
@@ -177,6 +283,8 @@ async def verify_2fa(request: Verify2FARequest):
         {"_id": user["_id"]},
         {"$set": {"acct_status": "pending"}}
     )
+
+    ##dont need?
     await db.verification_codes.update_one(
         {"_id": record["_id"]},
         {"$set": {"is_used": True}}
@@ -188,9 +296,7 @@ async def verify_2fa(request: Verify2FARequest):
 # ---------------------------
 # 4️⃣ Login
 # ---------------------------
-# ---------------------------
-# 4️⃣ Login (Final version)
-# ---------------------------
+
 @router.post("/login")
 async def login_user(request: LoginRequest):
     # 🔍 Step 1: Find the user by email

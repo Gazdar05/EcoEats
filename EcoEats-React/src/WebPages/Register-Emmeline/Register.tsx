@@ -11,15 +11,10 @@ const Register: React.FC = () => {
   const [enable2FA, setEnable2FA] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [isCreating, setIsCreating] = useState(false);
-  const [isVerificationOpen, setIsVerificationOpen] = useState(false);
-  const [isSetPasswordOpen, setIsSetPasswordOpen] = useState(false);
-  const [verificationCode, setVerificationCode] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmNewPassword, setConfirmNewPassword] = useState("");
-  const [registrationEmail, setRegistrationEmail] = useState("");
-  const [userId, setUserId] = useState<string | null>(null);
+   const [registrationSuccess, setRegistrationSuccess] = useState(false);
+  
 
-  // --- Validation ---
+  // --- Validation --- 
   const validateEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   const validatePassword = (password: string) => password.length >= 8;
 
@@ -59,15 +54,8 @@ const Register: React.FC = () => {
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail || "Registration failed");
 
-      setUserId(data.user_id);
-      setRegistrationEmail(email);
-
-      if (enable2FA) {
-        setIsVerificationOpen(true);
-      } else {
-        alert("Registration successful! You can now log in.");
-        window.location.href = "/login";
-      }
+       // Show success message
+      setRegistrationSuccess(true);
     } catch (err: any) {
       alert(err.message || "Error during registration.");
       console.error("Registration error:", err);
@@ -75,79 +63,38 @@ const Register: React.FC = () => {
       setIsCreating(false);
     }
   };
-
-  // --- Verification ---
-  const handleVerification = async () => {
-    if (!verificationCode || verificationCode.length !== 6) {
-      setErrors({ verificationCode: "Please enter a valid 6-digit code" });
-      return;
-    }
-
-    setIsCreating(true);
-    try {
-      const res = await fetch(`${API_BASE_URL}/auth/verify-2fa`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: registrationEmail,
-          code: verificationCode,
-        }),
-      });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.detail || "Verification failed");
-
-      // ✅ After successful verification, open the "Set Password" modal
-      setIsVerificationOpen(false);
-      setIsSetPasswordOpen(true);
-    } catch (err: any) {
-      alert(err.message || "Verification error");
-    } finally {
-      setIsCreating(false);
-    }
-  };
-
-  // --- Set New Password ---
-  const handleSetPassword = async () => {
-    const newErrors: { [key: string]: string } = {};
-    if (!newPassword) newErrors.newPassword = "New password is required";
-    else if (!validatePassword(newPassword)) newErrors.newPassword = "Password must be at least 8 characters";
-    if (newPassword !== confirmNewPassword) newErrors.confirmNewPassword = "Passwords do not match";
-    setErrors(newErrors);
-    if (Object.keys(newErrors).length > 0) return;
-
-    setIsCreating(true);
-    try {
-      const res = await fetch(`${API_BASE_URL}/auth/set-password`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: registrationEmail,
-          new_password: newPassword,
-        }),
-      });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.detail || "Failed to set password");
-
-      alert("Password updated successfully! You can now log in.");
-      window.location.href = "/login";
-    } catch (err: any) {
-      alert(err.message || "Error setting password.");
-    } finally {
-      setIsCreating(false);
-    }
-  };
-
-  const resendCode = async () => {
-    if (!userId) return;
-    try {
-      await fetch(`${API_BASE_URL}/auth/enable-2fa/${userId}`, { method: "POST" });
-      alert("Verification code resent to " + registrationEmail);
-    } catch {
-      alert("Failed to resend verification code.");
-    }
-  };
+  
+  // Show success message if registration completed
+  if (registrationSuccess) {
+  return (
+      <div className="register-wrapper">
+        <div className="container">
+          <div className="success-message-container">
+            <h1>✓ Registration Successful!</h1>
+            {enable2FA ? (
+              <>
+                <p>We've sent a verification email to <strong>{email}</strong></p>
+                <p>Please check your inbox and click the confirmation link to verify your account and set your password.</p>
+                <p className="note">The verification link will expire in 5 minutes.</p>
+              </>
+            ) : (
+              <>
+                <p>Your account has been created successfully!</p>
+                <p>You can now log in with your credentials.</p>
+              </>
+            )}
+            <button 
+              className="btn-primary" 
+              onClick={() => window.location.href = "/login"}
+              style={{ marginTop: "2rem" }}
+            >
+              Go to Login
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="register-wrapper">
@@ -231,6 +178,11 @@ const Register: React.FC = () => {
             />
             Enable Two-Factor Authentication (2FA)
           </label>
+          {enable2FA && (
+            <p className="info-text">
+              A verification link will be sent to your email to activate your account.
+            </p>
+          )}
         </div>
 
         <button className="btn-primary" onClick={handleRegister} disabled={isCreating}>
@@ -241,78 +193,11 @@ const Register: React.FC = () => {
           Already have an account? <a href="/login">  Sign in</a>
         </div>
 
-        {/* 2FA Modal */}
-        {isVerificationOpen && (
-          <div className="modal active">
-            <div className="modal-content">
-              <h2>Verify Your Email</h2>
-              <p>We’ve sent a 6-digit verification code to {registrationEmail}</p>
-              <input
-                type="text"
-                maxLength={6}
-                value={verificationCode}
-                onChange={(e) => setVerificationCode(e.target.value)}
-                className={errors.verificationCode ? "error" : ""}
-              />
-              {errors.verificationCode && <div className="error-message">{errors.verificationCode}</div>}
-              <button onClick={handleVerification} disabled={isCreating}>
-                {isCreating ? "Verifying..." : "Verify Code"}
-              </button>
-              <button onClick={resendCode}>Resend Code</button>
-            </div>
-          </div>
-        )}
-
-        {/* ✅ Set New Password Modal */}
-        {isSetPasswordOpen && (
-        <div className="modal active">
-          <div className="modal-content">
-            <h2>Set New Password</h2>
-            <p>Email: <strong>{registrationEmail}</strong></p>
-
-            {/* New Password Field */}
-            <div className="modal-password-row">
-              <input
-                type="password"
-                id="newPassword"
-                placeholder="Enter new password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                className={errors.newPassword ? "error" : ""}
-              />
-                <button type="button" className="modal-show-btn" onClick={() => togglePassword("newPassword")}>Show</button>
-              </div>
-            {errors.newPassword  && <div className="error-message">{errors.newPassword}</div>}
-
-            <div className="modal-password-row">
-              <input
-                type="password"
-                id="confirmNewPassword"
-                placeholder="Confirm new password"
-                value={confirmNewPassword}
-                onChange={(e) => setConfirmNewPassword(e.target.value)}
-                className={errors.confirmNewPassword ? "error" : ""}
-              />
-              <button
-                type="button"
-                className="modal-show-btn" 
-                onClick={() => togglePassword("confirmNewPassword")}
-              >
-                Show
-              </button>
-            </div>
-            {errors.confirmNewPassword && <div className="error-message">{errors.confirmNewPassword}</div>}
-
-            <button onClick={handleSetPassword} disabled={isCreating}>
-              {isCreating ? "Saving..." : "Save Password"}
-            </button>
+        
           </div>
         </div>
       )}
 
-      </div>
-    </div>
-  );
-};
+     
 
 export default Register;
