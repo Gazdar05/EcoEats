@@ -1,6 +1,6 @@
-import React, { useState, type ChangeEvent, type FormEvent, type KeyboardEvent } from 'react';
+import React, { useState, useEffect, type ChangeEvent, type FormEvent, type KeyboardEvent } from 'react';
 import './login.css';
-import { API_BASE_URL } from '../../config'; // ✅ Use your existing config setup
+import { API_BASE_URL } from '../../config';
 
 interface LoginFormData {
   email: string;
@@ -22,7 +22,18 @@ const LoginPage: React.FC = () => {
   const [errors, setErrors] = useState<LoginErrors>({});
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  
+  const [loginSuccess, setLoginSuccess] = useState<boolean>(false);
+  const [userName, setUserName] = useState<string>('');
+
+  // Auto-redirect after 2 seconds on success
+  useEffect(() => {
+    if (loginSuccess) {
+      const timer = setTimeout(() => {
+        window.location.href = '/';
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [loginSuccess]);
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>): void => {
     const { name, value } = e.target;
@@ -74,10 +85,9 @@ const LoginPage: React.FC = () => {
       localStorage.setItem('userEmail', data.user.email);
       localStorage.setItem('userName', data.user.full_name);
 
-      alert('Login successful!');
-
-      // ✅ Redirect user after login
-      window.location.href = '/';
+      // Show success screen
+      setUserName(data.user.full_name);
+      setLoginSuccess(true);
 
     } catch (error) {
       console.error('Login error:', error);
@@ -93,6 +103,25 @@ const LoginPage: React.FC = () => {
       if (form) form.requestSubmit();
     }
   };
+
+  // Success Screen
+  if (loginSuccess) {
+    return (
+      <div className="login-container">
+        <div className="login-wrapper">
+          <div className="container">
+            <div className="success-message-container">
+              <div className="success-icon">✓</div>
+              <h1>Login Successful!</h1>
+              <p>Welcome back, <strong>{userName}</strong>!</p>
+              <p className="redirect-text">Redirecting you to the home page...</p>
+              <div className="loading-spinner"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="login-container">
@@ -136,28 +165,26 @@ const LoginPage: React.FC = () => {
               <div className="form-group">
                 <label htmlFor="password">Password</label>
                 <div className="input-wrapper">
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  id="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  onKeyPress={handleKeyPress}
-                  className={`form-control ${errors.password ? 'error' : ''}`}
-                  placeholder="••••••••"
-                />
-                <button
-                  type="button"
-                  className="password-toggle-outside"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  Show
-                </button>
-              </div>
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    id="password"
+                    name="password"
+                    value={formData.password}
+                    onChange={handleInputChange}
+                    onKeyPress={handleKeyPress}
+                    className={`form-control ${errors.password ? 'error' : ''}`}
+                    placeholder="••••••••"
+                  />
+                  <button
+                    type="button"
+                    className="password-toggle-outside"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    Show
+                  </button>
+                </div>
                 {errors.password && <div className="error-message"><span>{errors.password}</span></div>}
               </div>
-
-            
 
               <button type="submit" className="btn-primary" disabled={isSubmitting}>
                 {isSubmitting ? 'Signing in...' : 'Sign In'}
