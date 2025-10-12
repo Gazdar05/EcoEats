@@ -8,27 +8,35 @@ interface EditItemPopupProps {
 }
 
 const EditItemPopup: React.FC<EditItemPopupProps> = ({ item, onClose, onSave }) => {
-  const [formData, setFormData] = useState(item);
-  const [imagePreview, setImagePreview] = useState<string | null>(item.image || null);
+  const [formData, setFormData] = useState({
+    ...item,
+    category: item.category || "",
+    storage: item.storage || "",
+  });
+
+  const [imagePreview, setImagePreview] = useState<string>(
+    item.image ? String(item.image) : ""
+  );
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    // ✅ Add explicit type for prev
+    setFormData((prev: typeof formData) => ({ ...prev, [name]: value }));
   };
 
-  // ✅ Ensures preview shows immediately after upload
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setImagePreview(reader.result as string);
+        setImagePreview(typeof reader.result === "string" ? reader.result : "");
       };
       reader.readAsDataURL(file);
     }
   };
 
   const handleRemoveImage = () => {
-    setImagePreview(null);
+    setImagePreview("");
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -56,15 +64,24 @@ const EditItemPopup: React.FC<EditItemPopupProps> = ({ item, onClose, onSave }) 
             />
           </div>
 
+          {/* ✅ Category dropdown */}
           <div className="edit-form-group">
             <label>Category</label>
-            <input
-              type="text"
+            <select
               name="category"
               value={formData.category}
               onChange={handleChange}
               required
-            />
+            >
+              <option value="">Select category</option>
+              <option value="Produce">Produce</option>
+              <option value="Dairy">Dairy</option>
+              <option value="Bakery">Bakery</option>
+              <option value="Meat">Meat</option>
+              <option value="Seafood">Seafood</option>
+              <option value="Dry Goods">Dry Goods</option>
+              <option value="Frozen">Frozen</option>
+            </select>
           </div>
 
           <div className="edit-form-group">
@@ -89,7 +106,24 @@ const EditItemPopup: React.FC<EditItemPopupProps> = ({ item, onClose, onSave }) 
             />
           </div>
 
-          {/* ✅ Updated image upload section */}
+          {/* ✅ Storage dropdown */}
+          <div className="edit-form-group">
+            <label>Storage</label>
+            <select
+              name="storage"
+              value={formData.storage}
+              onChange={handleChange}
+              required
+            >
+              <option value="">Select storage</option>
+              <option value="Fridge">Fridge</option>
+              <option value="Freezer">Freezer</option>
+              <option value="Pantry">Pantry</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+
+          {/* Image upload section */}
           <div className="edit-form-group">
             <label>Item Image</label>
             <div className="edit-image-section">

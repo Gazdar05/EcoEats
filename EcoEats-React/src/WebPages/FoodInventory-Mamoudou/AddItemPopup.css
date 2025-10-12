@@ -24,6 +24,11 @@
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
 }
 
+/* ✅ Title color */
+.add-item-popup h2 {
+  color: #111827;
+}
+
 /* Form layout */
 .popup-form {
   display: flex;
@@ -34,6 +39,7 @@
 .popup-form label {
   font-weight: 600;
   margin-top: 5px;
+  color: #111827; /* ✅ updated label color */
 }
 
 .popup-form input,
@@ -43,6 +49,16 @@
   border: 1px solid #ccc;
   border-radius: 6px;
   font-size: 14px;
+  color: #333;
+  background-color: #fff;
+}
+
+.popup-form input:focus,
+.popup-form select:focus,
+.popup-form textarea:focus {
+  outline: none;
+  border-color: #6ea124;
+  box-shadow: 0 0 4px rgba(110, 161, 36, 0.4);
 }
 
 .popup-form textarea {

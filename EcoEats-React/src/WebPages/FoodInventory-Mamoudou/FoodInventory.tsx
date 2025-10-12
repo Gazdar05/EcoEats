@@ -177,7 +177,6 @@ const FoodInventory: React.FC = () => {
 
   return (
     <div className="food-inventory-page">
-      {/* ✅ Navbar only visible if no popup is open */}
       {!isPopupOpen && <Navbar />}
 
       <div className="inventory-container">
@@ -245,6 +244,8 @@ const FoodInventory: React.FC = () => {
                       <option value="">All Storage</option>
                       <option value="Fridge">Fridge</option>
                       <option value="Pantry">Pantry</option>
+                      <option value="Freezer">Freezer</option>
+                      <option value="Other">Other</option>
                     </select>
                   </div>
                   <div className="filter-actions">
@@ -328,10 +329,8 @@ const FoodInventory: React.FC = () => {
         </table>
       </div>
 
-      {/* ✅ Footer only visible if no popup is open */}
       {!isPopupOpen && <Footer />}
 
-      {/* Popups */}
       {showViewPopup && selectedItem && (
         <ViewItemPopup
           item={selectedItem}

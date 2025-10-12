@@ -105,6 +105,8 @@ const AddItemPopup: React.FC<AddItemPopupProps> = ({ onClose, onSave, categories
             <option value="">Select Storage</option>
             <option value="Fridge">Fridge</option>
             <option value="Pantry">Pantry</option>
+            <option value="Freezer">Freezer</option>
+            <option value="Other">Other</option>
           </select>
 
           <label>Notes</label>

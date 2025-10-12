@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
 import Navbar from "./components/navbar";
 import Footer from "./components/footer";
 import FoodInventory from "./WebPages/FoodInventory-Mamoudou/FoodInventory";
@@ -35,12 +35,15 @@ function DonationPage() {
 function NotificationsPage() {
   return <h1>User Notifications</h1>;
 }
+
 function ProfilePage() {
   return <h1>User Profile</h1>;
 }
+
 function AnalyticsPage() {
   return <h1>Track and Record of User</h1>;
 }
+
 function SupportPage() {
   return <h1>Support Page</h1>;
 }
@@ -50,9 +53,15 @@ function AboutPage() {
 }
 
 function App() {
+  const location = useLocation();
+
+  // ✅ Hide Navbar & Footer ONLY for the inventory page
+  const hideLayout = location.pathname === "/inventory";
+
   return (
     <>
-      <Navbar />
+      {!hideLayout && <Navbar />}
+
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
@@ -67,7 +76,8 @@ function App() {
         <Route path="/support" element={<SupportPage />} />
         <Route path="/about" element={<AboutPage />} />
       </Routes>
-      <Footer />
+
+      {!hideLayout && <Footer />}
     </>
   );
 }
