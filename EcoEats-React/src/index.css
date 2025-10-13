@@ -6,7 +6,6 @@
   color-scheme: light dark;
   color: #6EA124;
   background-color: white;
-  
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -25,10 +24,10 @@ a:hover {
 
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
   min-width: 320px;
   min-height: 100vh;
+  display: flex;
+  flex-direction: column; /* ✅ stack content vertically */
 }
 
 h1 {
@@ -67,7 +66,8 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
-/* temporary debug override to force Navbar visible at top */
+
+/* Navbar */
 nav {
   position: fixed;
   top: 0;
@@ -78,13 +78,14 @@ nav {
   padding: 0.6rem 1rem;
   z-index: 9999;
 }
+
 body {
-  padding-top: 58px; /* leave space so page content isn't hidden behind fixed nav */
-}
-html, body {
-  margin: 0;
-  padding: 0;
-  height: 100%;       
-  overflow: hidden;   
+  padding-top: 58px; /* ✅ space for navbar */
 }
 
+/* 🚫 REMOVE this:
+html, body {
+  height: 100%;
+  overflow: hidden;
+}
+*/
