@@ -5,7 +5,7 @@ import ViewItemPopup from "./ViewItemPopup";
 import EditItemPopup from "./EditItemPopup";
 import AddItemPopup from "./AddItemPopup";
 import DonationPopup from "./DonationPopup";
-import type { DonationItem as DonationListItem } from "./DonationList"; // ✅ type-only import
+import type { DonationItem as DonationListItem } from "./DonationList"; // type-only
 import DonationList from "./DonationList";
 import Navbar from "../../components/navbar";
 import Footer from "../../components/footer";
@@ -23,7 +23,7 @@ interface InventoryItem {
 }
 
 interface DonationItem {
-  id: number; // ✅ number to match backend
+  id: number;
   name: string;
   category: string;
   quantity: string;
@@ -96,7 +96,7 @@ const FoodInventory: React.FC = () => {
       const data = await res.json();
       const normalized: DonationItem[] = data.map((d: any) => ({
         ...d,
-        id: Number(d.id), // ✅ ensure number
+        id: Number(d.id),
         expiry: d.expiry || "",
         status: d.status || "Fresh",
         pickupLocation: d.pickupLocation || "",
@@ -358,22 +358,14 @@ const FoodInventory: React.FC = () => {
         <DonationPopup
           donationItem={donationItem}
           onClose={() => { setShowDonationPopup(false); setDonationItem(null); }}
-          onDonationAdded={async () => {
-            try {
-              const res = await fetch(`${API_BASE}/donations`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(donationItem),
-              });
-              if (!res.ok) throw new Error("Failed to add donation");
-              const newDonation: DonationItem = await res.json();
-              setDonations((prev) => [...prev, newDonation]);
-              setInventory((prev) => prev.filter((i) => i.id !== donationItem.id));
-              setShowDonationPopup(false);
-              setDonationItem(null);
-            } catch (err) {
-              console.error(err);
-            }
+          onDonationAdded={(newDonationId: number) => {
+            setDonations((prev) => [
+              ...prev,
+              { ...donationItem, id: newDonationId }
+            ]);
+            setInventory((prev) => prev.filter((i) => i.id !== donationItem.id));
+            setShowDonationPopup(false);
+            setDonationItem(null);
           }}
         />
       )}

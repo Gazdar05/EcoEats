@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import "./DonationPopup.css";
 
 interface InventoryItem {
-  id: number;
+  id: number; // keep as number
   name: string;
   category: string;
   quantity: string;
@@ -16,14 +16,13 @@ interface InventoryItem {
 interface DonationPopupProps {
   donationItem: InventoryItem | null;
   onClose: () => void;
-  onDonationAdded?: (newDonationId: number) => void;
+  onDonationAdded?: (newDonationId: number) => void; // use number
 }
 
 const API_BASE = "http://127.0.0.1:8000";
 
 const DonationPopup: React.FC<DonationPopupProps> = ({ donationItem, onClose, onDonationAdded }) => {
   const [pickupLocation, setPickupLocation] = useState("Main Storage");
-  const [availability, setAvailability] = useState("Available");
   const [donationDate, setDonationDate] = useState(new Date().toISOString().slice(0, 10));
   const [loading, setLoading] = useState(false);
 
@@ -37,61 +36,39 @@ const DonationPopup: React.FC<DonationPopupProps> = ({ donationItem, onClose, on
   const handleSubmitDonation = async () => {
     setLoading(true);
 
-    // Validate quantity
-    const quantityNum = parseInt(donationItem.quantity, 10);
-    if (isNaN(quantityNum) || quantityNum <= 0) {
-      alert("Invalid quantity. Cannot convert to donation.");
-      setLoading(false);
-      return;
-    }
-
-    // Construct payload with all required fields and type-safe values
-    const payload = {
-      name: donationItem.name || "Unnamed",
-      category: donationItem.category || "Other",
-      quantity: quantityNum,
-      expiry: donationItem.expiry || new Date().toISOString().slice(0, 10),
-      storage: donationItem.storage || "Unknown",
-      status: donationItem.status || "Fresh",
-      pickupLocation: pickupLocation || "Main Storage",
-      availability: availability || "Available",
-      donationDate: donationDate || new Date().toISOString().slice(0, 10),
-      notes: donationItem.notes || "",
-      image: donationItem.image || "",
-    };
-
     try {
-      const res = await fetch(`${API_BASE}/donations`, {
+      const res = await fetch(`${API_BASE}/donations/${donationItem.id}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          pickupDate: donationDate,
+          pickupLocation: pickupLocation
+        }),
       });
 
       if (!res.ok) {
-        // Try to get backend message
         let message = "Failed to create donation";
         try {
           const errorData = await res.json();
-          if (errorData?.message) message = errorData.message;
+          if (errorData?.detail) message = errorData.detail;
         } catch {
           console.error("Non-JSON backend error");
         }
         console.error("Donation creation error:", message);
         alert(message);
-        return; // exit early
-      }
-
-      const createdDonation = await res.json();
-
-      if (!createdDonation?.id) {
-        alert("Donation created but no ID returned. Please check backend.");
+        setLoading(false);
         return;
       }
 
-      if (onDonationAdded) onDonationAdded(Number(createdDonation.id));
+      const createdDonation = await res.json();
+      if (!createdDonation?.id) {
+        alert("Donation created but no ID returned. Please check backend.");
+        setLoading(false);
+        return;
+      }
 
-      // Delete from inventory safely
-      await fetch(`${API_BASE}/inventory/${donationItem.id}`, { method: "DELETE" });
+      // Convert backend string ID to number
+      if (onDonationAdded) onDonationAdded(Number(createdDonation.id));
 
       alert(`"${donationItem.name}" has been successfully converted to a donation.`);
       onClose();
@@ -129,18 +106,19 @@ const DonationPopup: React.FC<DonationPopupProps> = ({ donationItem, onClose, on
         </div>
         <div className="donation-field">
           <label>Pickup Location</label>
-          <input type="text" value={pickupLocation} onChange={(e) => setPickupLocation(e.target.value)} />
-        </div>
-        <div className="donation-field">
-          <label>Availability</label>
-          <select value={availability} onChange={(e) => setAvailability(e.target.value)}>
-            <option value="Available">Available</option>
-            <option value="Pending">Pending</option>
-          </select>
+          <input
+            type="text"
+            value={pickupLocation}
+            onChange={(e) => setPickupLocation(e.target.value)}
+          />
         </div>
         <div className="donation-field">
           <label>Donation Date</label>
-          <input type="date" value={donationDate} onChange={(e) => setDonationDate(e.target.value)} />
+          <input
+            type="date"
+            value={donationDate}
+            onChange={(e) => setDonationDate(e.target.value)}
+          />
         </div>
         <div className="donation-actions">
           <button className="btn-submit" onClick={handleSubmitDonation} disabled={loading}>
