@@ -57,7 +57,7 @@ body {
 .logo {
     width: 60px;
     height: 60px;
-    background-color: #059669;
+    background-color: #6EA124;
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -138,7 +138,7 @@ body {
 
 .form-control:focus {
     outline: none;
-    border-color: #059669;
+    border-color: #6EA124;
     box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
 }
 
@@ -155,7 +155,7 @@ body {
     flex-shrink: 0;
     padding: 0 0.8rem;
     font-size: 0.9rem;
-    background-color: #059669;
+    background-color: #6EA124;
     color: white;
     border-radius: 8px;
     border: none;
@@ -164,7 +164,7 @@ body {
 }
 
 .password-toggle-outside:hover {
-    background-color: #047857;
+    background-color: #6EA124;
 }
 
 .error-message {
@@ -191,7 +191,7 @@ body {
 
 .btn-primary {
     width: 100%;
-    background-color: #059669;
+    background-color: #6EA124;
     color: white;
     border: none;
     border-radius: 8px;

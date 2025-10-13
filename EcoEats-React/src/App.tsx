@@ -5,6 +5,7 @@ import Register from "./WebPages/Register-Emmeline/Register";
 import LoginPage from "./WebPages/Register-Emmeline/Login";
 import VerifyAccountPage from "./WebPages/Register-Emmeline/VerifyAccount";
 import ProfilePage from "./WebPages/Register-Emmeline/ProfilePage";
+import HomePage from "./WebPages/Register-Emmeline/HomePage.tsx";
 import ProtectedRoute from "./components/ProtectedRoute.tsx";
 import { useEffect } from "react";
 
@@ -13,10 +14,6 @@ import { useEffect } from "react";
 import BrowseFood from "./WebPages/BrowseFood-Zayyan/BrowsePage";
 
 // Temporary page components
-function HomePage() {
-  return <h1>Welcome to EcoEats!</h1>;
-}
-
 
 function BrowsePage() {
   return <h1>Browse Food Items</h1>;

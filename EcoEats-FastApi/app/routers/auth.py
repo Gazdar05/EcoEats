@@ -44,6 +44,10 @@ class SetPasswordRequest(BaseModel):
     email: EmailStr
     new_password: str
 
+class Update2FARequest(BaseModel):
+    email: EmailStr
+    enable_2fa: bool
+
 # ---------------------------
 # Helpers
 # ---------------------------
@@ -285,11 +289,7 @@ async def verify_2fa(request: Verify2FARequest):
         {"$set": {"acct_status": "pending"}}
     )
 
-    ##dont need?
-    await db.verification_codes.update_one(
-        {"_id": record["_id"]},
-        {"$set": {"is_used": True}}
-    )
+
 
     return {"message": "2FA verified successfully. You can now log in."}
 
@@ -373,6 +373,7 @@ async def get_user_profile(email: EmailStr):
         raise HTTPException(status_code=404, detail="User not found")
     
     return {
+        "user_id": str(user["_id"]),  # ✅ Added user_id
         "full_name": user["full_name"],
         "email": user["email"],
         "household_size": user.get("household_size"),
@@ -381,3 +382,4 @@ async def get_user_profile(email: EmailStr):
         "created_at": user["created_at"].isoformat() if user.get("created_at") else None,
         "last_login_at": user["last_login_at"].isoformat() if user.get("last_login_at") else None
     }
+
