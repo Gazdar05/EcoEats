@@ -10,6 +10,9 @@ import ProtectedRoute from "./components/ProtectedRoute.tsx";
 import { useEffect } from "react";
 
 
+// ✅ Import your real feature page
+import BrowseFood from "./WebPages/BrowseFood-Zayyan/BrowsePage";
+
 // Temporary page components
 
 function BrowsePage() {
@@ -19,15 +22,12 @@ function BrowsePage() {
 function InventoryPage() {
   return <h1>Inventory Management</h1>;
 }
-
 function MealsPage() {
   return <h1>Meal Planning</h1>;
 }
-
 function DonationPage() {
   return <h1>User Donations</h1>;
 }
-
 function NotificationsPage() {
   return <h1>User Notifications</h1>;
 }
@@ -38,7 +38,6 @@ function AnalyticsPage() {
 function SupportPage() {
   return <h1>Support Page</h1>;
 }
-
 function AboutPage() {
   return <h1>About EcoEats</h1>;
 }
@@ -136,7 +135,9 @@ function App() {
           </ProtectedRoute>
         } />
       </Routes>
-      <Footer />
+
+      {/* ✅ Only show footer when NOT on /browse */}
+      {location.pathname !== "/browse" && <Footer />}
     </>
   );
 }
