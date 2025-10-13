@@ -1,9 +1,9 @@
 /* ===============================
-   Donation Popup Overlay Styles
+   Donation List Overlay Styles
    =============================== */
 
 /* Overlay */
-.donation-popup-overlay {
+.donation-list-overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -13,13 +13,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 99999; /* ensures it overlays inventory table and everything else */
+  z-index: 99999;
   padding: 10px;
   box-sizing: border-box;
 }
 
 /* Popup Container */
-.donation-popup-container {
+.donation-list-container {
   background: #ffffff;
   border-radius: 16px;
   width: 90%;
@@ -33,8 +33,8 @@
 }
 
 /* Header */
-.donation-popup-header {
-  background-color: #2563eb;
+.donation-list-header {
+  background-color: #5d8f1f;
   color: #ffffff;
   padding: 1rem 1.5rem;
   display: flex;
@@ -44,13 +44,13 @@
   border-top-right-radius: 16px;
 }
 
-.donation-popup-header h2 {
+.donation-list-header h2 {
   font-size: 1.5rem;
   font-weight: 600;
   margin: 0;
 }
 
-.close-btn {
+.close-donation-list {
   background: transparent;
   border: none;
   color: #ffffff;
@@ -59,12 +59,12 @@
   transition: opacity 0.2s ease;
 }
 
-.close-btn:hover {
+.close-donation-list:hover {
   opacity: 0.8;
 }
 
 /* Scrollable content */
-.donation-popup-content {
+.donation-list-content {
   padding: 1rem 1.5rem;
   overflow-y: auto;
   flex-grow: 1;
@@ -72,7 +72,7 @@
 }
 
 /* Donation Table */
-.donation-table {
+.donation-list-table {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
@@ -84,7 +84,7 @@
   font-size: 0.95rem;
 }
 
-.donation-table thead th {
+.donation-list-table thead th {
   text-align: left;
   font-weight: 500;
   font-size: 13px;
@@ -94,7 +94,7 @@
   border-bottom: 1px solid #e5e7eb;
 }
 
-.donation-table tbody td {
+.donation-list-table tbody td {
   padding: 14px 16px;
   font-size: 14px;
   color: #111827;
@@ -102,8 +102,54 @@
   vertical-align: middle;
 }
 
-.donation-table tbody tr:hover {
+.donation-list-table tbody tr:hover {
   background: #fcfcfd;
+}
+
+/* Status badges */
+.status.fresh {
+  color: #16a34a;
+  font-weight: 500;
+}
+.status.expiring {
+  color: #f59e0b;
+  font-weight: 500;
+}
+.status.expired {
+  color: #dc2626;
+  font-weight: 500;
+}
+
+/* No donations message */
+.no-donations {
+  text-align: center;
+  padding: 2rem 0;
+  color: #6b7280;
+  font-size: 1rem;
+}
+
+/* Actions at bottom */
+.donation-list-actions {
+  padding: 1rem 1.5rem;
+  display: flex;
+  justify-content: flex-end;
+  background-color: #f9fafb;
+  border-top: 1px solid #e5e7eb;
+}
+
+.donation-list-actions .close-btn {
+  background-color: #5d8f1f;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: background 0.2s ease;
+}
+
+.donation-list-actions .close-btn:hover {
+  background-color: #5d8f1f;
 }
 
 /* Hide navbar and footer when popup is open */
