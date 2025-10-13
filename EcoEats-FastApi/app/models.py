@@ -1,18 +1,12 @@
-# app/models.py
 from pydantic import BaseModel, Field, EmailStr
-from typing import Optional
+from typing import Optional, Any
 from datetime import datetime, date
 from bson import ObjectId
 from pydantic_core import core_schema
-from typing import Any
-from pydantic import BaseModel, Field
-from datetime import date
-from typing import Optional
 
-
-
-
+# --------------------
 # Helper for Mongo ObjectId serialization
+# --------------------
 class PyObjectId(ObjectId):
     @classmethod
     def __get_pydantic_core_schema__(cls, source_type: Any, handler):
@@ -21,18 +15,17 @@ class PyObjectId(ObjectId):
             cls.validate,
             core_schema.str_schema()
         )
-    
+
     @classmethod
     def validate(cls, v: Any) -> ObjectId:
         if not ObjectId.is_valid(v):
             raise ValueError("Invalid ObjectId")
         return ObjectId(v)
-    
+
     @classmethod
     def __get_pydantic_json_schema__(cls, core_schema, handler):
         # tells Pydantic how to display in docs
         return {"type": "string", "example": "507f1f77bcf86cd799439011"}
-
 
 
 # --------------------
@@ -51,11 +44,10 @@ class HouseholdUser(BaseModel):
     last_login_at: Optional[datetime] = None
 
     model_config = {
-        "populate_by_name": True,
+        "validate_by_name": True,
         "arbitrary_types_allowed": True,
         "json_encoders": {ObjectId: str},
     }
-
 
 
 # --------------------
@@ -69,10 +61,11 @@ class PrivacySetting(BaseModel):
     saved_filter_json: Optional[dict] = None
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
-    class Config:
-        allow_population_by_field_name = True
-        arbitrary_types_allowed = True
-        json_encoders = {ObjectId: str}
+    model_config = {
+        "validate_by_name": True,
+        "arbitrary_types_allowed": True,
+        "json_encoders": {ObjectId: str},
+    }
 
 
 # --------------------
@@ -87,24 +80,27 @@ class VerificationCode(BaseModel):
     is_used: bool = False
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
-    class Config:
-        allow_population_by_field_name = True
-        arbitrary_types_allowed = True
-        json_encoders = {ObjectId: str}
+    model_config = {
+        "validate_by_name": True,
+        "arbitrary_types_allowed": True,
+        "json_encoders": {ObjectId: str},
+    }
+
 
 # --------------------
 # FoodCategory
 # --------------------
 class FoodCategory(BaseModel):
-    id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")  # MongoDB _id
+    id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
     fc_cat_id: Optional[int] = Field(None, description="Custom category ID from data dictionary")
     name: str = Field(..., max_length=80)
     desc: Optional[str] = None
 
-    class Config:
-        allow_population_by_field_name = True
-        arbitrary_types_allowed = True
-        json_encoders = {ObjectId: str}
+    model_config = {
+        "validate_by_name": True,
+        "arbitrary_types_allowed": True,
+        "json_encoders": {ObjectId: str},
+    }
 
 
 # --------------------
@@ -118,18 +114,23 @@ class FoodItem(BaseModel):
     qty: int
     reserved_qty: int = 0
     unit: str = Field(..., max_length=32)
-    storage_loc: Optional[str] = None  # fridge, freezer, pantry, other
+    storage_loc: Optional[str] = None
     expiry_date: Optional[date] = None
-    status: str = Field(default="active", max_length=20)  # active, used, donation, archived
+    status: str = Field(default="active", max_length=20)
     notes: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
-    class Config:
-        allow_population_by_field_name = True
-        arbitrary_types_allowed = True
-        json_encoders = {ObjectId: str}
+    model_config = {
+        "validate_by_name": True,
+        "arbitrary_types_allowed": True,
+        "json_encoders": {ObjectId: str},
+    }
 
+
+# --------------------
+# InventoryItemModel
+# --------------------
 class InventoryItemModel(BaseModel):
     id: Optional[str] = Field(alias="_id", default=None)
     name: str
@@ -141,9 +142,8 @@ class InventoryItemModel(BaseModel):
     notes: Optional[str] = None
     image: Optional[str] = None
 
-    class Config:
-        populate_by_name = True
-        json_encoders = {ObjectId: str}
-        arbitrary_types_allowed = True
-    
-    
+    model_config = {
+        "validate_by_name": True,
+        "json_encoders": {ObjectId: str},
+        "arbitrary_types_allowed": True,
+    }

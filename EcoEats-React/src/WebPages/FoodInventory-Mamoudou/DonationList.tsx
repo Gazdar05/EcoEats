@@ -1,8 +1,9 @@
+// src/pages/Inventory/DonationList.tsx
 import React, { useEffect } from "react";
 import "./DonationList.css";
 
 export interface DonationItem {
-  id: number; // ✅ ensure ID is a number
+  id: string;
   name: string;
   category: string;
   quantity: string;
@@ -20,71 +21,50 @@ interface DonationListProps {
 }
 
 const DonationList: React.FC<DonationListProps> = ({ donations, onClose }) => {
-  // Add class to body when popup is open to hide background scroll and navbar/footer
   useEffect(() => {
     document.body.classList.add("popup-open");
-    return () => {
-      document.body.classList.remove("popup-open");
-    };
+    return () => document.body.classList.remove("popup-open");
   }, []);
 
-  // Close modal on Escape key
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    document.addEventListener("keydown", handleEscape);
-    return () => {
-      document.removeEventListener("keydown", handleEscape);
-    };
-  }, [onClose]);
-
-  // Prevent clicks inside modal from closing it
-  const stopPropagation = (e: React.MouseEvent<HTMLDivElement>) => e.stopPropagation();
-
   return (
-    <div className="donation-popup-overlay" onClick={onClose}>
-      <div className="donation-popup-container" onClick={stopPropagation}>
-        <div className="donation-popup-header">
-          <h2>Donation Listings</h2>
-          <button className="close-btn" onClick={onClose}>
-            ×
-          </button>
+    <div className="donation-list-overlay" onClick={onClose}>
+      <div className="donation-list-container" onClick={(e) => e.stopPropagation()}>
+        <div className="donation-list-header">
+          <h2>Donation List</h2>
+          <button className="close-donation-list" onClick={onClose}>✕</button>
         </div>
 
-        <div className="donation-popup-content">
-          {donations.length > 0 ? (
-            <table className="donation-table">
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Quantity</th>
-                  <th>Expiry</th>
-                  <th>Storage</th>
-                  <th>Status</th>
-                  <th>Availability</th>
-                  <th>Pickup Location</th>
-                  <th>Pickup Date</th>
+        {donations.length === 0 ? (
+          <p className="no-donations">No donations available.</p>
+        ) : (
+          <table className="donation-list-table">
+            <thead>
+              <tr>
+                <th>ID</th><th>Item Name</th><th>Category</th><th>Quantity</th><th>Expiry</th>
+                <th>Storage</th><th>Status</th><th>Pickup Location</th><th>Pickup Date</th><th>Availability</th>
+              </tr>
+            </thead>
+            <tbody>
+              {donations.map((donation) => (
+                <tr key={donation.id}>
+                  <td>{donation.id}</td>
+                  <td>{donation.name}</td>
+                  <td>{donation.category}</td>
+                  <td>{donation.quantity}</td>
+                  <td>{donation.expiry}</td>
+                  <td>{donation.storage}</td>
+                  <td><span className={`status ${donation.status === "Expired" ? "expired" : donation.status === "Expiring Soon" ? "expiring" : "fresh"}`}>{donation.status}</span></td>
+                  <td>{donation.pickupLocation || "—"}</td>
+                  <td>{donation.pickupDate || "—"}</td>
+                  <td>{donation.availability || "Available"}</td>
                 </tr>
-              </thead>
-              <tbody>
-                {donations.map((item) => (
-                  <tr key={item.id}>
-                    <td>{item.name}</td>
-                    <td>{item.quantity}</td>
-                    <td>{item.expiry}</td>
-                    <td>{item.storage}</td>
-                    <td>{item.status}</td>
-                    <td>{item.availability || "Available"}</td>
-                    <td>{item.pickupLocation || "-"}</td>
-                    <td>{item.pickupDate || "-"}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          ) : (
-            <p className="no-donations">No donations available.</p>
-          )}
+              ))}
+            </tbody>
+          </table>
+        )}
+
+        <div className="donation-list-actions">
+          <button className="close-btn" onClick={onClose}>Close</button>
         </div>
       </div>
     </div>

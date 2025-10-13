@@ -9,7 +9,9 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=["http://localhost:5173",
+                   "http://127.0.0.1:5173",
+                    "http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -29,4 +31,3 @@ app.include_router(auth.router, prefix="/auth", tags=["Auth"])
 app.include_router(inventory.router, prefix="/inventory", tags=["Inventory"])
 app.include_router(browse.router, prefix="/browse", tags=["Browse"])
 app.include_router(donation.router, prefix="/donations", tags=["Donations"])
-app.include_router(inventory.router)

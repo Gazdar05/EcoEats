@@ -32,4 +32,4 @@ class InventoryResponse(BaseModel):
     image: Optional[str]
 
     class Config:
-        orm_mode = True
+        from_attributes = True  # ✅ Updated for Pydantic v2
