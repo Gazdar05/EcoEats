@@ -5,7 +5,6 @@ import ViewItemPopup from "./ViewItemPopup";
 import EditItemPopup from "./EditItemPopup";
 import AddItemPopup from "./AddItemPopup";
 import DonationPopup from "./DonationPopup";
-import type { DonationItem as DonationListItem } from "./DonationList";
 import DonationList from "./DonationList";
 import Navbar from "../../components/navbar";
 import Footer from "../../components/footer";
@@ -268,7 +267,7 @@ const FoodInventory: React.FC = () => {
     setShowDonationPopup(true);
   };
 
-  const handleDonationAdded = async (newDonationId: string) => {
+  const handleDonationAdded = async () => {
     await fetchInventory();
     await fetchDonations();
     setShowDonationPopup(false);
@@ -495,7 +494,9 @@ const FoodInventory: React.FC = () => {
         />
       )}
 
-      {showDonationList && <DonationList donations={donations} onClose={() => setShowDonationList(false)} />}
+      {showDonationList && (
+        <DonationList donations={donations} onClose={() => setShowDonationList(false)} />
+      )}
     </div>
   );
 };
