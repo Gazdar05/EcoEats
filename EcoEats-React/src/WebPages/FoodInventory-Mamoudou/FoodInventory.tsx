@@ -1,10 +1,15 @@
 import React, { useEffect, useMemo, useState } from "react";
 import "./FoodInventory.css";
 import { Plus, Filter, Search, Edit, Trash2, Eye, CheckSquare, Heart } from "lucide-react";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import ViewItemPopup from "./ViewItemPopup";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import EditItemPopup from "./EditItemPopup";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import AddItemPopup from "./AddItemPopup";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import DonationPopup from "./DonationPopup";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import DonationList from "./DonationList";
 import Navbar from "../../components/navbar";
 import Footer from "../../components/footer";
@@ -65,7 +70,6 @@ const FoodInventory: React.FC = () => {
     { id: "frozen", name: "Frozen" },
   ];
 
-  // Lock body scroll if popup open
   const isPopupOpen = showViewPopup || showEditPopup || showAddPopup || showDonationPopup || showDonationList;
   useEffect(() => {
     if (isPopupOpen) document.body.classList.add("popup-open");
@@ -73,7 +77,6 @@ const FoodInventory: React.FC = () => {
     return () => document.body.classList.remove("popup-open");
   }, [isPopupOpen]);
 
-  // Status helper
   const calculateStatus = (expiryDate: string): string => {
     if (!expiryDate) return "Unknown";
     const today = new Date();
@@ -84,7 +87,6 @@ const FoodInventory: React.FC = () => {
     return "Fresh";
   };
 
-  // Fetch inventory
   const fetchInventory = async () => {
     try {
       const res = await fetch(`${API_BASE}/inventory/`);
@@ -104,7 +106,6 @@ const FoodInventory: React.FC = () => {
     }
   };
 
-  // Fetch donations
   const fetchDonations = async () => {
     try {
       const res = await fetch(`${API_BASE}/donations/`);
@@ -132,7 +133,6 @@ const FoodInventory: React.FC = () => {
     fetchDonations();
   }, []);
 
-  // Filtered list
   const filteredInventory = useMemo(() => {
     const term = searchTerm.trim().toLowerCase();
     return inventory.filter((item) => {
@@ -153,7 +153,6 @@ const FoodInventory: React.FC = () => {
     });
   }, [inventory, searchTerm, filters]);
 
-  // Delete
   const handleDeleteItem = async (itemId: string) => {
     if (!window.confirm("Are you sure you want to delete this item?")) return;
     try {
@@ -168,7 +167,6 @@ const FoodInventory: React.FC = () => {
     }
   };
 
-  // Add
   const handleAddItem = async (newItem: Omit<InventoryItem, "id" | "status">) => {
     try {
       const res = await fetch(`${API_BASE}/inventory/`, {
@@ -188,7 +186,6 @@ const FoodInventory: React.FC = () => {
     }
   };
 
-  // Update
   const handleUpdateItem = async (updatedItem: Omit<InventoryItem, "status">) => {
     try {
       const res = await fetch(`${API_BASE}/inventory/${updatedItem.id}/`, {
@@ -213,7 +210,6 @@ const FoodInventory: React.FC = () => {
     }
   };
 
-  // Mark as used
   const handleMarkAsUsed = async () => {
     const nextInventory = await Promise.all(
       inventory.map(async (item) => {
@@ -250,7 +246,6 @@ const FoodInventory: React.FC = () => {
     setSelectedItems([]);
   };
 
-  // Delete multiple
   const handleDeleteSelected = async () => {
     if (!window.confirm("Are you sure you want to delete the selected items?")) return;
     await Promise.all(selectedItems.map((id) => fetch(`${API_BASE}/inventory/${id}/`, { method: "DELETE" })));
@@ -261,7 +256,6 @@ const FoodInventory: React.FC = () => {
   const toggleSelectItem = (id: string) =>
     setSelectedItems((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
 
-  // Donation popup
   const handleOpenDonationPopup = (item: InventoryItem) => {
     setDonationItem(item);
     setShowDonationPopup(true);
@@ -274,7 +268,6 @@ const FoodInventory: React.FC = () => {
     setDonationItem(null);
   };
 
-  // UI
   const handleViewItem = (item: InventoryItem) => {
     setSelectedItem(item);
     setShowViewPopup(true);

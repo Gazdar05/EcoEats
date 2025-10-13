@@ -9,13 +9,18 @@ router = APIRouter()
 collection = db["inventory"]
 
 def serialize_item(item):
-    """Convert MongoDB _id to string and return clean dict."""
+    """Convert MongoDB _id to string and clean datetime fields."""
     item["id"] = str(item["_id"])
     del item["_id"]
+
+    # Convert expiry datetime to string (YYYY-MM-DD)
+    if "expiry" in item and isinstance(item["expiry"], datetime):
+        item["expiry"] = item["expiry"].strftime("%Y-%m-%d")
+
     return item
 
 
-@router.get("/", response_model=list[dict])
+@router.get("/")
 async def get_inventory():
     """Get all inventory items."""
     items = await collection.find().to_list(length=None)
@@ -40,13 +45,12 @@ async def get_inventory_item(item_id: str):
 @router.post("/", status_code=status.HTTP_201_CREATED)
 async def create_inventory_item(item: dict):
     """Create a new inventory item."""
-    # Optional: ensure required fields
     required = ["name", "category", "quantity", "expiry", "storage"]
     for field in required:
         if field not in item or not item[field]:
             raise HTTPException(status_code=400, detail=f"Missing field: {field}")
 
-    # Parse expiry to datetime if it's a string
+    # Convert expiry string to datetime
     if isinstance(item.get("expiry"), str):
         try:
             item["expiry"] = datetime.strptime(item["expiry"], "%Y-%m-%d")
