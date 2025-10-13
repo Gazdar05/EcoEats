@@ -42,7 +42,7 @@ const DonationPopup: React.FC<DonationPopupProps> = ({ donationItem, onClose, on
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           pickupDate: donationDate,
-          pickupLocation: pickupLocation
+          pickupLocation: pickupLocation,
         }),
       });
 
@@ -67,7 +67,7 @@ const DonationPopup: React.FC<DonationPopupProps> = ({ donationItem, onClose, on
         return;
       }
 
-      // Convert backend string ID to number
+      // Convert backend ID to number
       if (onDonationAdded) onDonationAdded(Number(createdDonation.id));
 
       alert(`"${donationItem.name}" has been successfully converted to a donation.`);

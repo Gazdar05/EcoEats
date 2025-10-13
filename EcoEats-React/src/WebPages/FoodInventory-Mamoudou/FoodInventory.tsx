@@ -354,6 +354,7 @@ const FoodInventory: React.FC = () => {
       {showEditPopup && selectedItem && <EditItemPopup item={selectedItem} onClose={() => setShowEditPopup(false)} onSave={handleUpdateItem} />}
       {showAddPopup && <AddItemPopup onClose={() => setShowAddPopup(false)} onSave={handleAddItem} categories={categories} />}
 
+      {/* UPDATED DonationPopup section */}
       {showDonationPopup && donationItem && (
         <DonationPopup
           donationItem={donationItem}
@@ -361,7 +362,12 @@ const FoodInventory: React.FC = () => {
           onDonationAdded={(newDonationId: number) => {
             setDonations((prev) => [
               ...prev,
-              { ...donationItem, id: newDonationId }
+              {
+                ...donationItem,
+                id: newDonationId,
+                pickupLocation: donationItem.storage,
+                availability: "Available",
+              } as DonationListItem,
             ]);
             setInventory((prev) => prev.filter((i) => i.id !== donationItem.id));
             setShowDonationPopup(false);
