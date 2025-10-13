@@ -1,6 +1,6 @@
 # app/main.py
 from fastapi import FastAPI
-from app.routers import auth, inventory, browse
+from app.routers import auth, inventory, browse, donation
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.database import db
@@ -28,4 +28,5 @@ async def test_db():
 app.include_router(auth.router, prefix="/auth", tags=["Auth"])
 app.include_router(inventory.router, prefix="/inventory", tags=["Inventory"])
 app.include_router(browse.router, prefix="/browse", tags=["Browse"])
+app.include_router(donation.router, prefix="/donations", tags=["Donations"])
 app.include_router(inventory.router)

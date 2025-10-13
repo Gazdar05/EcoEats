@@ -1,0 +1,113 @@
+/* ===============================
+   Donation Popup Overlay Styles
+   =============================== */
+
+/* Overlay */
+.donation-popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999; /* ensures it overlays inventory table and everything else */
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+/* Popup Container */
+.donation-popup-container {
+  background: #ffffff;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 900px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  color: #111827;
+}
+
+/* Header */
+.donation-popup-header {
+  background-color: #2563eb;
+  color: #ffffff;
+  padding: 1rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
+}
+
+.donation-popup-header h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.close-btn {
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.close-btn:hover {
+  opacity: 0.8;
+}
+
+/* Scrollable content */
+.donation-popup-content {
+  padding: 1rem 1.5rem;
+  overflow-y: auto;
+  flex-grow: 1;
+  background-color: #f9fafb;
+}
+
+/* Donation Table */
+.donation-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+  color: #111827;
+  font-size: 0.95rem;
+}
+
+.donation-table thead th {
+  text-align: left;
+  font-weight: 500;
+  font-size: 13px;
+  color: #6b7280;
+  background: #f9fafb;
+  padding: 12px 16px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.donation-table tbody td {
+  padding: 14px 16px;
+  font-size: 14px;
+  color: #111827;
+  border-bottom: 1px solid #f3f4f6;
+  vertical-align: middle;
+}
+
+.donation-table tbody tr:hover {
+  background: #fcfcfd;
+}
+
+/* Hide navbar and footer when popup is open */
+.popup-open nav,
+.popup-open footer {
+  display: none !important;
+}
