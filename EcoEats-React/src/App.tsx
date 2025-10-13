@@ -9,7 +9,6 @@ import HomePage from "./WebPages/Register-Emmeline/HomePage.tsx";
 import ProtectedRoute from "./components/ProtectedRoute.tsx";
 import { useEffect } from "react";
 
-
 // ✅ Import your real feature page
 import BrowseFood from "./WebPages/BrowseFood-Zayyan/BrowsePage";
 
@@ -50,10 +49,10 @@ function App() {
     let logoutTimer: NodeJS.Timeout;
 
     const resetTimer = () => {
-       // 🧩 Don't set timer if user is already on login/register
+      // 🧩 Don't set timer if user is already on login/register
       const excludedPaths = ["/login", "/register"];
       if (excludedPaths.includes(window.location.pathname)) return;
-      
+
       clearTimeout(logoutTimer);
       logoutTimer = setTimeout(() => {
         const token = localStorage.getItem("token");
@@ -68,7 +67,9 @@ function App() {
 
     // ✅ Reset timer when user interacts
     const activityEvents = ["mousemove", "keydown", "click", "scroll"];
-    activityEvents.forEach(event => window.addEventListener(event, resetTimer));
+    activityEvents.forEach((event) =>
+      window.addEventListener(event, resetTimer)
+    );
 
     // Start initial timer
     resetTimer();
@@ -76,7 +77,9 @@ function App() {
     // Cleanup on unmount
     return () => {
       clearTimeout(logoutTimer);
-      activityEvents.forEach(event => window.removeEventListener(event, resetTimer));
+      activityEvents.forEach((event) =>
+        window.removeEventListener(event, resetTimer)
+      );
     };
   }, [navigate]);
 
@@ -91,49 +94,68 @@ function App() {
         <Route path="/verify-account" element={<VerifyAccountPage />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/support" element={<SupportPage />} />
+        <Route
+          path="/browse"
+          element={
+            <ProtectedRoute>
+              <BrowseFood />
+            </ProtectedRoute>
+          }
+        />
 
-        {/* Protected Routes - Login required */}
-        <Route path="/browse" element={
-          <ProtectedRoute>
-            <BrowsePage />
-          </ProtectedRoute>
-        } />
-        
-        <Route path="/inventory" element={
-          <ProtectedRoute>
-            <InventoryPage />
-          </ProtectedRoute>
-        } />
-        
-        <Route path="/meals" element={
-          <ProtectedRoute>
-            <MealsPage />
-          </ProtectedRoute>
-        } />
-        
-        <Route path="/donations" element={
-          <ProtectedRoute>
-            <DonationPage />
-          </ProtectedRoute>
-        } />
-        
-        <Route path="/notifications" element={
-          <ProtectedRoute>
-            <NotificationsPage />
-          </ProtectedRoute>
-        } />
-        
-        <Route path="/profile" element={
-          <ProtectedRoute>
-            <ProfilePage />
-          </ProtectedRoute>
-        } />
-        
-        <Route path="/analytics" element={
-          <ProtectedRoute>
-            <AnalyticsPage />
-          </ProtectedRoute>
-        } />
+        <Route
+          path="/inventory"
+          element={
+            <ProtectedRoute>
+              <InventoryPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/meals"
+          element={
+            <ProtectedRoute>
+              <MealsPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/donations"
+          element={
+            <ProtectedRoute>
+              <DonationPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/notifications"
+          element={
+            <ProtectedRoute>
+              <NotificationsPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <ProfilePage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/analytics"
+          element={
+            <ProtectedRoute>
+              <AnalyticsPage />
+            </ProtectedRoute>
+          }
+        />
       </Routes>
 
       {/* ✅ Only show footer when NOT on /browse */}
@@ -141,6 +163,5 @@ function App() {
     </>
   );
 }
-
 
 export default App;
