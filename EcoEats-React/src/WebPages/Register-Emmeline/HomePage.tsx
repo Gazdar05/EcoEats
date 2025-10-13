@@ -1,5 +1,7 @@
 import React from 'react';
 import './homepage.css';
+import icon from "../../components/eaticon.png";
+
 
 const HomePage: React.FC = () => {
   return (
@@ -14,14 +16,13 @@ const HomePage: React.FC = () => {
           </p>
           <div className="hero-buttons">
             <a href="/register" className="btn-primary">Get Started</a>
-            <a href="#about" className="btn-secondary">Learn More</a>
+            <a href="#about" className="btn-primary">Learn More</a>
           </div>
         </div>
+
         <div className="hero-image">
-          <div className="floating-icon icon-1">🥗</div>
-          <div className="floating-icon icon-2">🌱</div>
-          <div className="floating-icon icon-3">♻️</div>
-          <div className="floating-icon icon-4">🍎</div>
+          <img src={icon} alt="EcoEats Icon" className="hero-main-image" />
+         
         </div>
       </section>
 
