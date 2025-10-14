@@ -15,9 +15,7 @@ import HomePage from "./WebPages/Register-Emmeline/HomePage";
 import BrowseFood from "./WebPages/BrowseFood-Zayyan/BrowsePage";
 
 // Temporary placeholder pages (until replaced with real components)
-function InventoryPage() {
-  return <h1>Inventory Management</h1>;
-}
+
 function MealsPage() {
   return <h1>Meal Planning</h1>;
 }
@@ -27,9 +25,7 @@ function DonationPage() {
 function NotificationsPage() {
   return <h1>User Notifications</h1>;
 }
-function ProfilePageDisplay() {
-  return <h1>User Profile</h1>;
-}
+
 function AnalyticsPage() {
   return <h1>Track and Record of User</h1>;
 }
