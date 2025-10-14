@@ -11,4 +11,4 @@ class Settings(BaseSettings):
 
     model_config = SettingsConfigDict(env_file="app/.env")  # ✅ point to correct path
 
-    settings=Settings()
+settings=Settings()
