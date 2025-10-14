@@ -251,12 +251,12 @@
   background: var(--card-bg) !important;
   border: 1px solid var(--border);
   border-radius: 12px !important;
-  padding: 14px !important;;
+  padding: 15px !important;;
   display: flex;
   flex-direction: row;
   align-items: center;
   transition: box-shadow 0.12s ease;
-  min-height: 120px !important; /* consistent height but not tall */
+  min-height: 150px !important; /* consistent height but not tall */
 }
 
 .card:hover {
@@ -276,6 +276,8 @@
 
 .card-thumb {
   flex-shrink: 0;
+  width: 80px;     /* fixed thumbnail size */
+  height: 80px;
   margin-right: 14px;
 }
 
@@ -684,4 +686,22 @@ html, body {
   background: red;
   padding: 6px 14px;
   border-radius: 6px;
+}
+.thumb-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
+}
+.detail-image {
+  width: 200px;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 10px;
+}
+.item-card-img {
+  width: 100%;
+  height: 180px;        /* adjust for card layout */
+  object-fit: cover;    /* crop nicely without stretching */
+  border-radius: 8px;   /* optional: rounded corners */
 }

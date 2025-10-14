@@ -6,7 +6,8 @@ class Settings(BaseSettings):
     JWT_SECRET: str
     EMAIL_SENDER: str
     EMAIL_PASSWORD: str
-    ALLOW_ORIGINS: str = "http://localhost:5173"
+    FRONTEND_URL: str = "http://localhost:5173"  # ✅ match .env
+
 
     model_config = SettingsConfigDict(env_file="app/.env")  # ✅ point to correct path
 

@@ -71,7 +71,11 @@ const ItemDetailModal: React.FC<Props> = ({
         <div className="detail-content">
           {/* Left = image */}
           <div className="detail-thumb">
-            <div className="thumb-placeholder-lg" />
+            {item.image ? (
+              <img src={item.image} alt={item.name} className="detail-image" />
+            ) : (
+              <div className="thumb-placeholder-lg" />
+            )}
           </div>
 
           {/* Right = info */}
