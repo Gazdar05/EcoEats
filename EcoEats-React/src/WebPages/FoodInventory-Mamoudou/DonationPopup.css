@@ -69,6 +69,9 @@
   color: #111827;
 }
 
+/* ===============================
+   Make all input/select fields consistent
+   =============================== */
 .donation-field input,
 .donation-field select {
   padding: 10px 14px;
@@ -76,6 +79,7 @@
   border: 1px solid #ccc;
   border-radius: 8px;
   color: #111827;
+  background: #ffffff;  /* Ensures pickupLocation and pickupDate match */
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 
@@ -100,7 +104,7 @@
 }
 
 .btn-submit {
-  background-color: #27ae60;
+  background-color: #6EA124;
   color: #ffffff;
   border: none;
   border-radius: 8px;
@@ -111,7 +115,7 @@
 }
 
 .btn-submit:hover {
-  background-color: #219150;
+  background-color: #6EA124;
   transform: translateY(-1px);
 }
 

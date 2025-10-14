@@ -40,14 +40,13 @@ const DonationList: React.FC<DonationListProps> = ({ donations, onClose }) => {
           <table className="donation-list-table">
             <thead>
               <tr>
-                <th>ID</th><th>Item Name</th><th>Category</th><th>Quantity</th><th>Expiry</th>
+                <th>Item Name</th><th>Category</th><th>Quantity</th><th>Expiry</th>
                 <th>Storage</th><th>Status</th><th>Pickup Location</th><th>Pickup Date</th><th>Availability</th>
               </tr>
             </thead>
             <tbody>
               {donations.map((donation) => (
                 <tr key={donation.id}>
-                  <td>{donation.id}</td>
                   <td>{donation.name}</td>
                   <td>{donation.category}</td>
                   <td>{donation.quantity}</td>

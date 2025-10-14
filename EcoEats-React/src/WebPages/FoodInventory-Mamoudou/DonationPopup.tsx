@@ -23,7 +23,7 @@ interface DonationPopupProps {
 const API_BASE = "http://127.0.0.1:8000";
 
 const DonationPopup: React.FC<DonationPopupProps> = ({ donationItem, onClose, onDonationAdded }) => {
-  const [pickupLocation, setPickupLocation] = useState("Main Storage");
+  const [pickupLocation, setPickupLocation] = useState("");
   const [donationDate, setDonationDate] = useState(new Date().toISOString().slice(0, 10));
   const [loading, setLoading] = useState(false);
 
