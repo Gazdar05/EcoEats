@@ -155,6 +155,8 @@ const FoodInventory: React.FC = () => {
 
   const filteredInventory = useMemo(() => {
     const term = searchTerm.trim().toLowerCase();
+     console.log("🔍 Filtering with term:", searchTerm);
+     console.log("📦 Inventory items:", inventory);
     return inventory.filter((item) => {
       const matchesSearch =
         !term ||
