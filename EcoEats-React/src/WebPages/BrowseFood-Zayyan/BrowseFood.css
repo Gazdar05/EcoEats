@@ -16,9 +16,9 @@
 .browse-wrap {
   display: grid;
   grid-template-columns: var(--fp-width) 1fr; /* left = filter, right = main */
-  gap: 28px;
-  padding: 20px;
-  min-height: calc(100vh - 120px);
+  gap: 28px !important;
+  padding: 20px !important;
+  min-height: calc(100vh - 120px) !important;
   box-sizing: border-box;
 }
 
@@ -239,25 +239,24 @@
 }
 
 
-/* GRID */
+/* === Fix 1: Keep wide grid === */
 .item-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(260px, 1fr));
-  gap: 20px;
-  width: 100%;
+  grid-template-columns: repeat(4, minmax(260px, 1fr)) !important;
+  gap: 20px !important;
 }
 
 .card {
   position: relative;
-  background: var(--card-bg);
+  background: var(--card-bg) !important;
   border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 14px;
+  border-radius: 12px !important;
+  padding: 14px !important;;
   display: flex;
   flex-direction: row;
   align-items: center;
   transition: box-shadow 0.12s ease;
-  min-height: 120px; /* consistent height but not tall */
+  min-height: 120px !important; /* consistent height but not tall */
 }
 
 .card:hover {
@@ -571,7 +570,7 @@
   align-items: center;
   gap: 8px;
   padding: 14px 0;
-  background-color: #fff;
+   background: linear-gradient(135deg, #f0fdf4 0%, #fbfbfb 100%);
   position: sticky;
   bottom: 0;
   border-top: 1px solid #e5e7eb;
