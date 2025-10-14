@@ -21,7 +21,7 @@ import DonationPopup from "./DonationPopup";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import DonationList from "./DonationList";
 import Navbar from "../../components/navbar";
-import Footer from "../../components/footer";
+
 
 const API_BASE = "http://127.0.0.1:8000";
 
@@ -155,14 +155,12 @@ const FoodInventory: React.FC = () => {
 
   const filteredInventory = useMemo(() => {
     const term = searchTerm.trim().toLowerCase();
-     console.log("🔍 Filtering with term:", searchTerm);
-     console.log("📦 Inventory items:", inventory);
     return inventory.filter((item) => {
       const matchesSearch =
         !term ||
         item.name.toLowerCase().includes(term) ||
         item.category.toLowerCase().includes(term) ||
-        item.quantity.toLowerCase().includes(term) ||
+        String(item.quantity).toLowerCase().includes(term) ||
         item.storage.toLowerCase().includes(term) ||
         item.status.toLowerCase().includes(term) ||
         (item.notes && item.notes.toLowerCase().includes(term));
@@ -531,7 +529,7 @@ const FoodInventory: React.FC = () => {
         </table>
       </div>
 
-      {!isPopupOpen && <Footer />}
+     
 
       {showViewPopup && selectedItem && (
         <ViewItemPopup
