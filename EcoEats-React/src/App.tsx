@@ -1,26 +1,21 @@
-import { Routes, Route, useLocation } from "react-router-dom";
+import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
+import { useEffect } from "react";
+
 import Navbar from "./components/navbar";
 import Footer from "./components/footer";
+import ProtectedRoute from "./components/ProtectedRoute";
+
 import FoodInventory from "./WebPages/FoodInventory-Mamoudou/FoodInventory";
+import Register from "./WebPages/Register-Emmeline/Register";
+import LoginPage from "./WebPages/Register-Emmeline/Login";
+import VerifyAccountPage from "./WebPages/Register-Emmeline/VerifyAccount";
+import ProfilePage from "./WebPages/Register-Emmeline/ProfilePage";
+import HomePage from "./WebPages/Register-Emmeline/HomePage";
 
-// Temporary page components
-function HomePage() {
-  return <h1>Welcome to EcoEats!</h1>;
-}
+// ✅ Import your real feature page
+import BrowseFood from "./WebPages/BrowseFood-Zayyan/BrowsePage";
 
-function LoginPage() {
-  return <h1>Login Page</h1>;
-}
-
-function RegisterPage() {
-  return <h1>Sign Up Page</h1>;
-}
-
-function BrowsePage() {
-  return <h1>Browse Food Items</h1>;
-}
-
-function FoodInventoryPage() {
+function InventoryPage() {
   return <h1>Inventory Management</h1>;
 }
 
@@ -36,7 +31,7 @@ function NotificationsPage() {
   return <h1>User Notifications</h1>;
 }
 
-function ProfilePage() {
+function ProfilePageDisplay() {
   return <h1>User Profile</h1>;
 }
 
@@ -53,30 +48,114 @@ function AboutPage() {
 }
 
 function App() {
+  const navigate = useNavigate();
   const location = useLocation();
 
-  // ✅ Hide Navbar & Footer ONLY for the inventory page
+  // Hide navbar & footer ONLY for the inventory page
   const hideLayout = location.pathname === "/inventory";
+
+  useEffect(() => {
+    // Auto logout after 15 minutes
+    const timeoutDuration = 15 * 60 * 1000;
+    let logoutTimer: NodeJS.Timeout;
+
+    const resetTimer = () => {
+      const excludedPaths = ["/login", "/register"];
+      if (excludedPaths.includes(window.location.pathname)) return;
+
+      clearTimeout(logoutTimer);
+      logoutTimer = setTimeout(() => {
+        const token = localStorage.getItem("token");
+        if (token) {
+          localStorage.clear();
+          alert("You have been logged out due to inactivity.");
+          navigate("/login");
+        }
+      }, timeoutDuration);
+    };
+
+    const activityEvents = ["mousemove", "keydown", "click", "scroll"];
+    activityEvents.forEach((event) => window.addEventListener(event, resetTimer));
+    resetTimer();
+
+    return () => {
+      clearTimeout(logoutTimer);
+      activityEvents.forEach((event) =>
+        window.removeEventListener(event, resetTimer)
+      );
+    };
+  }, [navigate]);
 
   return (
     <>
       {!hideLayout && <Navbar />}
-
       <Routes>
+        {/* Public Routes */}
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
-        <Route path="/browse" element={<BrowsePage />} />
-        <Route path="/inventory" element={<FoodInventory />} />
-        <Route path="/meals" element={<MealsPage />} />
-        <Route path="/donations" element={<DonationPage />} />
-        <Route path="/notifications" element={<NotificationsPage />} />
-        <Route path="/profile" element={<ProfilePage />} />
-        <Route path="/analytics" element={<AnalyticsPage />} />
-        <Route path="/support" element={<SupportPage />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/verify-account" element={<VerifyAccountPage />} />
         <Route path="/about" element={<AboutPage />} />
-      </Routes>
+        <Route path="/support" element={<SupportPage />} />
 
+        {/* Protected Routes */}
+        <Route
+          path="/browse"
+          element={
+            <ProtectedRoute>
+              <BrowseFood />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/inventory"
+          element={
+            <ProtectedRoute>
+              <InventoryPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/meals"
+          element={
+            <ProtectedRoute>
+              <MealsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/donations"
+          element={
+            <ProtectedRoute>
+              <DonationPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/notifications"
+          element={
+            <ProtectedRoute>
+              <NotificationsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <ProfilePageDisplay />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/analytics"
+          element={
+            <ProtectedRoute>
+              <AnalyticsPage />
+            </ProtectedRoute>
+          }
+        />
+      </Routes>
       {!hideLayout && <Footer />}
     </>
   );

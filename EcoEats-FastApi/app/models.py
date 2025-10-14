@@ -10,7 +10,6 @@ from pydantic_core import core_schema
 class PyObjectId(ObjectId):
     @classmethod
     def __get_pydantic_core_schema__(cls, source_type: Any, handler):
-        # tells Pydantic how to validate
         return core_schema.no_info_after_validator_function(
             cls.validate,
             core_schema.str_schema()
@@ -24,7 +23,6 @@ class PyObjectId(ObjectId):
 
     @classmethod
     def __get_pydantic_json_schema__(cls, core_schema, handler):
-        # tells Pydantic how to display in docs
         return {"type": "string", "example": "507f1f77bcf86cd799439011"}
 
 
@@ -108,24 +106,26 @@ class FoodCategory(BaseModel):
 # --------------------
 class FoodItem(BaseModel):
     id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
-    user_id: PyObjectId
-    category_id: PyObjectId
+    user_id: Optional[PyObjectId] = None
     name: str = Field(..., max_length=200)
     qty: int
     reserved_qty: int = 0
     unit: str = Field(..., max_length=32)
-    storage_loc: Optional[str] = None
     expiry_date: Optional[date] = None
-    status: str = Field(default="active", max_length=20)
+    category: str = Field(..., max_length=100)
+    storage: str = Field(..., max_length=50)
+    quantity: int = 1
     notes: Optional[str] = None
+    source: str = Field(default="inventory")  # inventory or donation
+    reserved: bool = False
+    donationDetails: Optional[dict] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
-    model_config = {
-        "validate_by_name": True,
-        "arbitrary_types_allowed": True,
-        "json_encoders": {ObjectId: str},
-    }
+    class Config:
+        populate_by_name = True
+        arbitrary_types_allowed = True
+        json_encoders = {ObjectId: str}
 
 
 # --------------------

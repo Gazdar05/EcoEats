@@ -1,4 +1,3 @@
-# app/main.py
 from fastapi import FastAPI
 from app.routers import auth, inventory, browse, donation
 from fastapi.middleware.cors import CORSMiddleware
@@ -7,6 +6,7 @@ from app.database import db
 
 app = FastAPI()
 
+# ✅ Allow frontend to connect
 origins = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
@@ -31,7 +31,7 @@ async def test_db():
     return {"collections": collections}
 
 # Attach routers
-app.include_router(auth.router, prefix="/auth", tags=["Auth"])
+app.include_router(auth.router)
 app.include_router(inventory.router, prefix="/inventory", tags=["Inventory"])
 app.include_router(browse.router, prefix="/browse", tags=["Browse"])
 app.include_router(donation.router, prefix="/donations", tags=["Donations"])
