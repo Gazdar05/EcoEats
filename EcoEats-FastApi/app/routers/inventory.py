@@ -5,15 +5,15 @@ from app.database import db
 from datetime import datetime
 
 router = APIRouter(tags=["Inventory"])
-collection = db["food_items"]
+collection = db["food_items"]   # ✅ stay with food_items collection
 
 # ✅ Constants synced with Browse Page
 ALLOWED_CATEGORIES = [
-    "Fruits",
-    "Vegetables",
+    "Fruit",
+    "Vegetable",
     "Dairy",
     "Meat",
-    "Grains",
+    "Grain",
     "Pantry Staples",
     "Bakery",
     "Beverages",
@@ -21,6 +21,25 @@ ALLOWED_CATEGORIES = [
     "Seafood",
 ]
 ALLOWED_STORAGE = ["Fridge", "Freezer", "Pantry", "Counter"]
+
+# ✅ Map plural → singular
+CATEGORY_MAP = {
+    "Fruits": "Fruit",
+    "Fruit": "Fruit",
+    "Vegetables": "Vegetable",
+    "Vegetable": "Vegetable",
+    "Grains": "Grain",
+    "Grain": "Grain",
+    "Fruit": "Fruits",
+    "Vegetable": "Vegetables",
+    "Grain": "Grains",
+    "Pantry Staple": "Pantry Staples",
+
+    
+}
+
+def normalize_category(cat: str) -> str:
+    return CATEGORY_MAP.get(cat, cat)
 
 
 # ✅ Helper: Convert DB item to frontend format
@@ -38,6 +57,10 @@ def serialize_item(item):
     else:
         item["expiry"] = None
 
+    # normalize category
+    if "category" in item:
+        item["category"] = normalize_category(item["category"])
+
     # ensure image exists
     item["image"] = item.get("image", "")
 
@@ -45,15 +68,18 @@ def serialize_item(item):
     item["quantity"] = int(item.get("quantity", 1))
 
     # include status for frontend
-    if "expiry" in item:
+    if "expiry" in item and item["expiry"]:
         today = datetime.utcnow().date()
-        exp_date = datetime.strptime(item["expiry"], "%Y-%m-%d").date()
-        if exp_date < today:
-            item["status"] = "Expired"
-        elif (exp_date - today).days <= 3:
-            item["status"] = "Expiring Soon"
-        else:
-            item["status"] = "Fresh"
+        try:
+            exp_date = datetime.strptime(item["expiry"], "%Y-%m-%d").date()
+            if exp_date < today:
+                item["status"] = "Expired"
+            elif (exp_date - today).days <= 3:
+                item["status"] = "Expiring Soon"
+            else:
+                item["status"] = "Fresh"
+        except Exception:
+            item["status"] = "Unknown"
     else:
         item["status"] = "Unknown"
 
@@ -61,7 +87,6 @@ def serialize_item(item):
     item["reserved"] = item.get("reserved", False)
 
     return item
-
 
 
 # ✅ GET all inventory items
@@ -100,6 +125,9 @@ async def create_inventory_item(request: Request):
         if field not in item or not item[field]:
             raise HTTPException(status_code=400, detail=f"Missing field: {field}")
 
+    # normalize category before validating
+    item["category"] = normalize_category(item["category"])
+
     # validate category/storage
     if item["category"] not in ALLOWED_CATEGORIES:
         raise HTTPException(status_code=400, detail=f"Invalid category: {item['category']}")
@@ -117,7 +145,7 @@ async def create_inventory_item(request: Request):
     if "image" not in item:
         item["image"] = ""
 
-    item["source"] = "inventory"
+    item["source"] = "inventory"   # ✅ mark as inventory item
     item["created_at"] = datetime.utcnow()
 
     result = await collection.insert_one(item)
@@ -130,27 +158,26 @@ async def create_inventory_item(request: Request):
 async def update_inventory_item(item_id: str, request: Request):
     updated_data = await request.json()
 
-    # map frontend "expiry" → backend "expiry_date"
+    # ✅ Map frontend "expiry" → backend "expiry_date"
     if "expiry" in updated_data:
-        updated_data["expiry_date"] = updated_data.pop("expiry")
+        try:
+            updated_data["expiry_date"] = datetime.strptime(updated_data.pop("expiry"), "%Y-%m-%d")
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid expiry format. Use YYYY-MM-DD.")
 
     try:
         obj_id = ObjectId(item_id)
     except InvalidId:
         raise HTTPException(status_code=400, detail="Invalid item ID format")
 
-    # validate if category/storage updated
-    if "category" in updated_data and updated_data["category"] not in ALLOWED_CATEGORIES:
-        raise HTTPException(status_code=400, detail=f"Invalid category: {updated_data['category']}")
+    # normalize category before validating
+    if "category" in updated_data:
+        updated_data["category"] = normalize_category(updated_data["category"])
+        if updated_data["category"] not in ALLOWED_CATEGORIES:
+            raise HTTPException(status_code=400, detail=f"Invalid category: {updated_data['category']}")
+
     if "storage" in updated_data and updated_data["storage"] not in ALLOWED_STORAGE:
         raise HTTPException(status_code=400, detail=f"Invalid storage type: {updated_data['storage']}")
-
-    # convert expiry_date to datetime if string
-    if isinstance(updated_data.get("expiry_date"), str):
-        try:
-            updated_data["expiry_date"] = datetime.strptime(updated_data["expiry_date"], "%Y-%m-%d")
-        except ValueError:
-            raise HTTPException(status_code=400, detail="Invalid expiry_date format. Use YYYY-MM-DD.")
 
     # ✅ Ensure image can be updated
     if "image" not in updated_data:

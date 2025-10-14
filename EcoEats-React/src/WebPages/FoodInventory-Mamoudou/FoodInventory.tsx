@@ -1,6 +1,15 @@
 import React, { useEffect, useMemo, useState } from "react";
 import "./FoodInventory.css";
-import { Plus, Filter, Search, Edit, Trash2, Eye, CheckSquare, Heart } from "lucide-react";
+import {
+  Plus,
+  Filter,
+  Search,
+  Edit,
+  Trash2,
+  Eye,
+  CheckSquare,
+  Heart,
+} from "lucide-react";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import ViewItemPopup from "./ViewItemPopup";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -58,7 +67,11 @@ const FoodInventory: React.FC = () => {
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
-  const [filters, setFilters] = useState({ category: "", status: "", storage: "" });
+  const [filters, setFilters] = useState({
+    category: "",
+    status: "",
+    storage: "",
+  });
 
   const categories = [
     { id: "produce", name: "Produce" },
@@ -70,7 +83,12 @@ const FoodInventory: React.FC = () => {
     { id: "frozen", name: "Frozen" },
   ];
 
-  const isPopupOpen = showViewPopup || showEditPopup || showAddPopup || showDonationPopup || showDonationList;
+  const isPopupOpen =
+    showViewPopup ||
+    showEditPopup ||
+    showAddPopup ||
+    showDonationPopup ||
+    showDonationList;
   useEffect(() => {
     if (isPopupOpen) document.body.classList.add("popup-open");
     else document.body.classList.remove("popup-open");
@@ -81,7 +99,9 @@ const FoodInventory: React.FC = () => {
     if (!expiryDate) return "Unknown";
     const today = new Date();
     const expiry = new Date(expiryDate);
-    const diffDays = Math.ceil((expiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    const diffDays = Math.ceil(
+      (expiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+    );
     if (diffDays < 0) return "Expired";
     if (diffDays <= 3) return "Expiring Soon";
     return "Fresh";
@@ -145,18 +165,24 @@ const FoodInventory: React.FC = () => {
         item.status.toLowerCase().includes(term) ||
         (item.notes && item.notes.toLowerCase().includes(term));
 
-      const matchesCategory = !filters.category || item.category === filters.category;
+      const matchesCategory =
+        !filters.category || item.category === filters.category;
       const matchesStatus = !filters.status || item.status === filters.status;
-      const matchesStorage = !filters.storage || item.storage === filters.storage;
+      const matchesStorage =
+        !filters.storage || item.storage === filters.storage;
 
-      return matchesSearch && matchesCategory && matchesStatus && matchesStorage;
+      return (
+        matchesSearch && matchesCategory && matchesStatus && matchesStorage
+      );
     });
   }, [inventory, searchTerm, filters]);
 
   const handleDeleteItem = async (itemId: string) => {
     if (!window.confirm("Are you sure you want to delete this item?")) return;
     try {
-      const res = await fetch(`${API_BASE}/inventory/${itemId}/`, { method: "DELETE" });
+      const res = await fetch(`${API_BASE}/inventory/${itemId}/`, {
+        method: "DELETE",
+      });
       if (!res.ok) console.error("Delete failed", res.status);
       else {
         setInventory((prev) => prev.filter((i) => i.id !== itemId));
@@ -167,7 +193,9 @@ const FoodInventory: React.FC = () => {
     }
   };
 
-  const handleAddItem = async (newItem: Omit<InventoryItem, "id" | "status">) => {
+  const handleAddItem = async (
+    newItem: Omit<InventoryItem, "id" | "status">
+  ) => {
     try {
       const res = await fetch(`${API_BASE}/inventory/`, {
         method: "POST",
@@ -179,14 +207,19 @@ const FoodInventory: React.FC = () => {
         return;
       }
       const created: InventoryItem = await res.json();
-      setInventory((prev) => [...prev, { ...created, status: calculateStatus(created.expiry) }]);
+      setInventory((prev) => [
+        ...prev,
+        { ...created, status: calculateStatus(created.expiry) },
+      ]);
       setShowAddPopup(false);
     } catch (err) {
       console.error(err);
     }
   };
 
-  const handleUpdateItem = async (updatedItem: Omit<InventoryItem, "status">) => {
+  const handleUpdateItem = async (
+    updatedItem: Omit<InventoryItem, "status">
+  ) => {
     try {
       const res = await fetch(`${API_BASE}/inventory/${updatedItem.id}/`, {
         method: "PUT",
@@ -200,7 +233,9 @@ const FoodInventory: React.FC = () => {
       const saved: InventoryItem = await res.json();
       setInventory((prev) =>
         prev.map((i) =>
-          i.id === saved.id ? { ...saved, status: calculateStatus(saved.expiry) } : i
+          i.id === saved.id
+            ? { ...saved, status: calculateStatus(saved.expiry) }
+            : i
         )
       );
       setShowEditPopup(false);
@@ -219,7 +254,9 @@ const FoodInventory: React.FC = () => {
         const newQty = currentQty - 1;
         if (newQty <= 0) {
           try {
-            await fetch(`${API_BASE}/inventory/${item.id}/`, { method: "DELETE" });
+            await fetch(`${API_BASE}/inventory/${item.id}/`, {
+              method: "DELETE",
+            });
             return null;
           } catch (err) {
             console.error(err);
@@ -247,14 +284,23 @@ const FoodInventory: React.FC = () => {
   };
 
   const handleDeleteSelected = async () => {
-    if (!window.confirm("Are you sure you want to delete the selected items?")) return;
-    await Promise.all(selectedItems.map((id) => fetch(`${API_BASE}/inventory/${id}/`, { method: "DELETE" })));
-    setInventory((prev) => prev.filter((item) => !selectedItems.includes(item.id)));
+    if (!window.confirm("Are you sure you want to delete the selected items?"))
+      return;
+    await Promise.all(
+      selectedItems.map((id) =>
+        fetch(`${API_BASE}/inventory/${id}/`, { method: "DELETE" })
+      )
+    );
+    setInventory((prev) =>
+      prev.filter((item) => !selectedItems.includes(item.id))
+    );
     setSelectedItems([]);
   };
 
   const toggleSelectItem = (id: string) =>
-    setSelectedItems((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+    setSelectedItems((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
 
   const handleOpenDonationPopup = (item: InventoryItem) => {
     setDonationItem(item);
@@ -278,9 +324,12 @@ const FoodInventory: React.FC = () => {
     setShowEditPopup(true);
   };
 
-  const handleFilterChange = (filterType: keyof typeof filters, value: string) =>
-    setFilters((p) => ({ ...p, [filterType]: value }));
-  const clearFilters = () => setFilters({ category: "", status: "", storage: "" });
+  const handleFilterChange = (
+    filterType: keyof typeof filters,
+    value: string
+  ) => setFilters((p) => ({ ...p, [filterType]: value }));
+  const clearFilters = () =>
+    setFilters({ category: "", status: "", storage: "" });
 
   return (
     <div className="food-inventory-page">
@@ -304,7 +353,10 @@ const FoodInventory: React.FC = () => {
             <button className="btn-add" onClick={() => setShowAddPopup(true)}>
               <Plus size={16} /> Add Item
             </button>
-            <button className="btn-filter" onClick={() => setShowDonationList(true)}>
+            <button
+              className="btn-filter"
+              onClick={() => setShowDonationList(true)}
+            >
               <Heart size={16} /> View Donations
             </button>
 
@@ -320,7 +372,10 @@ const FoodInventory: React.FC = () => {
             )}
 
             <div className="filter-container">
-              <button className="btn-filter" onClick={() => setShowFilterDropdown((s) => !s)}>
+              <button
+                className="btn-filter"
+                onClick={() => setShowFilterDropdown((s) => !s)}
+              >
                 <Filter size={16} /> Filter by
               </button>
               {showFilterDropdown && (
@@ -329,7 +384,9 @@ const FoodInventory: React.FC = () => {
                     <label>Category</label>
                     <select
                       value={filters.category}
-                      onChange={(e) => handleFilterChange("category", e.target.value)}
+                      onChange={(e) =>
+                        handleFilterChange("category", e.target.value)
+                      }
                     >
                       <option value="">All Categories</option>
                       {categories.map((c) => (
@@ -343,7 +400,9 @@ const FoodInventory: React.FC = () => {
                     <label>Status</label>
                     <select
                       value={filters.status}
-                      onChange={(e) => handleFilterChange("status", e.target.value)}
+                      onChange={(e) =>
+                        handleFilterChange("status", e.target.value)
+                      }
                     >
                       <option value="">All Status</option>
                       <option value="Fresh">Fresh</option>
@@ -355,7 +414,9 @@ const FoodInventory: React.FC = () => {
                     <label>Storage</label>
                     <select
                       value={filters.storage}
-                      onChange={(e) => handleFilterChange("storage", e.target.value)}
+                      onChange={(e) =>
+                        handleFilterChange("storage", e.target.value)
+                      }
                     >
                       <option value="">All Storage</option>
                       <option value="Fridge">Fridge</option>
@@ -400,7 +461,11 @@ const FoodInventory: React.FC = () => {
                 </td>
                 <td className="item-name-with-image">
                   {item.image ? (
-                    <img src={item.image} alt={item.name} className="item-image-thumb" />
+                    <img
+                      src={item.image}
+                      alt={item.name}
+                      className="item-image-thumb"
+                    />
                   ) : (
                     <div className="item-image-placeholder">No Image</div>
                   )}
@@ -408,7 +473,9 @@ const FoodInventory: React.FC = () => {
                 </td>
                 <td>{item.category}</td>
                 <td>{item.quantity}</td>
-                <td className={item.status === "Expired" ? "expired-date" : ""}>{item.expiry}</td>
+                <td className={item.status === "Expired" ? "expired-date" : ""}>
+                  {item.expiry}
+                </td>
                 <td>{item.storage}</td>
                 <td>
                   <span
@@ -425,13 +492,21 @@ const FoodInventory: React.FC = () => {
                 </td>
                 <td>
                   <div className="actions">
-                    <Edit size={16} className="action-icon" onClick={() => handleEditItem(item)} />
+                    <Edit
+                      size={16}
+                      className="action-icon"
+                      onClick={() => handleEditItem(item)}
+                    />
                     <Trash2
                       size={16}
                       className="action-icon"
                       onClick={() => handleDeleteItem(item.id)}
                     />
-                    <Eye size={16} className="action-icon" onClick={() => handleViewItem(item)} />
+                    <Eye
+                      size={16}
+                      className="action-icon"
+                      onClick={() => handleViewItem(item)}
+                    />
                     {item.status !== "Fresh" && (
                       <Heart
                         size={16}
@@ -457,7 +532,10 @@ const FoodInventory: React.FC = () => {
       {!isPopupOpen && <Footer />}
 
       {showViewPopup && selectedItem && (
-        <ViewItemPopup item={selectedItem} onClose={() => setShowViewPopup(false)} />
+        <ViewItemPopup
+          item={selectedItem}
+          onClose={() => setShowViewPopup(false)}
+        />
       )}
 
       {showEditPopup && selectedItem && (
@@ -488,7 +566,10 @@ const FoodInventory: React.FC = () => {
       )}
 
       {showDonationList && (
-        <DonationList donations={donations} onClose={() => setShowDonationList(false)} />
+        <DonationList
+          donations={donations}
+          onClose={() => setShowDonationList(false)}
+        />
       )}
     </div>
   );
