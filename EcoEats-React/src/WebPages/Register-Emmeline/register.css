@@ -6,7 +6,8 @@
     padding: 4rem 1rem 5rem; /* reduced bottom padding */
     overflow-y: auto;
     width: 100%;
-  /
+    
+  
 }
 
 .register-wrapper > .container {
@@ -17,7 +18,7 @@
   padding: 0.5rem 1rem 0.5rem;
   box-shadow: 0 5px 20px rgba(0,0,0,0.08);
   height: 706px;
-  margin-top: 2rem;
+  margin-top: -10px;
 }
 
 h1 {
@@ -145,14 +146,16 @@ button.btn-primary:hover {
 
 }
 
-.container > .success-message-container {
-  
+.register-wrapper > .container > .success-message-container {
   text-align: center;
-  padding: 30px;
+  padding: 40px;
+  padding-right: 0%;
   width: 100%;
   max-width: 400px; 
   margin-bottom: 1rem;
   margin-top: 5rem;
+  justify-content: center;
+  align-items: center;
 }
 
 /* Responsive adjustments */
@@ -169,5 +172,6 @@ button.btn-primary:hover {
     font-size: 0.95rem;
   }
 }
+
 
 
