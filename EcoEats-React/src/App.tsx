@@ -1,36 +1,48 @@
 import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
+import { useEffect } from "react";
+
 import Navbar from "./components/navbar";
 import Footer from "./components/footer";
+import ProtectedRoute from "./components/ProtectedRoute";
+
+import FoodInventory from "./WebPages/FoodInventory-Mamoudou/FoodInventory";
 import Register from "./WebPages/Register-Emmeline/Register";
 import LoginPage from "./WebPages/Register-Emmeline/Login";
 import VerifyAccountPage from "./WebPages/Register-Emmeline/VerifyAccount";
 import ProfilePage from "./WebPages/Register-Emmeline/ProfilePage";
 import HomePage from "./WebPages/Register-Emmeline/HomePage";
-import ProtectedRoute from "./components/ProtectedRoute";
-import { useEffect } from "react";
 
 // ✅ Import your real feature page
 import BrowseFood from "./WebPages/BrowseFood-Zayyan/BrowsePage";
 
-// Temporary placeholder pages
 function InventoryPage() {
   return <h1>Inventory Management</h1>;
 }
+
 function MealsPage() {
   return <h1>Meal Planning</h1>;
 }
+
 function DonationPage() {
   return <h1>User Donations</h1>;
 }
+
 function NotificationsPage() {
   return <h1>User Notifications</h1>;
 }
+
+function ProfilePageDisplay() {
+  return <h1>User Profile</h1>;
+}
+
 function AnalyticsPage() {
   return <h1>Track and Record of User</h1>;
 }
+
 function SupportPage() {
   return <h1>Support Page</h1>;
 }
+
 function AboutPage() {
   return <h1>About EcoEats</h1>;
 }
@@ -39,8 +51,11 @@ function App() {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // Hide navbar & footer ONLY for the inventory page
+  const hideLayout = location.pathname === "/inventory";
+
   useEffect(() => {
-    // ✅ Auto logout after 15 minutes
+    // Auto logout after 15 minutes
     const timeoutDuration = 15 * 60 * 1000;
     let logoutTimer: NodeJS.Timeout;
 
@@ -60,10 +75,7 @@ function App() {
     };
 
     const activityEvents = ["mousemove", "keydown", "click", "scroll"];
-    activityEvents.forEach((event) =>
-      window.addEventListener(event, resetTimer)
-    );
-
+    activityEvents.forEach((event) => window.addEventListener(event, resetTimer));
     resetTimer();
 
     return () => {
@@ -76,7 +88,7 @@ function App() {
 
   return (
     <>
-      <Navbar />
+      {!hideLayout && <Navbar />}
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<HomePage />} />
@@ -91,7 +103,7 @@ function App() {
           path="/browse"
           element={
             <ProtectedRoute>
-              <BrowseFood /> {/* ✅ use real BrowseFood */}
+              <BrowseFood />
             </ProtectedRoute>
           }
         />
@@ -131,7 +143,7 @@ function App() {
           path="/profile"
           element={
             <ProtectedRoute>
-              <ProfilePage />
+              <ProfilePageDisplay />
             </ProtectedRoute>
           }
         />
@@ -144,9 +156,7 @@ function App() {
           }
         />
       </Routes>
-      {/* Only show footer on homepage */}
-      {location.pathname === "/" && <Footer />}
-     
+      {!hideLayout && <Footer />}
     </>
   );
 }

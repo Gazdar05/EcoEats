@@ -1,15 +1,13 @@
-#config.py inside app
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
-    MONGO_URI: str = "your-mongodb-atlas-uri"
-    DB_NAME: str = "ecoeats"
+    MONGO_URI: str
+    DB_NAME: str
     JWT_SECRET: str
     EMAIL_SENDER: str
     EMAIL_PASSWORD: str
+    ALLOW_ORIGINS: str = "http://localhost:5173"
 
-    FRONTEND_URL: str = "http://localhost:5173"
-    class Config:
-        env_file = ".env"
+    model_config = SettingsConfigDict(env_file="app/.env")  # ✅ point to correct path
 
 settings = Settings()

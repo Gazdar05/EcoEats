@@ -1,0 +1,408 @@
+/* Food Inventory page styles */
+
+/* Layout */
+.inventory-container {
+  padding: 24px;
+  position: fixed;
+  top: 58px; /* account for fixed navbar */
+  left: 0;
+  right: 0;
+  bottom: 80px; /* leave room for fixed footer */
+  overflow: auto;
+}
+
+.inventory-title {
+  font-size: 22px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 16px 0;
+}
+
+/* Error and Loading States */
+.error-message {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  color: #dc2626;
+  margin-bottom: 16px;
+  font-size: 14px;
+}
+
+.error-message button {
+  background: none;
+  border: none;
+  color: #dc2626;
+  font-size: 18px;
+  cursor: pointer;
+  margin-left: auto;
+  padding: 0;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loading-message {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 20px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  color: #6b7280;
+  margin-bottom: 16px;
+  font-size: 14px;
+  justify-content: center;
+}
+
+.loading-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #e5e7eb;
+  border-top: 2px solid #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Top controls */
+.inventory-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.search-bar {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 8px 10px;
+  max-width: 320px;
+  background: #fff;
+  color: #6b7280;
+}
+
+.search-bar input {
+  border: none;
+  outline: none;
+  width: 100%;
+  font-size: 14px;
+  color: #111827;
+  background: #ffffff;
+}
+
+.control-buttons {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  position: relative;
+}
+
+.filter-container {
+  position: relative;
+}
+
+.btn-add,
+.btn-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  font-size: 14px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  color: #111827;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.btn-add {
+  background: #6EA124;
+  border-color: #6EA124;
+  color: #ffffff;
+}
+
+.btn-add:hover {
+  background: #5d8f1f;
+  border-color: #5d8f1f;
+}
+
+.btn-filter:hover {
+  background: #f9fafb;
+  border-color: #d1d5db;
+}
+
+/* Table */
+.inventory-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.inventory-table thead th {
+  text-align: left;
+  font-weight: 500;
+  font-size: 13px;
+  color: #6b7280;
+  background: #f9fafb;
+  padding: 12px 16px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.inventory-table tbody td {
+  padding: 14px 16px;
+  font-size: 14px;
+  color: #111827;
+  border-bottom: 1px solid #f3f4f6;
+  vertical-align: middle;
+}
+
+.inventory-table tbody tr:hover {
+  background: #fcfcfd;
+}
+
+.item-name {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Placeholder circular icon */
+.item-name::before {
+  content: "";
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  border: 1px solid #e5e7eb;
+  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+  display: inline-block;
+}
+
+.expired-date {
+  color: #dc2626;
+  font-weight: 500;
+}
+
+/* Status badges */
+.status {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.status.fresh {
+  color: #16a34a;
+  background: #e8f7ec;
+}
+
+.status.expiring {
+  color: #92400e;
+  background: #fef3c7;
+}
+
+.status.expired {
+  color: #ffffff;
+  background: #dc2626;
+}
+
+/* ===== Aligned Actions column ===== */
+.inventory-table thead th:last-child {
+  text-align: center;
+  width: 140px;
+}
+
+.inventory-table tbody td.actions {
+  text-align: center;
+  vertical-align: middle; /* ✅ Ensures perfect vertical alignment */
+  padding: 0; /* tighter vertical centering */
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: center; /* ✅ Horizontal center */
+  gap: 10px;
+  height: 100%;
+  min-height: 45px; /* ✅ Matches row height for symmetry */
+}
+
+.action-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  line-height: 0;
+  color: #6b7280;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.action-icon svg {
+  display: block;
+  width: 18px;
+  height: 18px;
+}
+
+.action-icon:hover {
+  color: #111827;
+}
+
+/* Responsive */
+@media (max-width: 720px) {
+  .inventory-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .search-bar {
+    max-width: 100%;
+  }
+  .inventory-table thead {
+    display: none;
+  }
+  .inventory-table,
+  .inventory-table tbody,
+  .inventory-table tr,
+  .inventory-table td {
+    display: block;
+    width: 100%;
+  }
+  .inventory-table tr {
+    border-bottom: 1px solid #e5e7eb;
+    padding: 10px 0;
+  }
+  .inventory-table tbody td {
+    padding: 8px 12px;
+  }
+}
+
+/* Filter Dropdown Styles */
+.filter-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  padding: 16px;
+  min-width: 200px;
+  z-index: 1000;
+  margin-top: 4px;
+}
+
+.filter-section {
+  margin-bottom: 12px;
+}
+
+.filter-section:last-of-type {
+  margin-bottom: 16px;
+}
+
+.filter-section label {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 4px;
+}
+
+.filter-section select {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 14px;
+  color: #111827;
+  background: #fff;
+  cursor: pointer;
+}
+
+.filter-section select:focus {
+  outline: none;
+  border-color: #6EA124;
+  box-shadow: 0 0 0 1px #6EA124;
+}
+
+.filter-actions {
+  border-top: 1px solid #e5e7eb;
+  padding-top: 12px;
+  text-align: right;
+}
+
+.btn-clear {
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  color: #374151;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.btn-clear:hover {
+  background: #e5e7eb;
+}
+
+/* === Item Image beside Name in Table === */
+.item-name-with-image {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.item-image-thumb {
+  width: 45px;
+  height: 45px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 1px solid #ddd;
+}
+
+.item-image-placeholder {
+  width: 45px;
+  height: 45px;
+  border-radius: 8px;
+  background-color: #f7f7f7;
+  color: #aaa;
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed #ccc;
+}
+
+.item-name-text {
+  font-weight: 500;
+  color: #333;
+}
+
+/* ✅ Hide global navbar & footer when popup is open */
+.popup-open nav,
+.popup-open footer {
+  display: none !important;
+}
