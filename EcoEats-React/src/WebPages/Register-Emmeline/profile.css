@@ -1,17 +1,31 @@
-.profile-container {
-  min-height: calc(100vh - 140px);
-  background: linear-gradient(135deg, #f0fdf4 0%, #fbfbfb 100%);
-  padding: 100px 3rem 100px;
+.profile-page {
+  width: 70%;
+  min-height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;      /* only this page can scroll */
   display: flex;
   justify-content: center;
-  align-items: center; 
-  width: 90vh;
-  margin-left: 26rem;
+  align-items: flex-start;
+  background: linear-gradient(135deg, #f0fdf4 0%, #fbfbfb 100%);
+}
+
+
+
+.profile-container {
+  padding: 0rem 10rem;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  width: 70%;
+  margin: 1rem auto;
+  min-height: 100vh;        /* full height of screen */        /* allow vertical scroll */
+   /* ensure padding doesn’t overflow */
 }
 
 .profile-wrapper {
   width: 100%;
-  max-width: 1400px;
+  max-width: 100%;
+  height: 100%;
   background: rgba(255, 255, 255, 0.95);
   border-radius: 16px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
@@ -135,6 +149,90 @@
   color: #991b1b;
 }
 
+/* ===== NEW: Privacy & Security Section ===== */
+.security-section {
+  margin: 0rem 1rem;
+  padding: 1rem;
+
+}
+
+.security-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 2rem;
+}
+
+.security-info {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+  flex: 1;
+}
+
+.security-icon {
+  font-size: 3rem;
+  width: 70px;
+  height: 70px;
+  background: linear-gradient(135deg, #6EA124 0%, #5a921e 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 15px rgba(110, 161, 36, 0.2);
+}
+
+.security-details {
+  flex: 1;
+}
+
+.security-details h3 {
+  font-size: 1.25rem;
+  color: #1f2937;
+  margin-bottom: 0.5rem;
+  font-weight: 700;
+}
+
+.security-details p {
+  color: #6b7280;
+  font-size: 0.95rem;
+  margin-bottom: 0.75rem;
+}
+
+.btn-toggle {
+  padding: 0.75rem 2rem;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s;
+  white-space: nowrap;
+  
+}
+
+.btn-success {
+  background: linear-gradient(135deg, #6EA124 0%, #5a921e 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(110, 161, 36, 0.3);
+}
+
+.btn-success:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(110, 161, 36, 0.4);
+}
+
+.btn-danger {
+  background: linear-gradient(135deg, #1b0a07 0%, #1b0a07 100%);
+  color: white;
+}
+
+.btn-danger:hover {
+  transform: translateY(-2px);
+
+}
+/* ===== END: Privacy & Security Section ===== */
+
 .profile-actions {
   display: flex;
   gap: 1rem;
@@ -154,7 +252,6 @@
   font-weight: 600;
   border-radius: 10px;
   cursor: pointer;
- 
   border: none;
 }
 
@@ -170,7 +267,6 @@
 
 .btn-edit:hover {
   background-color: #5a921e;
-  
   box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
 }
 
@@ -181,7 +277,6 @@
 
 .btn-logout:hover {
   background-color: #9f2424;
-  
   box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
 }
 
@@ -199,7 +294,7 @@
   width: 50px;
   height: 50px;
   border: 4px solid #e5e7eb;
-  border-top-color: #059669;
+  border-top-color: #6EA124;
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -234,7 +329,7 @@
 
 .error-container button {
   padding: 0.75rem 1.5rem;
-  background-color: #059669;
+  background-color: #6EA124;
   color: white;
   border: none;
   border-radius: 8px;
@@ -245,7 +340,7 @@
 }
 
 .error-container button:hover {
-  background-color: #047857;
+  background-color: #5a921e;
 }
 
 /* Logout Confirmation Modal */
@@ -277,10 +372,11 @@
   background: white;
   border-radius: 16px;
   padding: 2rem;
-  max-width: 400px;
+  max-width: 450px;
   width: 100%;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
   animation: slideUp 0.3s ease-out;
+  text-align: center;
 }
 
 @keyframes slideUp {
@@ -294,18 +390,24 @@
   }
 }
 
+/* ===== NEW: Modal Icon ===== */
+.modal-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+}
+/* ===== END: Modal Icon ===== */
+
 .modal-content h3 {
   font-size: 1.5rem;
   color: #1f2937;
   margin-bottom: 1rem;
-  text-align: center;
 }
 
 .modal-content p {
   color: #6b7280;
   margin-bottom: 2rem;
-  text-align: center;
   font-size: 1rem;
+  line-height: 1.6;
 }
 
 .modal-actions {
@@ -343,11 +445,43 @@
   box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
 }
 
+/* ===== NEW: Confirm Danger Button ===== */
+.btn-confirm-danger {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  background-color: #1b0a07;
+  color: white;
+}
+
+.btn-confirm-danger:hover {
+  background-color: #1b0a07;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+}
+/* ===== END: Confirm Danger Button ===== */
+
 /* Responsive Design */
 @media (max-width: 1024px) {
   .info-grid {
     grid-template-columns: repeat(2, 1fr);
   }
+
+  /* ===== NEW: Security responsive ===== */
+  .security-item {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .btn-toggle {
+    width: 100%;
+  }
+  /* ===== END: Security responsive ===== */
 }
 
 @media (max-width: 768px) {
@@ -381,13 +515,25 @@
     padding: 1rem 1.5rem;
   }
 
+  /* ===== NEW: Security section responsive ===== */
+  .security-section {
+    margin: 1rem 1.5rem;
+    padding: 1.5rem;
+  }
+
+  .security-info {
+    flex-direction: column;
+    text-align: center;
+  }
+  /* ===== END: Security section responsive ===== */
+
   .profile-actions {
     flex-direction: column;
     padding: 1rem 1.5rem;
   }
 
   .modal-content {
-    margin: 1rem;
+    margin: 1rem; 
   }
 }
 
