@@ -10,7 +10,7 @@ collection = db["food_items"]
 
 # ✅ Same as browse page for consistency
 ALLOWED_CATEGORIES = [
-    "Fruits",
+     "Fruits",
     "Vegetables",
     "Dairy",
     "Meat",

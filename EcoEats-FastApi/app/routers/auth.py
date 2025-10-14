@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 import os, jwt, random, string, smtplib
 from email.mime.text import MIMEText
 from app.database import db  # ✅ MongoDB connection
+from app.config import settings
 
 load_dotenv()
 
@@ -62,7 +63,7 @@ def verify_password(plain: str, hashed: str):
     return pwd_context.verify(plain, hashed)
 
 def send_email_html(to_email: str, subject: str, html_content: str):
-    """Send HTML email via Gmail SMTP"""
+    """Send HTML email via Gmail SMTP (with debug logging)"""
     msg = MIMEMultipart("alternative")
     msg["Subject"] = subject
     msg["From"] = EMAIL_SENDER
@@ -71,9 +72,18 @@ def send_email_html(to_email: str, subject: str, html_content: str):
     html_part = MIMEText(html_content, "html")
     msg.attach(html_part)
 
-    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
-        server.login(EMAIL_SENDER, EMAIL_PASSWORD)
-        server.send_message(msg)
+    print("📧 Sending email to:", to_email)
+    print("🔑 Sender:", EMAIL_SENDER)
+    print("🔐 Password starts with:", EMAIL_PASSWORD[:4])
+
+    try:
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+            server.login(EMAIL_SENDER, EMAIL_PASSWORD)
+            server.send_message(msg)
+        print("✅ Email sent successfully to:", to_email)
+    except Exception as e:
+        print("❌ Email sending failed:", e)
+
 
 # ---------------------------
 # Register User

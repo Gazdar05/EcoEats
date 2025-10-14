@@ -24,7 +24,7 @@ const AddItemPopup: React.FC<AddItemPopupProps> = ({
   const [formData, setFormData] = useState({
     name: "",
     category: "",
-    quantity: "",
+    quantity: "1",
     expiry: "",
     storage: "",
     notes: "",
@@ -63,7 +63,12 @@ const AddItemPopup: React.FC<AddItemPopupProps> = ({
       alert("Please fill required fields");
       return;
     }
-    onSave(formData);
+
+    const payload = {
+    ...formData,
+    quantity: formData.quantity || "1",};
+    onSave(payload);
+      
   };
 
   return (
@@ -88,8 +93,8 @@ const AddItemPopup: React.FC<AddItemPopupProps> = ({
             required
           >
             <option value="">Select Category</option>
-            <option value="Fruit">Fruit</option>
-            <option value="Vegetable">Vegetable</option>
+            <option value="Fruits">Fruit</option>
+            <option value="Vegetables">Vegetable</option>
             {categories.map((cat) => (
               <option key={cat.id} value={cat.name}>
                 {cat.name}
@@ -99,7 +104,7 @@ const AddItemPopup: React.FC<AddItemPopupProps> = ({
 
           <label>Quantity</label>
           <input
-            type="text"
+            type="number"
             name="quantity"
             value={formData.quantity}
             onChange={handleChange}
@@ -126,7 +131,7 @@ const AddItemPopup: React.FC<AddItemPopupProps> = ({
             <option value="Fridge">Fridge</option>
             <option value="Pantry">Pantry</option>
             <option value="Freezer">Freezer</option>
-            <option value="Other">Other</option>
+            <option value="Counter">Other</option>
           </select>
 
           <label>Notes</label>

@@ -9,11 +9,11 @@ collection = db["food_items"]   # ✅ stay with food_items collection
 
 # ✅ Constants synced with Browse Page
 ALLOWED_CATEGORIES = [
-    "Fruit",
-    "Vegetable",
+     "Fruits",
+    "Vegetables",
     "Dairy",
     "Meat",
-    "Grain",
+    "Grains",
     "Pantry Staples",
     "Bakery",
     "Beverages",
@@ -115,15 +115,22 @@ async def get_inventory_item(item_id: str):
 @router.post("/", status_code=status.HTTP_201_CREATED)
 async def create_inventory_item(request: Request):
     item = await request.json()
+    print("🧾 Received inventory payload:", item)
 
     # map frontend "expiry" → backend "expiry_date"
     if "expiry" in item:
         item["expiry_date"] = item.pop("expiry")
 
+    # Required fields
     required = ["name", "category", "quantity", "expiry_date", "storage"]
     for field in required:
         if field not in item or not item[field]:
             raise HTTPException(status_code=400, detail=f"Missing field: {field}")
+
+    # ✅ Trim strings
+    item["category"] = str(item["category"]).strip()
+    item["storage"] = str(item["storage"]).strip()
+    item["name"] = str(item["name"]).strip()
 
     # normalize category before validating
     item["category"] = normalize_category(item["category"])
@@ -134,6 +141,12 @@ async def create_inventory_item(request: Request):
     if item["storage"] not in ALLOWED_STORAGE:
         raise HTTPException(status_code=400, detail=f"Invalid storage type: {item['storage']}")
 
+    # convert quantity to int safely
+    try:
+        item["quantity"] = int(item.get("quantity", 1))
+    except (ValueError, TypeError):
+        raise HTTPException(status_code=400, detail="Quantity must be a number")
+
     # convert expiry_date string → datetime
     if isinstance(item.get("expiry_date"), str):
         try:
@@ -141,16 +154,16 @@ async def create_inventory_item(request: Request):
         except ValueError:
             raise HTTPException(status_code=400, detail="Invalid expiry_date format. Use YYYY-MM-DD.")
 
-    # ✅ Allow optional image (base64 or URL)
-    if "image" not in item:
-        item["image"] = ""
+    # optional image
+    item["image"] = item.get("image", "")
 
-    item["source"] = "inventory"   # ✅ mark as inventory item
+    item["source"] = "inventory"
     item["created_at"] = datetime.utcnow()
 
     result = await collection.insert_one(item)
     new_item = await collection.find_one({"_id": result.inserted_id})
     return serialize_item(new_item)
+
 
 
 # ✅ PUT (update) inventory item
