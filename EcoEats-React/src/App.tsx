@@ -111,7 +111,7 @@ function App() {
           path="/inventory"
           element={
             <ProtectedRoute>
-              <InventoryPage />
+              <FoodInventory />
             </ProtectedRoute>
           }
         />
@@ -143,7 +143,7 @@ function App() {
           path="/profile"
           element={
             <ProtectedRoute>
-              <ProfilePageDisplay />
+              <ProfilePage />
             </ProtectedRoute>
           }
         />
@@ -156,7 +156,7 @@ function App() {
           }
         />
       </Routes>
-      {!hideLayout && <Footer />}
+           {location.pathname === "/" && !hideLayout && <Footer />}
     </>
   );
 }
