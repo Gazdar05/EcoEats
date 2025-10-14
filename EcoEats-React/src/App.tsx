@@ -144,9 +144,9 @@ function App() {
           }
         />
       </Routes>
-
-      {/* ✅ Only show footer when NOT on /browse */}
-      {location.pathname !== "/browse" && <Footer />}
+      {/* Only show footer on homepage */}
+      {location.pathname === "/" && <Footer />}
+     
     </>
   );
 }

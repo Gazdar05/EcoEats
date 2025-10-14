@@ -4,7 +4,9 @@
   padding: 100px 3rem 100px;
   display: flex;
   justify-content: center;
-  align-items: flex-start; 
+  align-items: center; 
+  width: 90vh;
+  margin-left: 26rem;
 }
 
 .profile-wrapper {
