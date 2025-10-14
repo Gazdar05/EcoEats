@@ -20,7 +20,11 @@ interface EditItemPopupProps {
   onSave: (updatedItem: Omit<InventoryItem, "status">) => void; // ✅ omit status
 }
 
-const EditItemPopup: React.FC<EditItemPopupProps> = ({ item, onClose, onSave }) => {
+const EditItemPopup: React.FC<EditItemPopupProps> = ({
+  item,
+  onClose,
+  onSave,
+}) => {
   const [formData, setFormData] = useState({
     name: item.name,
     category: item.category || "",
@@ -30,10 +34,14 @@ const EditItemPopup: React.FC<EditItemPopupProps> = ({ item, onClose, onSave }) 
     notes: item.notes || "",
   });
 
-  const [imagePreview, setImagePreview] = useState<string>(item.image ? String(item.image) : "");
+  const [imagePreview, setImagePreview] = useState<string>(
+    item.image ? String(item.image) : ""
+  );
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -64,12 +72,23 @@ const EditItemPopup: React.FC<EditItemPopupProps> = ({ item, onClose, onSave }) 
         <form onSubmit={handleSubmit}>
           <div className="edit-form-group">
             <label>Name</label>
-            <input type="text" name="name" value={formData.name} onChange={handleChange} required />
+            <input
+              type="text"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              required
+            />
           </div>
 
           <div className="edit-form-group">
             <label>Category</label>
-            <select name="category" value={formData.category} onChange={handleChange} required>
+            <select
+              name="category"
+              value={formData.category}
+              onChange={handleChange}
+              required
+            >
               <option value="">Select category</option>
               <option value="Produce">Produce</option>
               <option value="Fruit">Fruit</option>
@@ -85,17 +104,34 @@ const EditItemPopup: React.FC<EditItemPopupProps> = ({ item, onClose, onSave }) 
 
           <div className="edit-form-group">
             <label>Quantity</label>
-            <input type="text" name="quantity" value={formData.quantity} onChange={handleChange} required />
+            <input
+              type="text"
+              name="quantity"
+              value={formData.quantity}
+              onChange={handleChange}
+              required
+            />
           </div>
 
           <div className="edit-form-group">
             <label>Expiry Date</label>
-            <input type="date" name="expiry" value={formData.expiry} onChange={handleChange} required />
+            <input
+              type="date"
+              name="expiry"
+              value={formData.expiry}
+              onChange={handleChange}
+              required
+            />
           </div>
 
           <div className="edit-form-group">
             <label>Storage</label>
-            <select name="storage" value={formData.storage} onChange={handleChange} required>
+            <select
+              name="storage"
+              value={formData.storage}
+              onChange={handleChange}
+              required
+            >
               <option value="">Select storage</option>
               <option value="Fridge">Fridge</option>
               <option value="Freezer">Freezer</option>
@@ -109,7 +145,11 @@ const EditItemPopup: React.FC<EditItemPopupProps> = ({ item, onClose, onSave }) 
             <div className="edit-image-section">
               {imagePreview ? (
                 <div className="edit-image-container">
-                  <img src={imagePreview} alt="Preview" className="edit-image-preview" />
+                  <img
+                    src={imagePreview}
+                    alt="Preview"
+                    className="edit-image-preview"
+                  />
                   <div className="edit-image-actions">
                     <label className="edit-image-btn">
                       Change Photo
@@ -120,7 +160,11 @@ const EditItemPopup: React.FC<EditItemPopupProps> = ({ item, onClose, onSave }) 
                         onChange={handleImageUpload}
                       />
                     </label>
-                    <button type="button" className="edit-remove-btn" onClick={handleRemoveImage}>
+                    <button
+                      type="button"
+                      className="edit-remove-btn"
+                      onClick={handleRemoveImage}
+                    >
                       Remove
                     </button>
                   </div>
@@ -140,8 +184,12 @@ const EditItemPopup: React.FC<EditItemPopupProps> = ({ item, onClose, onSave }) 
           </div>
 
           <div className="edit-popup-actions">
-            <button type="submit" className="edit-save-btn">Save Changes</button>
-            <button type="button" className="edit-cancel-btn" onClick={onClose}>Cancel</button>
+            <button type="submit" className="edit-save-btn">
+              Save Changes
+            </button>
+            <button type="button" className="edit-cancel-btn" onClick={onClose}>
+              Cancel
+            </button>
           </div>
         </form>
       </div>

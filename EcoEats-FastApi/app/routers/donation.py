@@ -1,4 +1,3 @@
-# app/routers/donation.py
 from fastapi import APIRouter, HTTPException, status, Body
 from app.database import db
 from datetime import datetime, date
@@ -7,17 +6,27 @@ from bson.errors import InvalidId
 from typing import Optional, List, Dict, Any
 
 router = APIRouter(tags=["Donations"])
+collection = db["food_items"]
 
-collection_inventory = db["inventory"]
-collection_donations = db["donations"]
-
+# ✅ Same as browse page for consistency
+ALLOWED_CATEGORIES = [
+    "Fruits",
+    "Vegetables",
+    "Dairy",
+    "Meat",
+    "Grains",
+    "Pantry Staples",
+    "Bakery",
+    "Beverages",
+    "Canned",
+    "Seafood",
+]
+ALLOWED_STORAGE = ["Fridge", "Freezer", "Pantry", "Counter"]
 
 def serialize_doc(doc: dict) -> dict:
-    """Convert MongoDB _id to string and format datetime fields."""
     doc["id"] = str(doc["_id"])
     del doc["_id"]
 
-    # Convert datetime fields to ISO string
     for key, value in doc.items():
         if isinstance(value, (datetime, date)):
             doc[key] = value.isoformat()
@@ -36,59 +45,38 @@ async def convert_to_donation(
     except InvalidId:
         raise HTTPException(status_code=400, detail="Invalid item ID format")
 
-    item = await collection_inventory.find_one({"_id": obj_id})
+    item = await collection.find_one({"_id": obj_id, "source": "inventory"})
     if not item:
         raise HTTPException(status_code=404, detail="Inventory item not found")
 
-    # Proper expiry handling
-    expiry_value = item.get("expiry")
-    if isinstance(expiry_value, datetime):
-        expiry_value = expiry_value.isoformat()
-    elif isinstance(expiry_value, date):
-        expiry_value = datetime.combine(expiry_value, datetime.min.time()).isoformat()
-    elif isinstance(expiry_value, str):
-        expiry_value = expiry_value
-    else:
-        expiry_value = None
+    # ✅ Ensure fields are valid before conversion
+    if item.get("category") not in ALLOWED_CATEGORIES:
+        raise HTTPException(status_code=400, detail="Invalid category in item record")
+    if item.get("storage") not in ALLOWED_STORAGE:
+        raise HTTPException(status_code=400, detail="Invalid storage type in item record")
 
-    donation = {
-        "inventory_id": str(item["_id"]),
-        "name": item.get("name"),
-        "category": item.get("category"),
-        "quantity": item.get("quantity"),
-        "expiry": expiry_value,
-        "storage": item.get("storage"),
-        "notes": item.get("notes"),
-        "image": item.get("image"),
-        "donated_at": datetime.utcnow(),
+    update_data = {
+        "source": "donation",
         "status": "Donated",
+        "donated_at": datetime.utcnow(),
         "pickupLocation": pickupLocation,
         "pickupDate": pickupDate,
     }
 
-    # Insert into donations collection with error handling
-    try:
-        result = await collection_donations.insert_one(donation)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to insert donation: {e}")
+    result = await collection.update_one({"_id": obj_id}, {"$set": update_data})
+    if result.modified_count == 0:
+        raise HTTPException(status_code=500, detail="Failed to convert to donation")
 
-    donation["_id"] = result.inserted_id
-
-    # Remove the original item from inventory
-    try:
-        await collection_inventory.delete_one({"_id": obj_id})
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to remove inventory item: {e}")
-
-    return serialize_doc(donation)
+    updated_item = await collection.find_one({"_id": obj_id})
+    return serialize_doc(updated_item)
 
 
 @router.get("/", response_model=List[Dict[str, Any]], status_code=status.HTTP_200_OK)
 async def get_all_donations():
     """Retrieve all donations, sorted by most recent."""
-    donations_cursor = collection_donations.find().sort("donated_at", -1)
+    cursor = collection.find({"source": "donation"}).sort("donated_at", -1)
     donations = []
-    async for donation in donations_cursor:
+    async for donation in cursor:
         donations.append(serialize_doc(donation))
     return donations
 
@@ -101,7 +89,7 @@ async def get_donation(donation_id: str):
     except InvalidId:
         raise HTTPException(status_code=400, detail="Invalid donation ID format")
 
-    donation = await collection_donations.find_one({"_id": obj_id})
+    donation = await collection.find_one({"_id": obj_id, "source": "donation"})
     if not donation:
         raise HTTPException(status_code=404, detail="Donation not found")
 
@@ -116,7 +104,7 @@ async def delete_donation(donation_id: str):
     except InvalidId:
         raise HTTPException(status_code=400, detail="Invalid donation ID format")
 
-    result = await collection_donations.delete_one({"_id": obj_id})
+    result = await collection.delete_one({"_id": obj_id, "source": "donation"})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Donation not found")
 

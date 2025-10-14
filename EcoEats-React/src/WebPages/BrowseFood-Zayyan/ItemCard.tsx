@@ -39,8 +39,11 @@ const ItemCard: React.FC<Props> = ({ item, onView }) => {
       </button>
 
       <div className="card-thumb" aria-hidden="true">
-        {/* placeholder square image */}
-        <div className="thumb-placeholder" />
+        {item.image ? (
+          <img src={item.image} alt={item.name} className="thumb-image" />
+        ) : (
+          <div className="thumb-placeholder" />
+        )}
       </div>
 
       <div className="card-body">

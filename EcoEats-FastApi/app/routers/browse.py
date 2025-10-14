@@ -4,7 +4,27 @@ from bson import ObjectId
 from datetime import datetime, timedelta
 from app.database import db
 
-router = APIRouter(prefix="/browse", tags=["Browse"])
+router = APIRouter(tags=["Browse"])
+
+
+# ✅ Helper: serialize MongoDB item for frontend
+def serialize_item(item):
+    item["id"] = str(item["_id"])
+    del item["_id"]
+
+    # Convert expiry_date → expiry
+    if "expiry_date" in item:
+        if isinstance(item["expiry_date"], datetime):
+            item["expiry"] = item["expiry_date"].strftime("%Y-%m-%d")
+        else:
+            item["expiry"] = item["expiry_date"]
+        del item["expiry_date"]
+
+    # Always ensure image key exists (avoid undefined in frontend)
+    item["image"] = item.get("image", "")
+
+    return item
+
 
 # ✅ Get all items with optional filters
 @router.get("/items")
@@ -45,19 +65,22 @@ async def get_items(
 
     results = []
     async for doc in db.food_items.find(query):
-        doc["_id"] = str(doc["_id"])
-        results.append(doc)
+        results.append(serialize_item(doc))
     return results
 
 
 # ✅ Get one item details
 @router.get("/item/{item_id}")
 async def get_item(item_id: str):
-    item = await db.food_items.find_one({"_id": ObjectId(item_id)})
+    try:
+        obj_id = ObjectId(item_id)
+    except:
+        raise HTTPException(status_code=400, detail="Invalid item ID format")
+
+    item = await db.food_items.find_one({"_id": obj_id})
     if not item:
         raise HTTPException(status_code=404, detail="Item not found")
-    item["_id"] = str(item["_id"])
-    return item
+    return serialize_item(item)
 
 
 # ✅ Mark an item as used
@@ -124,7 +147,9 @@ async def remove_donation(item_id: str):
     if result.modified_count == 0:
         raise HTTPException(status_code=404, detail="Item not found")
     return {"status": "removed from donation"}
-# ✅ Mark item as donated (Option 2: keep it, mark as donated)
+
+
+# ✅ Mark item as donated
 @router.put("/item/{item_id}/mark-donated")
 async def mark_donated(item_id: str):
     result = await db.food_items.update_one(
@@ -134,3 +159,15 @@ async def mark_donated(item_id: str):
     if result.modified_count == 0:
         raise HTTPException(status_code=404, detail="Item not found or already donated")
     return {"status": "marked as donated"}
+
+
+# ✅ Unmark donated (move back to donation listings)
+@router.put("/item/{item_id}/unmark-donated")
+async def unmark_donated(item_id: str):
+    result = await db.food_items.update_one(
+        {"_id": ObjectId(item_id)},
+        {"$set": {"donated": False}}
+    )
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Item not found or not donated")
+    return {"status": "returned to donation listings"}

@@ -44,7 +44,8 @@ const BrowsePage: React.FC = () => {
       source: doc.source === "donation" ? "donation" : "inventory",
       reserved: !!doc.reserved,
       donationDetails: doc.donationDetails ?? undefined,
-      donated: !!doc.donated, // ✅ support donated flag
+      donated: !!doc.donated,
+      image: doc.image ?? "", // ✅ add this
     };
   }
 
