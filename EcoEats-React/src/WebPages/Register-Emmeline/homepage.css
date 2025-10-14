@@ -6,6 +6,7 @@
   padding-bottom: 0px; /* Space for footer */
  /* Enable vertical scrolling */
   height: 70vh;
+  overflow-y: scroll;
 }
 
 /* Hero Section */
@@ -21,7 +22,7 @@
   margin-top:-910px;
   position: relative;
   gap: 4rem;
-  overflow-y: scroll; 
+  
 }
 
 .hero-content {
@@ -153,9 +154,12 @@
 
 /* About Section */
 .homepage > .about-section {
-  padding: 5rem 8%;
   background: linear-gradient(135deg, #d9f1b5 0%, #dde9d9 100%);
   margin-bottom: 2rem;
+  margin-top: 0rem;
+  min-height: calc(100vh - 70px);
+ 
+  
 }
 
 
@@ -163,6 +167,7 @@
   max-width: 1400px;
   margin: 0 auto;
   margin-bottom: 80px;
+  height:100%;
   
    
 }
@@ -172,7 +177,9 @@
     font-weight: 700;
     color: #6EA124;
     text-align: center;
-    margin-bottom: 4rem;
+    margin-bottom: 3rem;
+    margin-top: 1rem;
+    justify-content: center;
 }
 
 
@@ -419,41 +426,5 @@
   margin-bottom: 3rem;
 }
 
-.features-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 2rem;
-  max-width: 1200px;
-  margin: 0 auto;
-}
 
-.feature-card {
-  background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%);
-  padding: 2rem;
-  border-radius: 16px;
-  text-align: center;
-  transition: all 0.3s;
-  border: 2px solid transparent;
-}
 
-.feature-card:hover {
-  transform: translateY(-8px);
-  border-color: #059669;
-  box-shadow: 0 12px 30px rgba(5, 150, 105, 0.15);
-}
-
-.feature-icon {
-  font-size: 3.5rem;
-  margin-bottom: 1rem;
-}
-
-.feature-card h3 {
-  font-size: 1.5rem;
-  color: #047857;
-  margin-bottom: 0.75rem;
-}
-
-.feature-card p {
-  color: #334d1a;
-  line-height: 1.6;
-}

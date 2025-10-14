@@ -188,7 +188,9 @@ async def register_user(request: RegisterRequest):
 #  Enable/Resend 2FA
 # ---------------------------
 @router.post("/enable-2fa/{user_id}")
+
 async def enable_2fa(user_id: str):
+    
     """Generate and send a new 2FA code for an existing user"""
     user = await db.household_users.find_one({"_id": ObjectId(user_id)})
     if not user:
@@ -252,16 +254,26 @@ async def enable_2fa(user_id: str):
 # ---------------------------
 @router.get("/get-user-by-email")
 async def get_user_by_email(email: EmailStr):
+    
+
     """Get user ID by email - used for resending verification codes"""
     user = await db.household_users.find_one({"email": email})
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     
+    # ✅ Normalize user_id to ObjectId
+    user_id = user["_id"]
+    if isinstance(user_id, str):
+        user_id = ObjectId(user_id)
+
     return {"user_id": str(user["_id"]), "email": user["email"]}
 
 
 # ---------------------------
 #  Verify 2FA
+# ---------------------------
+# ---------------------------
+#  Verify 2FA (Updated to mark code as used and set purpose)
 # ---------------------------
 @router.post("/verify-2fa")
 async def verify_2fa(request: Verify2FARequest):
@@ -269,13 +281,21 @@ async def verify_2fa(request: Verify2FARequest):
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
+    # Normalize ObjectId
+    user_id = user["_id"]
+    if isinstance(user_id, str):
+        user_id = ObjectId(user_id)
+
     record = await db.verification_codes.find_one({
-        "user_id": user["_id"], "code": request.code, "is_used": False
+        "user_id": user_id,  # ✅ use normalized ObjectId consistently
+        "code": request.code,
+        "is_used": False
     })
+
     if not record:
         raise HTTPException(status_code=400, detail="Invalid verification code")
 
-    # ✅ Fix timezone-aware comparison
+    # Check expiry
     expires_at = record["expires_at"]
     if expires_at.tzinfo is None:
         expires_at = expires_at.replace(tzinfo=timezone.utc)
@@ -283,15 +303,28 @@ async def verify_2fa(request: Verify2FARequest):
     if datetime.now(timezone.utc) > expires_at:
         raise HTTPException(status_code=400, detail="Verification code expired")
 
-    # ✅ Activate user and mark code used
-    await db.household_users.update_one(
-        {"_id": user["_id"]},
-        {"$set": {"acct_status": "pending"}}
+    # Mark as used
+    await db.verification_codes.update_one(
+        {"_id": record["_id"]},
+        {"$set": {"is_used": True}}
     )
 
+    purpose = record.get("purpose", "2fa")
 
+    if purpose == "enable_2fa":
+        return {
+            "message": "2FA verified successfully. Please set your new password.",
+            "purpose": "enable_2fa"
+        }
 
-    return {"message": "2FA verified successfully. You can now log in."}
+    await db.household_users.update_one(
+        {"_id": user_id},
+        {"$set": {"acct_status": "pending"}}
+    )
+    return {
+        "message": "2FA verified successfully. Please set your password to activate your account.",
+        "purpose": "register_2fa"
+    }
 
 
 # ---------------------------
@@ -300,12 +333,16 @@ async def verify_2fa(request: Verify2FARequest):
 
 @router.post("/login")
 async def login_user(request: LoginRequest):
+    
     # 🔍 Step 1: Find the user by email
     user = await db.household_users.find_one({"email": request.email})
     if not user:
         raise HTTPException(
             status_code=400, detail="Invalid email or password. Please try again."
         )
+    user_id = user["_id"]
+    if isinstance(user_id, str):
+        user_id = ObjectId(user_id)
 
     # 🔑 Step 2: Check password
     if not verify_password(request.password, user["pwd_hash"]):
@@ -348,19 +385,49 @@ async def login_user(request: LoginRequest):
 # ---------------------------
 #  Set Password (After Register)
 # ---------------------------
+# ---------------------------
+#  Set Password (After Register or Enable 2FA)
+# ---------------------------
 @router.post("/set-password")
 async def set_password(request: SetPasswordRequest):
     user = await db.household_users.find_one({"email": request.email})
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
+    user_id = user["_id"]
+    if isinstance(user_id, str):
+        user_id = ObjectId(user_id)
+
     hashed = hash_password(request.new_password)
-    await db.household_users.update_one(
-        {"_id": user["_id"]},
-        {"$set": {"pwd_hash": hashed, "acct_status": "active"}}
+
+    # Look for a recently used verification code for enabling 2FA
+    recent_verification = await db.verification_codes.find_one(
+        {
+            "user_id": user_id,   # ✅ same normalized type
+            "purpose": "enable_2fa",
+            "is_used": True
+        },
+        sort=[("created_at", -1)]
     )
 
-    return {"message": "Password updated successfully."}
+    enable_2fa_value = user.get("enable_2fa", False)
+    message = "Password updated successfully."
+
+    if recent_verification:
+        enable_2fa_value = True
+        message = "Password updated successfully. Two-Factor Authentication has been enabled for your account."
+
+    await db.household_users.update_one(
+        {"_id": user_id},
+        {"$set": {
+            "pwd_hash": hashed,
+            "acct_status": "active",
+            "enable_2fa": enable_2fa_value,
+            "updated_at": datetime.now(timezone.utc)
+        }}
+    )
+
+    return {"message": message}
 
 # ---------------------------
 # Get User Profile
@@ -372,6 +439,10 @@ async def get_user_profile(email: EmailStr):
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     
+    user_id = user["_id"]
+    if isinstance(user_id, str):
+        user_id = ObjectId(user_id)
+
     return {
         "user_id": str(user["_id"]),  # ✅ Added user_id
         "full_name": user["full_name"],
@@ -383,3 +454,104 @@ async def get_user_profile(email: EmailStr):
         "last_login_at": user["last_login_at"].isoformat() if user.get("last_login_at") else None
     }
 
+@router.post("/update-2fa-status")
+async def update_2fa_status(request: Update2FARequest):
+    """Enable or disable 2FA for a user"""
+    user = await db.household_users.find_one({"email": request.email})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    user_id = user["_id"]
+    if isinstance(user_id, str):
+        user_id = ObjectId(user_id)
+
+    await db.household_users.update_one(
+        {"_id": user["_id"]},
+        {"$set": {
+            "enable_2fa": request.enable_2fa,
+            "updated_at": datetime.now(timezone.utc)
+        }}
+    )
+    
+    return {
+        "message": f"2FA {'enabled' if request.enable_2fa else 'disabled'} successfully",
+        "enable_2fa": request.enable_2fa
+    }
+
+@router.post("/profile/enable-2fa/{user_id}")
+async def enable_2fa(user_id: str):
+    
+    """Generate and send a new 2FA code for enabling 2FA from profile"""
+    user = await db.household_users.find_one({"_id": ObjectId(user_id)})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    user_id = user["_id"]
+    if isinstance(user_id, str):
+        user_id = ObjectId(user_id)
+
+    code = "".join(random.choices(string.digits, k=6))
+    expires_at = datetime.now(timezone.utc) + timedelta(minutes=5)
+
+    # ✅ Use "enable_2fa" purpose to distinguish from registration
+    await db.verification_codes.insert_one({
+        "user_id": ObjectId(user_id),
+        "code": code,
+        "purpose": "enable_2fa",  # Different purpose
+        "expires_at": expires_at,
+        "is_used": False,
+        "created_at": datetime.now(timezone.utc)
+    })
+
+    verification_link = f"{FRONTEND_URL}/verify-account?email={user['email']}&purpose=enable_2fa"
+
+    html_content = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <style>
+            body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+            .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+            .header {{ background-color: #6EA124; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }}
+            .content {{ background-color: #f9f9f9; padding: 30px; border-radius: 0 0 8px 8px; }}
+            .code-box {{ background-color: #fff; border: 2px dashed #6EA124; padding: 15px; text-align: center; font-size: 32px; font-weight: bold; letter-spacing: 5px; margin: 20px 0; color: #2a5d14; }}
+            .button {{ display: inline-block; background-color: #6EA124; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; font-weight: bold; }}
+            .footer {{ text-align: center; color: #666; font-size: 12px; margin-top: 20px; }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>Enable Two-Factor Authentication</h1>
+            </div>
+            <div class="content">
+                <p>Hi {user['full_name']},</p>
+                <p>You requested to enable Two-Factor Authentication for your EcoEats account.</p>
+                
+                <p><strong>Your verification code is:</strong></p>
+                <div class="code-box">{code}</div>
+
+                <p style="text-align: center;">
+                    <a href="{verification_link}" class="button">Verify & Enable 2FA</a>
+                </p>
+
+                <p><strong>After verification, you'll need to set a new password to complete the 2FA setup.</strong></p>
+                <p style="color: #dc3545; font-weight: bold;">⏰ This code expires in 5 minutes</p>
+
+                <p>If you didn't request this, please ignore this email.</p>
+            </div>
+            <div class="footer">
+                <p>© 2025 EcoEats. All rights reserved.</p>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+
+    send_email_html(
+        user["email"],
+        "EcoEats - Enable Two-Factor Authentication",
+        html_content
+    )
+
+    return {"message": "Verification code sent successfully."}

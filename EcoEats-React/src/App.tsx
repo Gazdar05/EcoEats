@@ -155,7 +155,7 @@ function App() {
           }
         />
       </Routes>
-      {!hideFooter && <Footer />}
+           {location.pathname === "/" && !hideLayout && <Footer />}
     </>
   );
 }
