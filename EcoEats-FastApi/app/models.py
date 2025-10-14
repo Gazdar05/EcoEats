@@ -1,33 +1,29 @@
-# app/models.py
 from pydantic import BaseModel, Field, EmailStr
-from typing import Optional
+from typing import Optional, Any
 from datetime import datetime, date
 from bson import ObjectId
 from pydantic_core import core_schema
-from typing import Any
 
-
+# --------------------
 # Helper for Mongo ObjectId serialization
+# --------------------
 class PyObjectId(ObjectId):
     @classmethod
     def __get_pydantic_core_schema__(cls, source_type: Any, handler):
-        # tells Pydantic how to validate
         return core_schema.no_info_after_validator_function(
             cls.validate,
             core_schema.str_schema()
         )
-    
+
     @classmethod
     def validate(cls, v: Any) -> ObjectId:
         if not ObjectId.is_valid(v):
             raise ValueError("Invalid ObjectId")
         return ObjectId(v)
-    
+
     @classmethod
     def __get_pydantic_json_schema__(cls, core_schema, handler):
-        # tells Pydantic how to display in docs
         return {"type": "string", "example": "507f1f77bcf86cd799439011"}
-
 
 
 # --------------------
@@ -46,11 +42,10 @@ class HouseholdUser(BaseModel):
     last_login_at: Optional[datetime] = None
 
     model_config = {
-        "populate_by_name": True,
+        "validate_by_name": True,
         "arbitrary_types_allowed": True,
         "json_encoders": {ObjectId: str},
     }
-
 
 
 # --------------------
@@ -64,10 +59,11 @@ class PrivacySetting(BaseModel):
     saved_filter_json: Optional[dict] = None
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
-    class Config:
-        allow_population_by_field_name = True
-        arbitrary_types_allowed = True
-        json_encoders = {ObjectId: str}
+    model_config = {
+        "validate_by_name": True,
+        "arbitrary_types_allowed": True,
+        "json_encoders": {ObjectId: str},
+    }
 
 
 # --------------------
@@ -82,34 +78,39 @@ class VerificationCode(BaseModel):
     is_used: bool = False
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
-    class Config:
-        allow_population_by_field_name = True
-        arbitrary_types_allowed = True
-        json_encoders = {ObjectId: str}
+    model_config = {
+        "validate_by_name": True,
+        "arbitrary_types_allowed": True,
+        "json_encoders": {ObjectId: str},
+    }
+
 
 # --------------------
 # FoodCategory
 # --------------------
 class FoodCategory(BaseModel):
-    id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")  # MongoDB _id
+    id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
     fc_cat_id: Optional[int] = Field(None, description="Custom category ID from data dictionary")
     name: str = Field(..., max_length=80)
     desc: Optional[str] = None
 
-    class Config:
-        allow_population_by_field_name = True
-        arbitrary_types_allowed = True
-        json_encoders = {ObjectId: str}
+    model_config = {
+        "validate_by_name": True,
+        "arbitrary_types_allowed": True,
+        "json_encoders": {ObjectId: str},
+    }
 
 
 # --------------------
 # FoodItem
 # --------------------
-
 class FoodItem(BaseModel):
     id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
     user_id: Optional[PyObjectId] = None
     name: str = Field(..., max_length=200)
+    qty: int
+    reserved_qty: int = 0
+    unit: str = Field(..., max_length=32)
     expiry_date: Optional[date] = None
     category: str = Field(..., max_length=100)
     storage: str = Field(..., max_length=50)
@@ -127,7 +128,22 @@ class FoodItem(BaseModel):
         json_encoders = {ObjectId: str}
 
 
-    class Config:
-        allow_population_by_field_name = True
-        arbitrary_types_allowed = True
-        json_encoders = {ObjectId: str}
+# --------------------
+# InventoryItemModel
+# --------------------
+class InventoryItemModel(BaseModel):
+    id: Optional[str] = Field(alias="_id", default=None)
+    name: str
+    category: str
+    quantity: str
+    expiry: date
+    storage: str
+    status: Optional[str] = None
+    notes: Optional[str] = None
+    image: Optional[str] = None
+
+    model_config = {
+        "validate_by_name": True,
+        "json_encoders": {ObjectId: str},
+        "arbitrary_types_allowed": True,
+    }

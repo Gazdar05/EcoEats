@@ -28,6 +28,7 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column; /* ✅ stack content vertically */
+  padding-top: 58px; /* space for navbar */
 }
 
 h1 {
@@ -79,13 +80,11 @@ nav {
   z-index: 9999;
 }
 
-body {
-  padding-top: 58px; /* ✅ space for navbar */
+/* Hide navbar and footer when popups are open */
+body.no-chrome nav {
+  display: none !important;
 }
 
-/* 🚫 REMOVE this:
-html, body {
-  height: 100%;
-  overflow: hidden;
+body.no-chrome footer {
+  display: none !important;
 }
-*/

@@ -1,4 +1,3 @@
-# database.py inside app folder
 from motor.motor_asyncio import AsyncIOMotorClient
 from app.config import settings
 
