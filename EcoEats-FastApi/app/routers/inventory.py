@@ -24,16 +24,19 @@ ALLOWED_STORAGE = ["Fridge", "Freezer", "Pantry", "Counter"]
 
 # ✅ Map plural → singular
 CATEGORY_MAP = {
-    "Fruits": "Fruit",
-    "Fruit": "Fruit",
-    "Vegetables": "Vegetable",
-    "Vegetable": "Vegetable",
-    "Grains": "Grain",
-    "Grain": "Grain",
+   "Fruits": "Fruits",
     "Fruit": "Fruits",
+    "Vegetables": "Vegetables",
     "Vegetable": "Vegetables",
+    "Grains": "Grains",
     "Grain": "Grains",
     "Pantry Staple": "Pantry Staples",
+    "Dairy": "Dairy",
+    "Meat": "Meat",
+    "Bakery": "Bakery",
+    "Beverages": "Beverages",
+    "Canned": "Canned",
+    "Seafood": "Seafood",
 
     
 }
