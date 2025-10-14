@@ -9,7 +9,7 @@ collection = db["food_items"]   # ✅ stay with food_items collection
 
 # ✅ Constants synced with Browse Page
 ALLOWED_CATEGORIES = [
-     "Fruits",
+    "Fruits",
     "Vegetables",
     "Dairy",
     "Meat",
@@ -112,6 +112,7 @@ async def get_inventory_item(item_id: str):
 
 
 # ✅ POST (create) a new inventory item
+# ✅ POST (create) a new inventory item
 @router.post("/", status_code=status.HTTP_201_CREATED)
 async def create_inventory_item(request: Request):
     item = await request.json()
@@ -125,6 +126,7 @@ async def create_inventory_item(request: Request):
     required = ["name", "category", "quantity", "expiry_date", "storage"]
     for field in required:
         if field not in item or not item[field]:
+            print(f"❌ Missing or empty field: {field}")
             raise HTTPException(status_code=400, detail=f"Missing field: {field}")
 
     # ✅ Trim strings
@@ -132,19 +134,27 @@ async def create_inventory_item(request: Request):
     item["storage"] = str(item["storage"]).strip()
     item["name"] = str(item["name"]).strip()
 
+    print(f"📋 Before normalization - Category: '{item['category']}', Storage: '{item['storage']}'")
+
     # normalize category before validating
     item["category"] = normalize_category(item["category"])
 
+    print(f"📋 After normalization - Category: '{item['category']}'")
+    print(f"✅ Allowed categories: {ALLOWED_CATEGORIES}")
+
     # validate category/storage
     if item["category"] not in ALLOWED_CATEGORIES:
+        print(f"❌ Invalid category: {item['category']}")
         raise HTTPException(status_code=400, detail=f"Invalid category: {item['category']}")
     if item["storage"] not in ALLOWED_STORAGE:
+        print(f"❌ Invalid storage: {item['storage']}")
         raise HTTPException(status_code=400, detail=f"Invalid storage type: {item['storage']}")
 
     # convert quantity to int safely
     try:
         item["quantity"] = int(item.get("quantity", 1))
     except (ValueError, TypeError):
+        print(f"❌ Invalid quantity: {item.get('quantity')}")
         raise HTTPException(status_code=400, detail="Quantity must be a number")
 
     # convert expiry_date string → datetime
@@ -152,6 +162,7 @@ async def create_inventory_item(request: Request):
         try:
             item["expiry_date"] = datetime.strptime(item["expiry_date"], "%Y-%m-%d")
         except ValueError:
+            print(f"❌ Invalid expiry_date format: {item.get('expiry_date')}")
             raise HTTPException(status_code=400, detail="Invalid expiry_date format. Use YYYY-MM-DD.")
 
     # optional image

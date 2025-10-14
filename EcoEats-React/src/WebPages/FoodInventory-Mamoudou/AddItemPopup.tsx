@@ -95,6 +95,15 @@ const AddItemPopup: React.FC<AddItemPopupProps> = ({
             <option value="">Select Category</option>
             <option value="Fruits">Fruit</option>
             <option value="Vegetables">Vegetable</option>
+            <option value="Dairy">Dairy</option>
+            <option value="Meat">Meat</option>
+            <option value="Grains">Grains</option>
+            <option value="Pantry Staples">Pantry Staples</option>
+            <option value="Bakery">Bakery</option>
+            <option value="Beverages">Beverages</option>
+            <option value="Canned">Canned</option>
+            <option value="Seafood">Seafood</option>
+         
             {categories.map((cat) => (
               <option key={cat.id} value={cat.name}>
                 {cat.name}
