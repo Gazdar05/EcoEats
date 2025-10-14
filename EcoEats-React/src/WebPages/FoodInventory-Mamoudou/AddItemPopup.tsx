@@ -131,7 +131,7 @@ const AddItemPopup: React.FC<AddItemPopupProps> = ({
             <option value="Fridge">Fridge</option>
             <option value="Pantry">Pantry</option>
             <option value="Freezer">Freezer</option>
-            <option value="Counter">Other</option>
+            <option value="Counter">Counter</option>
           </select>
 
           <label>Notes</label>

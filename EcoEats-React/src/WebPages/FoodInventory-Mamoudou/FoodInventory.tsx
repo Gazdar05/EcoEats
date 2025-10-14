@@ -138,7 +138,7 @@ const FoodInventory: React.FC = () => {
         ...d,
         id: String(d.id),
         expiry: d.expiry || "",
-        status: d.status || "Fresh",
+        status: calculateStatus(d.expiry || ""),
         pickupLocation: d.pickupLocation || "",
         availability: d.availability || "Available",
       }));
