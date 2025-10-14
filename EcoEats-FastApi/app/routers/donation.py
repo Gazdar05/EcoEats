@@ -1,7 +1,7 @@
 # app/routers/donation.py
 from fastapi import APIRouter, HTTPException, status, Body
 from app.database import db
-from datetime import datetime
+from datetime import datetime, date
 from bson import ObjectId
 from bson.errors import InvalidId
 from typing import Optional, List, Dict, Any
@@ -19,7 +19,7 @@ def serialize_doc(doc: dict) -> dict:
 
     # Convert datetime fields to ISO string
     for key, value in doc.items():
-        if isinstance(value, datetime):
+        if isinstance(value, (datetime, date)):
             doc[key] = value.isoformat()
     return doc
 
@@ -40,9 +40,12 @@ async def convert_to_donation(
     if not item:
         raise HTTPException(status_code=404, detail="Inventory item not found")
 
+    # Proper expiry handling
     expiry_value = item.get("expiry")
     if isinstance(expiry_value, datetime):
         expiry_value = expiry_value.isoformat()
+    elif isinstance(expiry_value, date):
+        expiry_value = datetime.combine(expiry_value, datetime.min.time()).isoformat()
     elif isinstance(expiry_value, str):
         expiry_value = expiry_value
     else:
@@ -63,12 +66,19 @@ async def convert_to_donation(
         "pickupDate": pickupDate,
     }
 
-    # Insert into donations collection
-    result = await collection_donations.insert_one(donation)
+    # Insert into donations collection with error handling
+    try:
+        result = await collection_donations.insert_one(donation)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to insert donation: {e}")
+
     donation["_id"] = result.inserted_id
 
     # Remove the original item from inventory
-    await collection_inventory.delete_one({"_id": obj_id})
+    try:
+        await collection_inventory.delete_one({"_id": obj_id})
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to remove inventory item: {e}")
 
     return serialize_doc(donation)
 
