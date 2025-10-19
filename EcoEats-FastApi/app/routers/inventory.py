@@ -5,7 +5,7 @@ from app.database import db
 from datetime import datetime
 
 router = APIRouter(tags=["Inventory"])
-collection = db["food_items"]   # ✅ stay with food_items collection
+collection = db["food_items"]  # ✅ stay with food_items collection
 
 # ✅ Constants synced with Browse Page
 ALLOWED_CATEGORIES = [
@@ -24,7 +24,7 @@ ALLOWED_STORAGE = ["Fridge", "Freezer", "Pantry", "Counter"]
 
 # ✅ Map plural → singular
 CATEGORY_MAP = {
-   "Fruits": "Fruits",
+    "Fruits": "Fruits",
     "Fruit": "Fruits",
     "Vegetables": "Vegetables",
     "Vegetable": "Vegetables",
@@ -37,8 +37,6 @@ CATEGORY_MAP = {
     "Beverages": "Beverages",
     "Canned": "Canned",
     "Seafood": "Seafood",
-
-    
 }
 
 def normalize_category(cat: str) -> str:
@@ -67,8 +65,13 @@ def serialize_item(item):
     # ensure image exists
     item["image"] = item.get("image", "")
 
-    # ensure quantity exists
-    item["quantity"] = int(item.get("quantity", 1))
+    # ✅ safely handle quantity (can be "2", "2L", "3 bottles", etc.)
+    quantity_val = item.get("quantity", 1)
+    try:
+        item["quantity"] = int(quantity_val)
+    except (ValueError, TypeError):
+        # Keep as string if not a plain integer
+        item["quantity"] = str(quantity_val)
 
     # include status for frontend
     if "expiry" in item and item["expiry"]:
@@ -115,7 +118,6 @@ async def get_inventory_item(item_id: str):
 
 
 # ✅ POST (create) a new inventory item
-# ✅ POST (create) a new inventory item
 @router.post("/", status_code=status.HTTP_201_CREATED)
 async def create_inventory_item(request: Request):
     item = await request.json()
@@ -153,12 +155,12 @@ async def create_inventory_item(request: Request):
         print(f"❌ Invalid storage: {item['storage']}")
         raise HTTPException(status_code=400, detail=f"Invalid storage type: {item['storage']}")
 
-    # convert quantity to int safely
+    # ✅ safely handle quantity conversion
     try:
         item["quantity"] = int(item.get("quantity", 1))
     except (ValueError, TypeError):
-        print(f"❌ Invalid quantity: {item.get('quantity')}")
-        raise HTTPException(status_code=400, detail="Quantity must be a number")
+        print(f"⚠️ Non-numeric quantity detected: {item.get('quantity')} — storing as string")
+        item["quantity"] = str(item.get("quantity", "1"))
 
     # convert expiry_date string → datetime
     if isinstance(item.get("expiry_date"), str):
@@ -177,7 +179,6 @@ async def create_inventory_item(request: Request):
     result = await collection.insert_one(item)
     new_item = await collection.find_one({"_id": result.inserted_id})
     return serialize_item(new_item)
-
 
 
 # ✅ PUT (update) inventory item
@@ -209,6 +210,13 @@ async def update_inventory_item(item_id: str, request: Request):
     # ✅ Ensure image can be updated
     if "image" not in updated_data:
         updated_data["image"] = ""
+
+    # ✅ Safely handle quantity updates
+    if "quantity" in updated_data:
+        try:
+            updated_data["quantity"] = int(updated_data["quantity"])
+        except (ValueError, TypeError):
+            updated_data["quantity"] = str(updated_data["quantity"])
 
     result = await collection.update_one({"_id": obj_id, "source": "inventory"}, {"$set": updated_data})
     if result.matched_count == 0:

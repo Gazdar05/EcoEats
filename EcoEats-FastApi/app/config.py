@@ -1,4 +1,5 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from typing import List
 
 class Settings(BaseSettings):
     MONGO_URI: str
@@ -6,9 +7,13 @@ class Settings(BaseSettings):
     JWT_SECRET: str
     EMAIL_SENDER: str
     EMAIL_PASSWORD: str
-    FRONTEND_URL: str = "http://localhost:5173"  # ✅ match .env
+    ALLOW_ORIGINS: str  # comma-separated list in .env
 
+    model_config = SettingsConfigDict(env_file="app/.env")
 
-    model_config = SettingsConfigDict(env_file="app/.env")  # ✅ point to correct path
+    @property
+    def origins(self) -> List[str]:
+        """Convert ALLOW_ORIGINS string to list for CORS."""
+        return [origin.strip() for origin in self.ALLOW_ORIGINS.split(",")]
 
-settings=Settings()
+settings = Settings()
