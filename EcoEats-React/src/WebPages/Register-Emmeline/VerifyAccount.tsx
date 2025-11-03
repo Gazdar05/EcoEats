@@ -14,6 +14,7 @@ const VerifyAccount: React.FC = () => {
   const [step, setStep] = useState<"verify" | "setPassword" | "success">("verify");
   const [resendMessage, setResendMessage] = useState("");
   const [isResending, setIsResending] = useState(false);
+  
   useEffect(() => {
     // Get email from URL parameters
     const emailParam = searchParams.get("email");
@@ -93,7 +94,10 @@ const VerifyAccount: React.FC = () => {
       if (!verifyRes.ok) throw new Error(verifyData.detail || "Verification failed");
 
       // ✅ Move to password setting step
-      setStep("setPassword");
+      // Add a small delay to ensure Katalon can detect the change
+      setTimeout(() => {
+        setStep("setPassword");
+      }, 100);
     } catch (err: any) {
       alert(err.message || "Verification error. Please try again.");
     } finally {
@@ -134,7 +138,9 @@ const VerifyAccount: React.FC = () => {
       if (!passwordRes.ok) throw new Error(passwordData.detail || "Failed to set password");
 
       // Success!
-      setStep("success");
+      setTimeout(() => {
+        setStep("success");
+      }, 100);
     } catch (err: any) {
       alert(err.message || "Error setting password. Please try again.");
     } finally {
@@ -145,14 +151,15 @@ const VerifyAccount: React.FC = () => {
   // Success screen
   if (step === "success") {
     return (
-      <div className="verify-wrapper">
+      <div className="verify-wrapper" data-test-step="success">
         <div className="verify-container">
           <div className="success-message-container">
             <h1>✓ Account Activated!</h1>
             <p>Your account has been successfully verified and your password has been set.</p>
             <p>You can now log in with your credentials.</p>
             <button 
-              className="btn-primary" 
+              className="btn-primary"
+              data-test-id="go-to-login-btn"
               onClick={() => window.location.href = "/login"}
               style={{ marginTop: "2rem" }}
             >
@@ -167,9 +174,9 @@ const VerifyAccount: React.FC = () => {
   // Set Password screen
   if (step === "setPassword") {
     return (
-      <div className="verify-wrapper">
+      <div className="verify-wrapper" data-test-step="setPassword">
         <div className="verify-container">
-          <h1>Set New Password</h1>
+          <h1 data-test-id="set-password-heading">Set New Password</h1>
           <p className="subtitle">Create a secure password for your account</p>
 
           <div className="email-display">
@@ -178,17 +185,22 @@ const VerifyAccount: React.FC = () => {
 
           {/* New Password */}
           <div className="form-group">
-            <label>New Password *</label>
+            <label htmlFor="newPassword">New Password *</label>
             <div className="input-wrapper">
               <input
                 type="password"
                 id="newPassword"
+                data-test-id="new-password-input"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 className={errors.newPassword ? "error" : ""}
                 placeholder="At least 8 characters"
               />
-              <button type="button" onClick={() => togglePassword("newPassword")}>
+              <button 
+                type="button" 
+                onClick={() => togglePassword("newPassword")}
+                data-test-id="toggle-new-password"
+              >
                 Show
               </button>
             </div>
@@ -197,17 +209,22 @@ const VerifyAccount: React.FC = () => {
 
           {/* Confirm Password */}
           <div className="form-group">
-            <label>Confirm Password *</label>
+            <label htmlFor="confirmNewPassword">Confirm Password *</label>
             <div className="input-wrapper">
               <input
                 type="password"
                 id="confirmNewPassword"
+                data-test-id="confirm-password-input"
                 value={confirmNewPassword}
                 onChange={(e) => setConfirmNewPassword(e.target.value)}
                 className={errors.confirmNewPassword ? "error" : ""}
                 placeholder="Re-enter password"
               />
-              <button type="button" onClick={() => togglePassword("confirmNewPassword")}>
+              <button 
+                type="button" 
+                onClick={() => togglePassword("confirmNewPassword")}
+                data-test-id="toggle-confirm-password"
+              >
                 Show
               </button>
             </div>
@@ -218,6 +235,7 @@ const VerifyAccount: React.FC = () => {
 
           <button
             className="btn-primary"
+            data-test-id="save-password-btn"
             onClick={handleSetPassword}
             disabled={isLoading}
           >
@@ -230,9 +248,9 @@ const VerifyAccount: React.FC = () => {
 
   // Verification Code screen (default)
   return (
-    <div className="verify-wrapper">
+    <div className="verify-wrapper" data-test-step="verify">
       <div className="verify-container">
-        <h1>Verify Your Account</h1>
+        <h1 data-test-id="verify-code-heading">Verify Your Account</h1>
         <p className="subtitle">Welcome to EcoEats! Please enter your verification code.</p>
 
         <div className="email-display">
@@ -241,9 +259,11 @@ const VerifyAccount: React.FC = () => {
 
         {/* Verification Code */}
         <div className="form-group">
-          <label>Verification Code *</label>
+          <label htmlFor="verificationCode">Verification Code *</label>
           <input
             type="text"
+            id="verificationCode"
+            data-test-id="verification-code-input"
             maxLength={6}
             value={verificationCode}
             onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, ""))}
@@ -263,6 +283,7 @@ const VerifyAccount: React.FC = () => {
 
         <button
           className="btn-primary"
+          data-test-id="verify-code-btn"
           onClick={handleVerifyCode}
           disabled={isLoading}
         >
@@ -272,6 +293,7 @@ const VerifyAccount: React.FC = () => {
         {/* Resend Code Button */}
         <button
           className="btn-secondary"
+          data-test-id="resend-code-btn"
           onClick={handleResendCode}
           disabled={isResending}
         >
