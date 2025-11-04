@@ -7,6 +7,7 @@ import InventorySidebar from "./InventorySidebar";
 import MealSlotModal from "./MealSlotModal";
 import type { InventoryItem, WeekPlan, MealSlot, DayKey } from "./types";
 import { sampleInventory, sampleRecipes } from "./mockData";
+import { format } from "date-fns";
 
 const DAYS: DayKey[] = [
   "monday",
@@ -38,6 +39,17 @@ function formatWeekRange(start: Date) {
     undefined,
     opts
   )} - ${end.toLocaleDateString(undefined, opts)}`;
+}
+function formatWeekLabel(weekStart: Date) {
+  const now = startOfWeek();
+  const diffWeeks = Math.round(
+    (weekStart.getTime() - now.getTime()) / (7 * 24 * 60 * 60 * 1000)
+  );
+
+  if (diffWeeks === 0) return `This Week (${formatWeekRange(weekStart)})`;
+  if (diffWeeks === 1) return `Next Week (${formatWeekRange(weekStart)})`;
+  if (diffWeeks === -1) return `Last Week (${formatWeekRange(weekStart)})`;
+  return formatWeekRange(weekStart);
 }
 
 const defaultEmptyPlan = (weekStartIso: string): WeekPlan => ({
@@ -309,9 +321,32 @@ const PlanWeeklyMeals: React.FC = () => {
         <h2>Meal Planner</h2>
 
         <div className="week-controls">
-          <button onClick={gotoPrevWeek}>◀</button>
-          <div className="week-label">{weekLabel}</div>
-          <button onClick={gotoNextWeek}>▶</button>
+          <button className="week-btn" onClick={gotoPrevWeek}>
+            ◀
+          </button>
+
+          <div className="week-label">{formatWeekLabel(weekStart)}</div>
+
+          <button className="week-btn" onClick={gotoNextWeek}>
+            ▶
+          </button>
+
+          <button
+            className="week-today-btn"
+            onClick={() => setWeekStart(startOfWeek())}
+          >
+            This Week
+          </button>
+
+          <input
+            type="date"
+            value={format(weekStart, "yyyy-MM-dd")}
+            onChange={(e) => {
+              const selected = new Date(e.target.value);
+              setWeekStart(startOfWeek(selected));
+            }}
+            className="week-picker"
+          />
         </div>
 
         <div className="main-controls">
