@@ -24,39 +24,27 @@ const InventorySidebar: React.FC<Props> = ({ inventory, recipes }) => {
     <div className="fp-panel" role="region" aria-label="Inventory sidebar">
       <h3 className="fp-title">Available Inventory</h3>
 
-      <div style={{ maxHeight: 420, overflow: "auto" }}>
+      <div className="inventory-list">
         {inventory.map((it) => (
-          <div
-            key={it._id ?? it.id}
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              padding: "8px 6px",
-              borderBottom: "1px solid #f1f1f1",
-            }}
-          >
-            <div>
-              <div style={{ fontWeight: 600 }}>{it.name}</div>
-              <div style={{ fontSize: "0.85rem", color: "#666" }}>
+          <div key={it._id ?? it.id} className="inventory-item">
+            <div className="inventory-item-left">
+              <div className="inventory-item-name">{it.name}</div>
+              <div className="inventory-item-meta">
                 {it.quantity} • {it.storage}
               </div>
             </div>
-            <div style={{ textAlign: "right" }}>
+            <div className="inventory-item-right">
               <div
-                style={{
-                  color:
-                    new Date(it.expiry || "").getTime() < Date.now()
-                      ? "#d60000"
-                      : "var(--eco-green)",
-                  fontWeight: 600,
-                }}
+                className={`inventory-expiry ${
+                  new Date(it.expiry || "").getTime() < Date.now()
+                    ? "expired"
+                    : ""
+                }`}
               >
                 {formatExpiry(it.expiry)}
               </div>
               {it.reserved && (
-                <div style={{ fontSize: "0.8rem", color: "#666" }}>
-                  Reserved
-                </div>
+                <div className="inventory-reserved">Reserved</div>
               )}
             </div>
           </div>
