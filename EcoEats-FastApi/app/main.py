@@ -1,8 +1,10 @@
 from fastapi import FastAPI
-from app.routers import auth, inventory, browse, donation
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.database import db
+
+# Import routers
+from app.routers import auth, inventory, browse, donation, notifications
 
 app = FastAPI()
 
@@ -15,7 +17,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
 @app.get("/")
 async def root():
     return {"message": "Backend running with routers!"}
@@ -25,8 +26,9 @@ async def test_db():
     collections = await db.list_collection_names()
     return {"collections": collections}
 
-# Attach routers
+# ✅ Attach routers
 app.include_router(auth.router)
 app.include_router(inventory.router, prefix="/inventory", tags=["Inventory"])
 app.include_router(browse.router, prefix="/browse", tags=["Browse"])
 app.include_router(donation.router, prefix="/donations", tags=["Donations"])
+app.include_router(notifications.router, prefix="/notifications", tags=["Notifications"])
