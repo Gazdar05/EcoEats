@@ -13,19 +13,15 @@ import VerifyAccountPage from "./WebPages/Register-Emmeline/VerifyAccount";
 import ProfilePage from "./WebPages/Register-Emmeline/ProfilePage";
 import HomePage from "./WebPages/Register-Emmeline/HomePage";
 import BrowseFood from "./WebPages/BrowseFood-Zayyan/BrowsePage";
+import Notifications from "./WebPages/Notification-Mamoudou/Notifications";
 
 // Temporary placeholder pages (until replaced with real components)
-
 function MealsPage() {
   return <h1>Meal Planning</h1>;
 }
 function DonationPage() {
   return <h1>User Donations</h1>;
 }
-function NotificationsPage() {
-  return <h1>User Notifications</h1>;
-}
-
 function AnalyticsPage() {
   return <h1>Track and Record of User</h1>;
 }
@@ -84,6 +80,7 @@ function App() {
   return (
     <>
       {!hideNavbar && <Navbar />}
+
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<HomePage />} />
@@ -126,14 +123,17 @@ function App() {
             </ProtectedRoute>
           }
         />
+
+        {/* ✅ Real Notifications Page */}
         <Route
           path="/notifications"
           element={
             <ProtectedRoute>
-              <NotificationsPage />
+              <Notifications />
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/profile"
           element={
@@ -151,7 +151,8 @@ function App() {
           }
         />
       </Routes>
-           {location.pathname === "/" && !hideFooter && <Footer />}
+
+      {location.pathname === "/" && !hideFooter && <Footer />}
     </>
   );
 }
