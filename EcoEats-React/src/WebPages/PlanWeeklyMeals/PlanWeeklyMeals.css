@@ -1,0 +1,269 @@
+/* src/WebPage/PlanWeeklyMeals/PlanWeeklyMeals.css */
+/* Reuse theme variables from BrowseFood for consistent look */
+:root {
+  --eco-green: #6EA124;
+  --muted: #666;
+  --border: #e6e6e6;
+  --card-bg: #fff;
+  --fp-width: 320px;
+  --nav-height: 58px;
+}
+
+/* page wrapper */
+.meal-wrap {
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  gap: 20px;
+}
+
+/* left (main) */
+.meal-main {
+  flex: 1;
+}
+.main-content {
+  display: flex;
+  align-items: flex-start; /* ensures top alignment */
+  gap: 24px;
+  width: 100%;
+}
+
+
+/* top controls */
+.main-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+/* top controls */
+.main-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+  width: 100%;
+}
+.main-top h2 {
+  flex: 1;
+  text-align: left;
+}
+
+.main-controls {
+  flex: 1;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  align-items: center;
+}
+
+.week-controls {
+  flex: 1;
+  display: flex;
+  justify-content: center; /* centers week label + arrows */
+  align-items: center;
+  gap: 8px;
+}
+.week-label {
+  font-weight: 600;
+  padding: 6px 12px;
+}
+
+
+/* grid area for planner */
+.planner-grid {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 18px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.04);
+  min-height: 520px;
+}
+
+/* calendar structure */
+.meal-calendar { width: 100%; }
+.calendar-top {
+  display: grid;
+  grid-template-columns: 140px repeat(7, 1fr);
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.calendar-top .empty-cell { height: 0; }
+.calendar-day {
+  text-align: center;
+  font-weight: 700;
+  color: #111;
+}
+
+/* rows for each meal time */
+.calendar-body { display: grid; gap: 10px; }
+.calendar-row {
+  display: grid;
+  grid-template-columns: 140px repeat(7, 1fr);
+  gap: 8px;
+  align-items: start;
+}
+.calendar-slot-label {
+  font-weight: 700;
+  padding-top: 10px;
+}
+
+/* each cell */
+.calendar-cell {
+  min-height: 90px;
+  border: 1px dashed #f0f0f0;
+  border-radius: 8px;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg,#fff,#fbfbfb);
+}
+
+/* meal card inside a cell */
+.meal-card {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.meal-name {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+.meal-meta {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+.meal-actions {
+  margin-top: auto;
+  display: flex;
+  gap: 6px;
+}
+.add-meal-btn {
+  border: 1px dashed #ddd;
+  background: transparent;
+  padding: 6px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+/* right side (inventory panel) */
+.meal-right {
+  width: 300px;
+  align-self: flex-start; /* aligns top with main content */
+}
+
+/* RIGHT SIDEBAR uses same fp-panel style as BrowseFood */
+.fp-panel {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+/* Modal reuse from BrowseFood */
+.detail-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: calc(var(--nav-height) + 8px);
+  z-index: 1000;
+}
+.detail-card {
+  background: #fff;
+  width: 640px;
+  max-width: 95%;
+  border-radius: 12px;
+  padding: 20px;
+  position: relative;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.close-x {
+  border: none;
+  background: transparent;
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: #666;
+}
+
+/* modal tabs */
+.meal-modal-tabs {
+  display: flex;
+  gap: 8px;
+}
+.meal-modal-tabs button {
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #eee;
+  background: whitesmoke;
+  cursor: pointer;
+}
+.meal-modal-tabs button.active {
+  background: var(--eco-green);
+  color: white;
+  border-color: var(--eco-green);
+}
+
+/* modal body */
+.meal-modal-body {
+  max-height: 360px;
+  overflow: auto;
+}
+
+/* reuse fp-checkbox styles */
+.fp-checkbox {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 0.95rem;
+  color: black;
+  margin-bottom: 8px;
+}
+.fp-checkbox input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--eco-green);
+  cursor: pointer;
+}
+
+/* actions */
+.detail-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+  margin-top: 8px;
+}
+.detail-actions button {
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: none;
+  background: var(--eco-green);
+  color: #fff;
+  cursor: pointer;
+}
+.detail-actions .fp-clear {
+  background: whitesmoke;
+  color: #111;
+  border: 1px solid #ccc;
+}
+
+/* responsive */
+@media (max-width: 1100px) {
+  .meal-wrap { grid-template-columns: 1fr; }
+  .planner-grid { min-height: 420px; }
+  .calendar-top, .calendar-row { grid-template-columns: 100px repeat(7, 1fr); }
+}

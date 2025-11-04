@@ -13,12 +13,10 @@ import VerifyAccountPage from "./WebPages/Register-Emmeline/VerifyAccount";
 import ProfilePage from "./WebPages/Register-Emmeline/ProfilePage";
 import HomePage from "./WebPages/Register-Emmeline/HomePage";
 import BrowseFood from "./WebPages/BrowseFood-Zayyan/BrowsePage";
+import PlanWeeklyMeals from "./WebPages/PlanWeeklyMeals/PlanWeeklyMeals";
 
 // Temporary placeholder pages (until replaced with real components)
 
-function MealsPage() {
-  return <h1>Meal Planning</h1>;
-}
 function DonationPage() {
   return <h1>User Donations</h1>;
 }
@@ -114,10 +112,11 @@ function App() {
           path="/meals"
           element={
             <ProtectedRoute>
-              <MealsPage />
+              <PlanWeeklyMeals />
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/donations"
           element={
@@ -150,8 +149,17 @@ function App() {
             </ProtectedRoute>
           }
         />
+
+        <Route
+          path="/plan-meals"
+          element={
+            <ProtectedRoute>
+              <PlanWeeklyMeals />
+            </ProtectedRoute>
+          }
+        />
       </Routes>
-           {location.pathname === "/" && !hideFooter && <Footer />}
+      {location.pathname === "/" && !hideFooter && <Footer />}
     </>
   );
 }
