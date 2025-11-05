@@ -7,7 +7,7 @@ import InventorySidebar from "./InventorySidebar";
 import MealSlotModal from "./MealSlotModal";
 import type { InventoryItem, WeekPlan, MealSlot, DayKey } from "./types";
 import { sampleInventory, sampleRecipes } from "./mockData";
-import { format } from "date-fns";
+import { differenceInCalendarWeeks, format } from "date-fns";
 
 const DAYS: DayKey[] = [
   "monday",
@@ -41,14 +41,14 @@ function formatWeekRange(start: Date) {
   )} - ${end.toLocaleDateString(undefined, opts)}`;
 }
 function formatWeekLabel(weekStart: Date) {
-  const now = startOfWeek();
-  const diffWeeks = Math.round(
-    (weekStart.getTime() - now.getTime()) / (7 * 24 * 60 * 60 * 1000)
-  );
+  const now = startOfWeek(new Date());
+  const diffWeeks = differenceInCalendarWeeks(weekStart, now);
 
   if (diffWeeks === 0) return `This Week (${formatWeekRange(weekStart)})`;
   if (diffWeeks === 1) return `Next Week (${formatWeekRange(weekStart)})`;
   if (diffWeeks === -1) return `Last Week (${formatWeekRange(weekStart)})`;
+
+  // For any other week, just show "Week of ..."
   return formatWeekRange(weekStart);
 }
 
@@ -147,6 +147,7 @@ const PlanWeeklyMeals: React.FC = () => {
   function closeSlot() {
     setSlotModal({ open: false });
   }
+  const [activeDay, setActiveDay] = useState<DayKey>("monday");
 
   // assign meal to slot (called from modal)
   async function assignMeal(
@@ -331,12 +332,15 @@ const PlanWeeklyMeals: React.FC = () => {
             ▶
           </button>
 
-          <button
-            className="week-today-btn"
-            onClick={() => setWeekStart(startOfWeek())}
-          >
-            This Week
-          </button>
+          {differenceInCalendarWeeks(weekStart, startOfWeek(new Date())) !==
+            0 && (
+            <button
+              className="week-today-btn"
+              onClick={() => setWeekStart(startOfWeek())}
+            >
+              Back to Current Week
+            </button>
+          )}
 
           <input
             type="date"
@@ -378,15 +382,26 @@ const PlanWeeklyMeals: React.FC = () => {
       {/* MAIN CONTENT AREA: white planner box + inventory sidebar */}
       <div className="main-content">
         <section className="meal-main">
-          <div className="planner-grid">
-            <MealCalendar
-              plan={plan}
-              inventory={inventory}
-              onOpenSlot={openSlot}
-              onRemoveMeal={removeMeal}
-              days={DAYS}
-            />
+          {/* ✅ NEW: Day switcher buttons */}
+          <div className="day-tabs">
+            {DAYS.map((d) => (
+              <button
+                key={d}
+                className={`day-tab ${activeDay === d ? "active" : ""}`}
+                onClick={() => setActiveDay(d)}
+              >
+                {d[0].toUpperCase() + d.slice(1, 3)}
+              </button>
+            ))}
           </div>
+
+          <MealCalendar
+            plan={plan}
+            inventory={inventory}
+            onOpenSlot={openSlot}
+            onRemoveMeal={removeMeal}
+            days={[activeDay]}
+          />
         </section>
 
         <aside className="meal-right">

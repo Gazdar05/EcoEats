@@ -1,11 +1,10 @@
-// src/WebPage/PlanWeeklyMeals/MealCalendar.tsx
 import React from "react";
 import type { WeekPlan, InventoryItem, DayKey } from "./types";
 
 type Props = {
   plan: WeekPlan;
   inventory: InventoryItem[];
-  days: DayKey[];
+  days: DayKey[]; // one or more days (used to display weekly/daily view)
   onOpenSlot: (day: DayKey, slot: keyof WeekPlan["meals"][DayKey]) => void;
   onRemoveMeal: (day: DayKey, slot: keyof WeekPlan["meals"][DayKey]) => void;
 };
@@ -28,60 +27,100 @@ const MealCalendar: React.FC<Props> = ({
   onOpenSlot,
   onRemoveMeal,
 }) => {
+  // Fallback if no day array provided (safety)
+  const dayKeys: DayKey[] =
+    Array.isArray(days) && days.length > 0
+      ? days
+      : (Object.keys(plan.meals || {}) as DayKey[]);
+
+  if (!plan || !plan.meals) {
+    return (
+      <div className="meal-calendar-grid-wrapper">No plan data available.</div>
+    );
+  }
+
   return (
-    <div className="meal-calendar">
-      <div className="calendar-top">
-        <div className="empty-cell" />
-        {days.map((d) => (
-          <div key={d} className="calendar-day">
-            {d[0].toUpperCase() + d.slice(1, 3)}
+    <div className="meal-calendar-grid-wrapper">
+      <h3 className="meal-grid-title">Weekly Meal Planner</h3>
+
+      {/* === Top row: Day headers === */}
+      <div className="meal-calendar-day-row">
+        {dayKeys.map((day) => (
+          <div key={`header-${day}`} className="grid-day-header">
+            {day[0].toUpperCase() + day.slice(1)}
           </div>
         ))}
       </div>
 
-      <div className="calendar-body">
-        {slotLabels.map((slot) => (
-          <div key={slot} className="calendar-row">
-            <div className="calendar-slot-label">
-              {slot[0].toUpperCase() + slot.slice(1)}
-            </div>
-            {days.map((day) => {
-              const meal = plan.meals[day][slot];
-              return (
-                <div key={day + slot} className="calendar-cell">
-                  {meal ? (
-                    <div className="meal-card">
-                      <div className="meal-name">{formatName(meal.name)}</div>
-                      <div className="meal-meta">
-                        {meal.ingredients?.length
-                          ? `${meal.ingredients.length} items`
-                          : "No items"}
-                      </div>
-                      <div className="meal-actions">
-                        <button onClick={() => onOpenSlot(day, slot)}>
-                          Edit
-                        </button>
-                        <button
-                          className="fp-clear"
-                          onClick={() => onRemoveMeal(day, slot)}
-                        >
-                          Remove
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <button
-                      className="add-meal-btn"
-                      onClick={() => onOpenSlot(day, slot)}
-                    >
-                      + Add
-                    </button>
-                  )}
+      {/* === Main meal grid === */}
+      {/* === Main meal grid === */}
+      <div className="meal-calendar-grid">
+        {slotLabels.map((slot) =>
+          dayKeys.map((day) => {
+            const meal = plan.meals[day]?.[slot];
+            return (
+              <div
+                key={`${day}-${slot}`}
+                className="meal-square"
+                onClick={() => onOpenSlot(day, slot)} // ✅ whole square clickable
+              >
+                <div className="meal-square-title">
+                  {slot[0].toUpperCase() + slot.slice(1)}
                 </div>
-              );
-            })}
-          </div>
-        ))}
+
+                {meal ? (
+                  <>
+                    {/* Optional image */}
+                    {"image" in meal && (meal as any).image ? (
+                      <img
+                        src={(meal as any).image}
+                        alt={meal.name}
+                        className="meal-square-img"
+                      />
+                    ) : (
+                      <div className="meal-square-placeholder">🍽️</div>
+                    )}
+
+                    <div className="meal-square-name">
+                      {formatName(meal.name)}
+                    </div>
+
+                    <div className="meal-square-meta">
+                      {meal.ingredients?.length
+                        ? `${meal.ingredients.length} items`
+                        : "No ingredients"}
+                    </div>
+
+                    <div className="meal-square-actions">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation(); // ✅ prevent triggering onOpenSlot
+                          onOpenSlot(day, slot);
+                        }}
+                        title="Edit meal"
+                      >
+                        ✏️
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation(); // ✅ prevent triggering onOpenSlot
+                          onRemoveMeal(day, slot);
+                        }}
+                        title="Remove meal"
+                      >
+                        🗑️
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <div className="meal-square-placeholder">
+                    + Add {slot[0].toUpperCase() + slot.slice(1)}
+                  </div>
+                )}
+              </div>
+            );
+          })
+        )}
       </div>
     </div>
   );
