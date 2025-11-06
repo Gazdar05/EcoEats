@@ -53,7 +53,7 @@ const InventorySidebar: React.FC<Props> = ({ inventory, recipes }) => {
 
       <div style={{ marginTop: 12 }}>
         <button className="fp-apply" style={{ width: "100%" }}>
-          Explore All Recipes
+          Browse Inventory Items
         </button>
       </div>
     </div>

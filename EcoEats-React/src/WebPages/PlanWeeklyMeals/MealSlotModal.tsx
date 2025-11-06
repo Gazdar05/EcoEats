@@ -1,4 +1,3 @@
-// src/WebPage/PlanWeeklyMeals/MealSlotModal.tsx
 import React, { useMemo, useState } from "react";
 import type { InventoryItem, DayKey } from "./types";
 
@@ -26,12 +25,30 @@ const GENERIC_RECIPES = [
   "Stir Fry Veggies",
   "Rice & Beans",
   "Omelette",
+  "Grilled Cheese Sandwich",
+  "Avocado Toast",
 ];
 
 // ✅ Helper to ensure every item has a definite string ID
 function getItemId(it: InventoryItem): string {
   return String(it._id ?? it.id ?? "");
 }
+
+// ✅ Helper to simulate recipe ingredient breakdown (for now static keywords)
+const RECIPE_INGREDIENT_MAP: Record<string, string[]> = {
+  "Green Goddess Salad": ["lettuce", "spinach", "olive oil", "lemon"],
+  "Spicy Chickpea Bowl": ["chickpeas", "rice", "tomato", "onion"],
+  "Mediterranean Quinoa": ["quinoa", "cucumber", "feta", "olive oil"],
+  "Creamy Tomato Pasta": ["pasta", "tomato", "cream", "cheese"],
+  "Chicken Stir Fry": ["chicken", "broccoli", "soy sauce", "garlic"],
+  "Omelette with Veggies": ["eggs", "broccoli", "onion", "tomato"],
+  "Pasta Primavera": ["pasta", "carrot", "broccoli", "olive oil"],
+  "Stir Fry Veggies": ["broccoli", "carrot", "onion", "soy sauce"],
+  "Rice & Beans": ["rice", "beans", "onion", "tomato"],
+  Omelette: ["eggs", "milk", "salt"],
+  "Grilled Cheese Sandwich": ["bread", "cheese", "butter"],
+  "Avocado Toast": ["bread", "avocado", "salt", "pepper"],
+};
 
 const MealSlotModal: React.FC<Props> = ({
   day,
@@ -53,17 +70,55 @@ const MealSlotModal: React.FC<Props> = ({
     {}
   );
 
-  // suggested recipes: simple heuristic — recipes that mention inventory item names
+  const invNames = useMemo(
+    () => inventory.map((i) => i.name.toLowerCase()),
+    [inventory]
+  );
+
+  // ✅ Smart Suggested Recipes — based on ingredient overlap
   const suggested = useMemo(() => {
-    const suggestions: string[] = [];
-    const names = inventory.map((i) => i.name.toLowerCase());
-    recipes.forEach((r) => {
-      const lower = r.toLowerCase();
-      if (names.some((n) => lower.includes(n))) suggestions.push(r);
+    const calcMatch = (recipe: string) => {
+      const ingredients = RECIPE_INGREDIENT_MAP[recipe] || [];
+      if (!ingredients.length) return { match: 0, available: [], missing: [] };
+
+      const available = ingredients.filter((ing) =>
+        invNames.some((n) => n.includes(ing))
+      );
+      const missing = ingredients.filter(
+        (ing) => !invNames.some((n) => n.includes(ing))
+      );
+      const match = Math.round((available.length / ingredients.length) * 100);
+      return { match, available, missing };
+    };
+
+    const withScores = recipes.map((r) => ({
+      name: r,
+      ...calcMatch(r),
+    }));
+
+    // show only recipes that have at least some match (or fallback)
+    const filtered = withScores.filter((r) => r.match > 20);
+    return (filtered.length ? filtered : withScores).sort(
+      (a, b) => b.match - a.match
+    );
+  }, [inventory, recipes, invNames]);
+
+  // ✅ Generic recipes — also with match analysis
+  const genericList = useMemo(() => {
+    return GENERIC_RECIPES.map((r) => {
+      const ingredients = RECIPE_INGREDIENT_MAP[r] || [];
+      const available = ingredients.filter((ing) =>
+        invNames.some((n) => n.includes(ing))
+      );
+      const missing = ingredients.filter(
+        (ing) => !invNames.some((n) => n.includes(ing))
+      );
+      const match = ingredients.length
+        ? Math.round((available.length / ingredients.length) * 100)
+        : 0;
+      return { name: r, match, available, missing };
     });
-    // fallback to top recipes
-    return suggestions.length ? suggestions : recipes.slice(0, 6);
-  }, [inventory, recipes]);
+  }, [inventory, invNames]);
 
   function toggleItem(id: string) {
     setSelectedItems((s) => ({ ...s, [id]: !s[id] }));
@@ -78,60 +133,59 @@ const MealSlotModal: React.FC<Props> = ({
 
   function confirm() {
     if (tab === "suggested") {
-      if (!selectedRecipe) {
-        alert("Select a suggested recipe.");
-        return;
-      }
-      // attempt to infer ingredients (simple: match words)
-      const matchedIngredients = inventory.filter((it) =>
-        selectedRecipe
-          .toLowerCase()
-          .includes(it.name.toLowerCase().split(" ")[0])
+      if (!selectedRecipe) return alert("Select a suggested recipe.");
+
+      const matched = RECIPE_INGREDIENT_MAP[selectedRecipe] || [];
+      const ingredients = inventory.filter((it) =>
+        matched.some((m) => it.name.toLowerCase().includes(m))
       );
+
       onConfirm(day, slot, {
         name: selectedRecipe,
         type: "recipe",
-        ingredients: matchedIngredients,
+        ingredients,
       });
       return;
     }
 
     if (tab === "generic") {
-      if (!selectedRecipe) {
-        alert("Select a generic recipe.");
-        return;
-      }
+      if (!selectedRecipe) return alert("Select a generic recipe.");
+
+      const matched = RECIPE_INGREDIENT_MAP[selectedRecipe] || [];
+      const ingredients = inventory.filter((it) =>
+        matched.some((m) => it.name.toLowerCase().includes(m))
+      );
+
       onConfirm(day, slot, {
         name: selectedRecipe,
         type: "generic",
-        ingredients: [],
+        ingredients,
       });
       return;
     }
 
-    // custom
-    if (!customName.trim()) {
-      alert("Enter a custom meal name.");
-      return;
+    if (tab === "custom") {
+      if (!customName.trim()) return alert("Enter a meal name.");
+      const ingredients = buildIngredients();
+      onConfirm(day, slot, {
+        name: customName.trim(),
+        type: "custom",
+        ingredients,
+      });
     }
-    const ingredients = buildIngredients();
-    onConfirm(day, slot, {
-      name: customName.trim(),
-      type: "custom",
-      ingredients,
-    });
   }
 
   return (
     <div className="detail-overlay" onClick={onClose}>
       <div className="detail-card" onClick={(e) => e.stopPropagation()}>
         <div className="detail-header">
-          <h3>Add/Edit Meal</h3>
+          <h3>Add or Edit Meal</h3>
           <button className="close-x" onClick={onClose}>
             ✕
           </button>
         </div>
 
+        {/* Tabs */}
         <div className="meal-modal-tabs">
           <button
             className={tab === "suggested" ? "active" : ""}
@@ -154,48 +208,85 @@ const MealSlotModal: React.FC<Props> = ({
         </div>
 
         <div className="meal-modal-body">
+          {/* Suggested */}
           {tab === "suggested" && (
             <div className="suggested-list">
               {suggested.map((r) => (
-                <label key={r} className="fp-checkbox">
+                <label key={r.name} className="fp-recipe-card">
                   <input
                     type="radio"
                     name="suggested"
-                    checked={selectedRecipe === r}
-                    onChange={() => setSelectedRecipe(r)}
+                    checked={selectedRecipe === r.name}
+                    onChange={() => setSelectedRecipe(r.name)}
                   />
-                  <span>{r}</span>
+                  <div className="recipe-info">
+                    <div className="recipe-title">
+                      {r.name} <span className="match">{r.match}% match</span>
+                    </div>
+                    <div className="recipe-detail">
+                      {r.available.length
+                        ? `✅ Have: ${r.available.join(", ")}`
+                        : "No ingredients available"}
+                      {r.missing.length > 0 && (
+                        <div className="missing">
+                          ❌ Missing: {r.missing.join(", ")}
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </label>
               ))}
             </div>
           )}
 
+          {/* Generic */}
           {tab === "generic" && (
             <div className="suggested-list">
-              {GENERIC_RECIPES.map((r) => (
-                <label key={r} className="fp-checkbox">
+              {genericList.map((r) => (
+                <label key={r.name} className="fp-recipe-card">
                   <input
                     type="radio"
                     name="generic"
-                    checked={selectedRecipe === r}
-                    onChange={() => setSelectedRecipe(r)}
+                    checked={selectedRecipe === r.name}
+                    onChange={() => setSelectedRecipe(r.name)}
                   />
-                  <span>{r}</span>
+                  <div className="recipe-info">
+                    <div className="recipe-title">
+                      {r.name} <span className="match">{r.match}% match</span>
+                    </div>
+                    <div className="recipe-detail">
+                      {r.available.length
+                        ? `✅ Have: ${r.available.join(", ")}`
+                        : "No ingredients available"}
+                      {r.missing.length > 0 && (
+                        <div className="missing">
+                          ❌ Missing: {r.missing.join(", ")}
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </label>
               ))}
             </div>
           )}
 
+          {/* Custom Meal */}
           {tab === "custom" && (
             <div className="custom-area">
               <input
-                placeholder="Meal name"
+                placeholder="Enter custom meal name..."
                 value={customName}
                 onChange={(e) => setCustomName(e.target.value)}
               />
-              <div style={{ marginTop: 8, marginBottom: 6, fontWeight: 600 }}>
-                Select ingredients from inventory
+              <div className="custom-subtitle">
+                Select ingredients from inventory (
+                {
+                  Object.keys(selectedItems).filter((k) => selectedItems[k])
+                    .length
+                }{" "}
+                selected)
               </div>
+
               <div className="fp-cats" style={{ maxHeight: 220 }}>
                 {inventory.map((it) => {
                   const id = getItemId(it);

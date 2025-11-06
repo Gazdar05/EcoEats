@@ -479,59 +479,283 @@
     color: #999;
     }
 
-    /* Modal reuse from BrowseFood */
-    .detail-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.45);
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    padding-top: calc(var(--nav-height) + 8px);
-    z-index: 1000;
-    }
-    .detail-card {
-    background: #fff;
-    width: 640px;
-    max-width: 95%;
-    border-radius: 12px;
-    padding: 20px;
-    position: relative;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    }
-    .detail-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    }
-    .close-x {
-    border: none;
-    background: transparent;
-    font-size: 1.2rem;
-    cursor: pointer;
-    color: #666;
-    }
+  /* =======================
+   MealSlotModal Styling
+   ======================= */
 
-    /* modal tabs */
-    .meal-modal-tabs {
-    display: flex;
-    gap: 8px;
-    }
-    .meal-modal-tabs button {
-    padding: 8px 12px;
-    border-radius: 6px;
-    border: 1px solid #eee;
-    background: whitesmoke;
-    cursor: pointer;
-    }
-    .meal-modal-tabs button.active {
-    background: var(--eco-green);
-    color: white;
-    border-color: var(--eco-green);
-    }
+/* Overlay background */
+.detail-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3000;
+}
+
+/* Modal card */
+.detail-card {
+  background: #fff;
+  width: 680px;
+  max-width: 95%;
+  border-radius: 16px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.15);
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  animation: fadeInUp 0.25s ease-out;
+}
+
+/* Header */
+.detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid #f0f0f0;
+  padding-bottom: 8px;
+}
+
+.detail-header h3 {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.close-x {
+  background: none;
+  border: none;
+  font-size: 1.3rem;
+  color: #888;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.close-x:hover {
+  color: #333;
+}
+
+/* Tabs */
+.meal-modal-tabs {
+  display: flex;
+  gap: 6px;
+  background: #f8f8f8;
+  border-radius: 10px;
+  padding: 4px;
+}
+ .meal-modal-tabs button {
+  flex: 1;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  padding: 8px 10px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #555;
+  transition: background 0.2s, color 0.2s;
+}
+
+.meal-modal-tabs button.active {
+  background: #6ea124;
+  color: #fff;
+}
+
+/* Recipe list area */
+.suggested-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 350px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+/* Recipe card */
+.fp-recipe-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: #fafafa;
+  border: 1px solid #eee;
+  border-radius: 12px;
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.fp-recipe-card:hover {
+  background: #f2fbe8;
+  border-color: #c8e4b8;
+}
+
+.fp-recipe-card input[type="radio"] {
+  margin-top: 5px;
+  accent-color: #6ea124;
+}
+
+.recipe-info {
+  flex: 1;
+}
+
+.recipe-title {
+  font-weight: 600;
+  color: #333;
+  font-size: 1rem;
+  margin-bottom: 4px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.recipe-title .match {
+  font-weight: 500;
+  font-size: 0.9rem;
+  color: #6ea124;
+}
+
+.recipe-detail {
+  font-size: 0.85rem;
+  color: #555;
+  line-height: 1.4;
+}
+
+.recipe-detail .missing {
+  color: #b24b4b;
+  margin-top: 2px;
+}
+
+/* Custom meal section */
+.custom-area input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  margin-bottom: 10px;
+  font-size: 0.95rem;
+}
+
+.custom-subtitle {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #555;
+  margin-bottom: 8px;
+}
+
+.fp-cats {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow-y: auto;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: 10px;
+  background: #fdfdfd;
+}
+
+.fp-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  color: #333;
+}
+
+.fp-checkbox input {
+  accent-color: #6ea124;
+}
+
+/* Footer buttons */
+.detail-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  border-top: 1px solid #f0f0f0;
+  padding-top: 12px;
+}
+
+.detail-actions button {
+  padding: 8px 16px;
+  font-size: 0.95rem;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.2s, color 0.2s;
+}
+
+/* Cancel */
+.fp-clear {
+  background: #eee;
+  color: #333;
+}
+.fp-clear:hover {
+  background: #ddd;
+}
+
+/* Confirm */
+.detail-actions button:not(.fp-clear) {
+  background: #6ea124;
+  color: #fff;
+}
+.detail-actions button:not(.fp-clear):hover {
+  background: #5b8820;
+}
+
+/* ✅ Updated scrollbar styling for all recipe lists */
+.suggested-list::-webkit-scrollbar,
+.fp-cats::-webkit-scrollbar {
+  width: 6px;
+}
+
+.suggested-list::-webkit-scrollbar-thumb,
+.fp-cats::-webkit-scrollbar-thumb {
+  background: var(--eco-green);
+  border-radius: 6px;
+}
+
+.suggested-list::-webkit-scrollbar-thumb:hover,
+.fp-cats::-webkit-scrollbar-thumb:hover {
+  background: var(--eco-green-dark);
+}
+
+.suggested-list::-webkit-scrollbar-track,
+.fp-cats::-webkit-scrollbar-track {
+  background: #f2f2f2;
+}
+/* Minimal — only change the custom meal name typing bar (no layout/width changes) */
+.detail-card .custom-area > input {
+  background: #ffffff;       /* white background only */
+  color: #222;               /* readable text color */
+  border-color: #ccc;        /* keep same border tone */
+  box-shadow: none;          /* do not change overall box model */
+}
+
+/* subtle placeholder color (doesn't affect layout) */
+.detail-card .custom-area > input::placeholder {
+  color: #9aa0a6;
+  opacity: 1;
+}
+
+/* friendly focus state — only visual highlight, no sizing changes */
+.detail-card .custom-area > input:focus {
+  outline: none;
+  border-color: var(--eco-green);
+  box-shadow: 0 0 0 4px rgba(110, 161, 36, 0.08);
+}
+
+/* Animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 
     /* modal body */
     .meal-modal-body {
@@ -873,4 +1097,33 @@
 .add-square-btn:hover {
   background: var(--eco-green);
   color: #fff;
+}
+/* ✅ Make date dropdown appear with a white-looking popup feel */
+input[type="date"].week-picker {
+  appearance: auto;
+  -webkit-appearance: auto;
+  background-color: #fff; /* white base */
+  color: #222;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: border 0.2s ease, box-shadow 0.2s ease;
+}
+/* Hover + Focus for better contrast */
+input[type="date"].week-picker:hover,
+input[type="date"].week-picker:focus {
+  border-color: var(--eco-green);
+  box-shadow: 0 0 0 2px rgba(110, 161, 36, 0.15);
+  background-color: #fff;
+  color: #222;
+}
+
+
+/* Calendar picker icon */
+input[type="date"].week-picker::-webkit-calendar-picker-indicator {
+  filter: invert(39%) sepia(53%) saturate(414%) hue-rotate(49deg)
+    brightness(95%) contrast(90%);
+  cursor: pointer;
 }

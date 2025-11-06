@@ -27,6 +27,12 @@ function startOfWeek(date = new Date()) {
   monday.setHours(0, 0, 0, 0);
   return monday;
 }
+function dateForDay(weekStart: Date, day: DayKey) {
+  const dayIndex = DAYS.indexOf(day); // 0 = Monday
+  const date = new Date(weekStart);
+  date.setDate(weekStart.getDate() + dayIndex);
+  return date;
+}
 
 function formatWeekRange(start: Date) {
   const end = new Date(start);
@@ -344,12 +350,19 @@ const PlanWeeklyMeals: React.FC = () => {
 
           <input
             type="date"
-            value={format(weekStart, "yyyy-MM-dd")}
+            value={format(dateForDay(weekStart, activeDay), "yyyy-MM-dd")}
             onChange={(e) => {
-              const selected = new Date(e.target.value);
+              const value = e.target.value;
+              if (!value) return; // ✅ Ignore if user tries to clear it
+              const selected = new Date(value);
               setWeekStart(startOfWeek(selected));
+              const jsDay = selected.getDay();
+              const newDay: DayKey = DAYS[(jsDay + 6) % 7];
+              setActiveDay(newDay);
             }}
+            onClick={(e) => e.currentTarget.showPicker?.()} // keeps native picker behavior
             className="week-picker"
+            required // ✅ Prevents clearing in most browsers
           />
         </div>
 
