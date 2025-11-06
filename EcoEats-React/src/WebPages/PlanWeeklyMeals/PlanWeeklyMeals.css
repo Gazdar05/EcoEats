@@ -678,11 +678,12 @@
   height: 100%;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
 }
+/* Meal Grid Card Hover Effects */
 .meal-square:hover {
-  background: var(--eco-green);
-  color: #fff;
-  transform: translateY(-3px);
-  box-shadow: 0 6px 14px rgba(110, 161, 36, 0.2);
+  background: var(--eco-green); /* Light green background on hover */
+  color: #fff; /* White text on hover */
+  transform: translateY(-3px); /* Slight lift effect */
+  box-shadow: 0 6px 14px rgba(110, 161, 36, 0.2); /* Drop shadow effect */
 }
 /* === Filled Meal Card === */
 .meal-square-card {
@@ -703,55 +704,115 @@
   opacity: 0.9;
   text-align: center;
 }
+/* Add Meal Button (same as before, but ensure size is consistent) */
+.add-square-btn {
+  border: 1px dashed var(--eco-green);
+  background: #f9fff6;
+  color: #333;
+  font-size: 1rem; /* Larger font size for the "Add Meal" button */
+  border-radius: 8px;
+  padding: 10px;
+  cursor: pointer;
+  width: 100%;
+  transition: all 0.2s ease;
+  margin-top: 10px;
+}
+.add-square-btn:hover {
+  background: var(--eco-green);
+  color: #fff;
+}
 
-/* ✅ Optional: if meal image exists, stays inside nicely */
-/* Meal image smaller */
+
+/* Image inside the meal card */
 .meal-square-img {
-  width: 60%;
-  height: 70px;
+  width: 80%;
+  height: 80px; /* Adjust size to fit within the card */
   object-fit: cover;
   border-radius: 8px;
-  margin-bottom: 6px;
+  margin-bottom: 8px; /* Spacing between image and meal name */
 }
 
-
-/* ✅ When no meal is added */
+/* Placeholder for meal image when none exists */
 .meal-square-placeholder {
-  font-size: 1.1rem;
-  opacity: 0.7;
-  color: inherit;
+  font-size: 1rem;
+  color: #666; /* Grey color for placeholder */
+  opacity: 0.8;
+  margin-top: 10px;
 }
 
+/* Meal Content (Image, Name, Ingredients) */
 .meal-square-name {
   font-weight: 600;
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   color: #222;
+  text-align: center;
+  margin-top: 8px;
+}
+/* Meal Title Styling */
+.meal-square-title {
+  font-weight: 700;
+  font-size: 1rem;
+  margin-bottom: 8px;
+  color: #333;
   text-align: center;
 }
 
+
 .meal-square-meta {
-  font-size: 0.65rem;
-  color: #777;
+  font-size: 0.75rem;
+  color: var(--muted); /* Lighter color for ingredients info */
+  text-align: center;
+  margin-top: 4px;
 }
 /* === Action Buttons === */
+/* === Action Buttons & Meal Content === */
+/* === Action Buttons & Meal Content === */
+/* Meal Square Action Buttons */
+/* Meal Square Action Buttons */
 .meal-square-actions {
   display: flex;
-  gap: 4px;
+  justify-content: center;
+  gap: 12px; /* increased space between icons */
+  margin-top: 12px; /* ensure spacing between icons and meal content */
+  flex-shrink: 0;
 }
 
+/* Default button styles (for all icons) */
 .meal-square-actions button {
   border: none;
-  background: var(--eco-green);
-  color: #fff;
-  font-size: 0.7rem;
-  padding: 2px 5px;
-  border-radius: 4px;
+  background: none; /* Remove background to match design style */
+  font-size: 1.2rem; /* Increase icon size */
   cursor: pointer;
-  transition: background 0.2s ease;
+  padding: 6px;
+  border-radius: 6px; /* Rounded corners for buttons */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.3s ease; /* Smooth transition */
+}
+/* Hover effect for all action buttons */
+.meal-square-actions button:hover {
+  transform: scale(1.1); /* Slightly enlarge on hover */
 }
 
-.meal-square-actions button:hover {
-  background: #5a8d1e;
+/* Edit Button (Pencil) */
+.meal-square-actions button.edit-btn {
+  color:lightblue; /* Orange color for pencil icon */
+}
+
+.meal-square-actions button.edit-btn:hover {
+  background: lightblue; /* Orange background on hover */
+  color: #fff; /* White icon on hover */
+}
+
+/* Remove Button (Trash Can) */
+.meal-square-actions button.delete-btn {
+  color: red; /* Red color for trash icon */
+}
+
+.meal-square-actions button.delete-btn:hover {
+  background: red; /* Red background on hover */
+  color: #fff; /* White icon on hover */
 }
 
 /* Add meal button */
@@ -783,10 +844,33 @@
 }
 
 /* === Responsive stacking (mobile) === */
+/* Responsive Layout for Small Screens */
 @media (max-width: 650px) {
   .meal-calendar-grid {
-    grid-template-columns: 1fr; /* stack vertically */
-    grid-template-rows: auto;
-    padding: 0 10px;
+    grid-template-columns: 1fr; /* Single column layout for smaller screens */
+    grid-template-rows: auto;  /* Adjust height accordingly */
   }
+}
+/* Add larger pencil and trash icons */
+.meal-square-actions button svg {
+  font-size: 1.2rem; /* Increase size of icons (pencil & trash can) */
+  display: inline-block;
+  margin-right: 4px; /* space between icon and text */
+}/* Add Meal Button (same as before, but ensure size is consistent) */
+.add-square-btn {
+  border: 1px dashed var(--eco-green);
+  background: #f9fff6;
+  color: #333;
+  font-size: 1rem; /* Larger font size for the "Add Meal" button */
+  border-radius: 8px;
+  padding: 10px;
+  cursor: pointer;
+  width: 100%;
+  transition: all 0.2s ease;
+  margin-top: 10px;
+}
+
+.add-square-btn:hover {
+  background: var(--eco-green);
+  color: #fff;
 }

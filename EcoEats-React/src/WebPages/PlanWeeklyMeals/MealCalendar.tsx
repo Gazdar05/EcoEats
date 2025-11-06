@@ -94,19 +94,21 @@ const MealCalendar: React.FC<Props> = ({
                     <div className="meal-square-actions">
                       <button
                         onClick={(e) => {
-                          e.stopPropagation(); // ✅ prevent triggering onOpenSlot
+                          e.stopPropagation(); // Prevent triggering onOpenSlot
                           onOpenSlot(day, slot);
                         }}
                         title="Edit meal"
+                        className="edit-btn"
                       >
                         ✏️
                       </button>
                       <button
                         onClick={(e) => {
-                          e.stopPropagation(); // ✅ prevent triggering onOpenSlot
+                          e.stopPropagation(); // Prevent triggering onOpenSlot
                           onRemoveMeal(day, slot);
                         }}
                         title="Remove meal"
+                        className="delete-btn"
                       >
                         🗑️
                       </button>
