@@ -101,12 +101,25 @@ const PlanWeeklyMeals: React.FC = () => {
         }
 
         // recipes suggestions endpoint (optional)
-        const recRes = await fetch(`${API_BASE_URL}/recipes/suggestions`);
+        const recRes = await fetch(`${API_BASE_URL}/mealplan/suggested/me`);
+
         if (recRes.ok) {
           const recs = await recRes.json();
-          setRecipes(Array.isArray(recs) ? recs : sampleRecipes);
+          // Normalize backend data → simple name list
+          const names = Array.isArray(recs)
+            ? recs.map((r) => (typeof r === "string" ? r : r.name))
+            : sampleRecipes;
+          setRecipes(names);
         } else {
           setRecipes([...sampleRecipes]);
+        }
+        const genRes = await fetch(`${API_BASE_URL}/mealplan/generic`);
+        if (genRes.ok) {
+          const gens = await genRes.json();
+          const genericNames = Array.isArray(gens)
+            ? gens.map((r) => (typeof r === "string" ? r : r.name))
+            : [];
+          setRecipes((prev) => [...new Set([...prev, ...genericNames])]);
         }
 
         // meal plan for this week

@@ -1,9 +1,9 @@
+#C:\Users\HP\Documents\GitHub\EcoEats\EcoEats-FastApi\app\main.py
 from fastapi import FastAPI
-from app.routers import auth, inventory, browse, donation
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.database import db
-from app.routers import auth, inventory, browse, donation, mealplan  # added mealplan
+from app.routers import auth, inventory, browse, donation, mealplan  # ✅ clean single import
 
 app = FastAPI()
 
@@ -16,7 +16,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
 @app.get("/")
 async def root():
     return {"message": "Backend running with routers!"}
@@ -26,9 +25,9 @@ async def test_db():
     collections = await db.list_collection_names()
     return {"collections": collections}
 
-# Attach routers
+# ✅ Attach routers
 app.include_router(auth.router)
 app.include_router(inventory.router, prefix="/inventory", tags=["Inventory"])
 app.include_router(browse.router, prefix="/browse", tags=["Browse"])
 app.include_router(donation.router, prefix="/donations", tags=["Donations"])
-app.include_router(mealplan.router, prefix="/mealplan", tags=["Meal Plan"])  # ✅ added
+app.include_router(mealplan.router)

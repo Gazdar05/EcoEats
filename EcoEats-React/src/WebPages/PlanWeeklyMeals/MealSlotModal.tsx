@@ -20,15 +20,6 @@ type Props = {
   ) => void;
 };
 
-const GENERIC_RECIPES = [
-  "Pasta Primavera",
-  "Stir Fry Veggies",
-  "Rice & Beans",
-  "Omelette",
-  "Grilled Cheese Sandwich",
-  "Avocado Toast",
-];
-
 // ✅ Helper to ensure every item has a definite string ID
 function getItemId(it: InventoryItem): string {
   return String(it._id ?? it.id ?? "");
@@ -90,7 +81,7 @@ const MealSlotModal: React.FC<Props> = ({
       const match = Math.round((available.length / ingredients.length) * 100);
       return { match, available, missing };
     };
-
+    // Use the dynamically fetched recipes here (from MongoDB backend)
     const withScores = recipes.map((r) => ({
       name: r,
       ...calcMatch(r),
@@ -105,7 +96,7 @@ const MealSlotModal: React.FC<Props> = ({
 
   // ✅ Generic recipes — also with match analysis
   const genericList = useMemo(() => {
-    return GENERIC_RECIPES.map((r) => {
+    return recipes.map((r) => {
       const ingredients = RECIPE_INGREDIENT_MAP[r] || [];
       const available = ingredients.filter((ing) =>
         invNames.some((n) => n.includes(ing))
@@ -118,7 +109,7 @@ const MealSlotModal: React.FC<Props> = ({
         : 0;
       return { name: r, match, available, missing };
     });
-  }, [inventory, invNames]);
+  }, [inventory, recipes, invNames]);
 
   function toggleItem(id: string) {
     setSelectedItems((s) => ({ ...s, [id]: !s[id] }));
