@@ -1,55 +1,31 @@
-#C:\Users\HP\Documents\GitHub\EcoEats\EcoEats-FastApi\app\generic_seed_data.py
+# generic_seed_data.py
 import asyncio
-from app.database import db
 from datetime import datetime
+from app.database import db
 
-async def seed_generic_recipes():
-    generic_recipes = [
-        {
-            "name": "Pasta",
-            "description": "A simple pasta recipe that can be customized with various sauces and toppings.",
-            "defaultIngredients": [
-                {"name": "Pasta", "quantity": "200g"},
-                {"name": "Olive Oil", "quantity": "1 tbsp"},
-                {"name": "Garlic", "quantity": "2 cloves"},
-                {"name": "Salt", "quantity": "to taste"}
-            ],
-            "nutrition": {"calories": 400, "protein": 10, "carbs": 60, "fat": 12},
-            "preparationTime": 20,
-            "imageUrl": "pasta.jpg",
-            "type": "generic",
-            "created_at": datetime.utcnow(),
-        },
-        {
-            "name": "Grilled Cheese Sandwich",
-            "description": "A quick and simple grilled cheese sandwich.",
-            "defaultIngredients": [
-                {"name": "Bread", "quantity": "2 slices"},
-                {"name": "Cheese", "quantity": "2 slices"},
-                {"name": "Butter", "quantity": "1 tbsp"}
-            ],
-            "nutrition": {"calories": 350, "protein": 15, "carbs": 35, "fat": 20},
-            "preparationTime": 15,
-            "imageUrl": "grilled_cheese.jpg",
-            "type": "generic",
-            "created_at": datetime.utcnow(),
-        },
-        # Add more recipes if needed...
-    ]
+now = datetime.utcnow()
 
-    # Check if any generic recipes exist already
-    count = await db.generic_recipes.count_documents({})
-    if count == 0:
-        # Insert the new recipes if the collection is empty
-        await db.generic_recipes.insert_many(generic_recipes)
-        print(f"✅ Inserted {len(generic_recipes)} generic recipes.")
-    else:
-        print("⚠️ generic_recipes collection already has data.")
+recipes = [
+    { "name":"Basic Pasta","defaultIngredients":[{"name":"Pasta Packs"},{"name":"Olive Oil"},{"name":"Garlics"}],"type":"generic","created_at":now },
+    { "name":"Scrambled Eggs","defaultIngredients":[{"name":"Eggs"},{"name":"Butter"},{"name":"Salt"}],"type":"generic","created_at":now },
+    { "name":"Rice Bowl","defaultIngredients":[{"name":"Rice"},{"name":"Eggs"},{"name":"Soy Sauce"}],"type":"generic","created_at":now },
+    { "name":"Veg Soup","defaultIngredients":[{"name":"Carrots"},{"name":"Potatoes"},{"name":"Onions"},{"name":"Salt"}],"type":"generic","created_at":now },
+    { "name":"Fruit Salad","defaultIngredients":[{"name":"Apples"},{"name":"Bananas"},{"name":"Oranges"},{"name":"Yogurts"}],"type":"generic","created_at":now },
+    { "name":"Butter Toast","defaultIngredients":[{"name":"Bread Loaves"},{"name":"Butter"}],"type":"generic","created_at":now },
+    { "name":"Cheese Toast","defaultIngredients":[{"name":"Bread Loaves"},{"name":"Cheese"}],"type":"generic","created_at":now },
+    { "name":"Garlic Toast","defaultIngredients":[{"name":"Bread Loaves"},{"name":"Garlics"},{"name":"Butter"}],"type":"generic","created_at":now },
+    { "name":"Olive Oil Pasta","defaultIngredients":[{"name":"Pasta Packs"},{"name":"Olive Oil"}],"type":"generic","created_at":now },
+    { "name":"Boiled Eggs","defaultIngredients":[{"name":"Eggs"},{"name":"Salt"}],"type":"generic","created_at":now },
+    { "name":"Honey Yogurt Cup","defaultIngredients":[{"name":"Yogurts"},{"name":"Honey"}],"type":"generic","created_at":now },
+    { "name":"Broccoli Bowl","defaultIngredients":[{"name":"Broccolis"},{"name":"Salt"}],"type":"generic","created_at":now },
+]
 
-async def main():
-    await seed_generic_recipes()
-    print("🌱 Seeding complete.")
-    # Optionally: await db.client.close() if you want to close connection
+
+async def seed():
+    await db.generic_recipes.delete_many({})
+    r = await db.generic_recipes.insert_many(recipes)
+    print(f"✅ Inserted {len(r.inserted_ids)} generic recipes")
+
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    asyncio.run(seed())

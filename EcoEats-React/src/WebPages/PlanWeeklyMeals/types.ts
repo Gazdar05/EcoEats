@@ -13,10 +13,11 @@ export type InventoryItem = {
   image?: string;
 };
 
+// ✅ updated this section
 export type MealEntry = {
   name: string;
   type: "recipe" | "generic" | "custom";
-  ingredients?: { id?: string; name: string; quantity?: number }[];
+  ingredients?: { id: string; name: string; used_qty: number }[]; // <-- updated
   nutrition?: {
     calories?: number;
     protein?: number;
@@ -32,7 +33,14 @@ export type MealSlot = {
   snacks: MealEntry;
 };
 
-export type DayKey = "monday" | "tuesday" | "wednesday" | "thursday" | "friday" | "saturday" | "sunday";
+export type DayKey =
+  | "monday"
+  | "tuesday"
+  | "wednesday"
+  | "thursday"
+  | "friday"
+  | "saturday"
+  | "sunday";
 
 export type WeekPlan = {
   userId: string;

@@ -4,7 +4,6 @@ import type { InventoryItem } from "./types";
 
 type Props = {
   inventory: InventoryItem[];
-  recipes: string[];
 };
 
 function formatExpiry(d?: string) {
@@ -19,7 +18,7 @@ function formatExpiry(d?: string) {
   return `${diff} days`;
 }
 
-const InventorySidebar: React.FC<Props> = ({ inventory, recipes }) => {
+const InventorySidebar: React.FC<Props> = ({ inventory }) => {
   return (
     <div className="fp-panel" role="region" aria-label="Inventory sidebar">
       <h3 className="fp-title">Available Inventory</h3>
@@ -33,6 +32,7 @@ const InventorySidebar: React.FC<Props> = ({ inventory, recipes }) => {
                 {it.quantity} • {it.storage}
               </div>
             </div>
+
             <div className="inventory-item-right">
               <div
                 className={`inventory-expiry ${

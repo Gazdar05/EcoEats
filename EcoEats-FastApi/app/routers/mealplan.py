@@ -7,6 +7,7 @@ from typing import List, Optional, Dict, Any
 from datetime import datetime
 from app.utils import food_status_from_date
 from bson import ObjectId
+from datetime import timedelta
 router = APIRouter(prefix="/mealplan", tags=["Meal Planner"])
 
 
@@ -31,12 +32,22 @@ def to_objectid(id_str: str) -> ObjectId:
         raise HTTPException(status_code=400, detail="Invalid ObjectId")
 
 
+def get_date_for_day(week_start_str: str, day: str) -> str:
+    """Return ISO date string (YYYY-MM-DD) for given day of the week."""
+    week_start = datetime.fromisoformat(week_start_str.replace("Z", ""))
+    day_index = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"].index(day)
+    date = week_start + timedelta(days=day_index)
+    return date.strftime("%Y-%m-%d")
+
+
 # -----------------------------
 # Pydantic Models
 # -----------------------------
 class Ingredient(BaseModel):
+    id: Optional[str] = None
     name: str
-    quantity: Optional[str] = None
+    used_qty: Optional[int] = None   # <-- allow used_qty
+
 
 
 class RecipeBase(BaseModel):
@@ -152,60 +163,49 @@ async def create_custom_recipe(recipe: CustomRecipe):
 @router.get("/suggested/{user_id}")
 async def get_suggested_recipes(user_id: str):
     """Return recipes where user has ≥50% ingredients + show detailed match info"""
-    if user_id == "me":
-        user_id = "671ff16f5e7a4b2f71e23b44"
+   
 
     # Fetch inventory
-    user_items_cursor = await db.food_items.find({"user_id": user_id}).to_list(None)
+    user_items_cursor = await db.food_items.find({}).to_list(None)
+
     user_items = [i["name"].lower() for i in user_items_cursor]
 
-    recipes = await db.generic_recipes.find().to_list(None)
+    # ✅ load from SUGGESTED collection (was wrongly generic)
+    recipes = await db.suggested_recipes.find().to_list(None)
+
     suggested = []
 
     for recipe in recipes:
-        ingredients = [
-            Ingredient(
-                name=i.get("name") or i.get("ingredient"),
-                quantity=i.get("quantity"),
-            )
-            for i in recipe.get("ingredients", [])
-        ]
+        ingredients = recipe.get("ingredients", [])
 
         matched, missing = [], []
         for ing in ingredients:
+            ing_name = ing.get("name", "").lower()
             found = any(
-                ing.name.lower() in u or u in ing.name.lower() for u in user_items
+                ing_name in u or u in ing_name for u in user_items
             )
             if found:
-                matched.append(ing.name)
+                matched.append(ing_name)
             else:
-                missing.append(ing.name)
+                missing.append(ing_name)
 
         match_pct = (len(matched) / len(ingredients)) * 100 if ingredients else 0
 
-        if match_pct >= 50:
+        if match_pct >= 80:
             suggested.append({
                 "id": str(recipe.get("_id")),
                 "name": recipe.get("name"),
-                "image": recipe.get("image"),
-                "ingredients": [
-                    {
-                        "name": ing.name,
-                        "quantity": ing.quantity,
-                        "have": ing.name.lower() in [m.lower() for m in matched]
-                    }
-                    for ing in ingredients
-                ],
+                "image": recipe.get("imageUrl"),
+                "ingredients": recipe.get("ingredients", []),
                 "matched_items": matched,
                 "missing_items": missing,
                 "match_pct": round(match_pct, 2)
             })
 
-    return [r["name"] for r in suggested]
+    # ✅ return full objects not just names
+    return suggested
 
 
-    
-    
 
 
 # -----------------------------
@@ -326,27 +326,66 @@ async def frontend_get_mealplan(weekStart: str = Query(...), userId: str = Query
 
 @router.put("")
 async def frontend_save_mealplan(plan: dict = Body(...)):
-    """Frontend: Save or update plan from UI"""
-    # Accept both camelCase and snake_case
+    """Frontend: Save or update plan from UI + record individual meals"""
     user_id = plan.get("userId") or plan.get("user_id") or "me"
     week_start = plan.get("weekStart") or plan.get("week_start")
 
     if not week_start:
         raise HTTPException(status_code=400, detail="Missing weekStart or week_start")
 
+    meals = plan.get("meals", {})
+
+    # 1️⃣ Save/update the whole weekly plan
     result = await db.meal_plans.update_one(
         {"user_id": user_id, "week_start": week_start},
-        {"$set": {"meals": plan.get("meals", {}), "updated_at": datetime.utcnow()}},
+        {"$set": {"meals": meals, "updated_at": datetime.utcnow()}},
         upsert=True,
     )
-    return {"status": "saved", "modified": result.modified_count}
 
+    # 2️⃣ Now update individual meal entries
+    await db.meal_entries.delete_many({"user_id": user_id, "week_start": week_start})
 
+    meal_entries = []
+    for day, slots in meals.items():
+        if not slots:
+            continue
+        for slot, meal in slots.items():
+            if not meal:
+                continue
+
+            # ✅ ensure used_qty is allowed
+            if "ingredients" in meal:
+                for ing in meal["ingredients"]:
+                    ing.setdefault("used_qty", None)
+            
+            entry = {
+                "user_id": user_id,
+                "week_start": week_start,
+                "day": day,
+                "slot": slot,
+                "date": get_date_for_day(week_start, day),
+                "meal": meal,
+                "created_at": datetime.utcnow(),
+            }
+            meal_entries.append(entry)
+
+    if meal_entries:
+        await db.meal_entries.insert_many(meal_entries)
+
+    return {"status": "saved", "modified": result.modified_count, "entries_saved": len(meal_entries)}
+
+@router.get("/entries/{user_id}/{week_start}")
+async def get_meal_entries(user_id: str, week_start: str):
+    """Get all recorded meal entries for a given week"""
+    entries = await db.meal_entries.find(
+        {"user_id": user_id, "week_start": week_start}
+    ).to_list(None)
+    return serialize_mongo(entries)
 
 
 @router.post("/copy")
 async def frontend_copy_mealplan(body: dict = Body(...)):
-    """Frontend: Copy a week's plan to another"""
+    """Frontend: Copy a week's plan + meal entries (persistent save)"""
     from_week = body.get("fromWeekStart")
     to_week = body.get("toWeekStart")
     user_id = body.get("userId", "me")
@@ -354,16 +393,58 @@ async def frontend_copy_mealplan(body: dict = Body(...)):
     if not from_week or not to_week:
         raise HTTPException(status_code=400, detail="Missing week start values")
 
+    # 1️⃣ Fetch the source plan
     from_plan = await db.meal_plans.find_one(
         {"user_id": user_id, "week_start": from_week}
     )
     if not from_plan:
         raise HTTPException(status_code=404, detail="Source week not found")
 
+    # 2️⃣ Prepare new plan
     new_plan = from_plan.copy()
     new_plan["_id"] = ObjectId()
     new_plan["week_start"] = to_week
     new_plan["created_at"] = datetime.utcnow()
     new_plan["updated_at"] = datetime.utcnow()
-    await db.meal_plans.insert_one(new_plan)
-    return {"status": "copied"}
+
+    meals = from_plan.get("meals", {})
+
+    # 3️⃣ Upsert (replace or insert) the new plan
+    await db.meal_plans.update_one(
+        {"user_id": user_id, "week_start": to_week},
+        {"$set": {"meals": meals, "created_at": datetime.utcnow(), "updated_at": datetime.utcnow()}},
+        upsert=True,
+    )
+
+    # 4️⃣ Also store individual meal entries for persistence
+    await db.meal_entries.delete_many({"user_id": user_id, "week_start": to_week})
+
+    meal_entries = []
+    for day, slots in meals.items():
+        if not slots:
+            continue
+        for slot, meal in slots.items():
+            if not meal:
+                continue
+            meal_entries.append({
+                "user_id": user_id,
+                "week_start": to_week,
+                "day": day,
+                "slot": slot,
+                "date": get_date_for_day(to_week, day),
+                "meal": meal,
+                "created_at": datetime.utcnow(),
+            })
+
+    if meal_entries:
+        await db.meal_entries.insert_many(meal_entries)
+
+    # 5️⃣ Return frontend-ready response
+    return {
+        "userId": user_id,
+        "weekStart": to_week,
+        "meals": meals,
+        "id": str(new_plan["_id"]),
+        "status": "copied_and_saved"
+    }
+

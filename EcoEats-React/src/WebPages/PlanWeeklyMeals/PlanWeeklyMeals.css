@@ -71,6 +71,7 @@
   width: 780px;          /* ⬅️ make it comfortably wide */
   flex: 0 0 780px;       /* keeps size fixed even when week text changes */
   height: 60px;
+  transform: translateX(-60px);
 }
 
 
@@ -1126,4 +1127,294 @@ input[type="date"].week-picker::-webkit-calendar-picker-indicator {
   filter: invert(39%) sepia(53%) saturate(414%) hue-rotate(49deg)
     brightness(95%) contrast(90%);
   cursor: pointer;
+}
+.live-usage-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.lu-box {
+  flex:1;
+  background:#f6f9f5;
+  border:1px solid #e3e3e3;
+  border-radius:8px;
+  padding:6px 8px;
+  font-size:0.8rem;
+  font-weight:600;
+  text-align:center;
+  color:#222;
+}
+/* ======================
+   Qty Selector Styling
+   ====================== */
+
+/* Eco-green scrollbars for any scrollable qty panel */
+.qty-panel {
+  /* no overflow forced here; your JSX sets it when needed */
+  scrollbar-width: thin;
+  scrollbar-color: var(--eco-green) #f2f2f2;
+}
+
+.qty-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+  color: #222;
+}
+
+.qty-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 0;
+  border-bottom: 1px solid #f1f1f1;
+}
+
+.qty-left .qty-name {
+  font-weight: 600;
+  font-size: 0.88rem;
+  color: #333;
+}
+
+.qty-left .qty-meta {
+  font-size: 0.75rem;
+  color: #888;
+  margin-top: 2px;
+}
+
+.qty-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* input alignment fix – match +/- buttons exactly */
+.qty-input {
+  width: 24px;
+  height: 24px;
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+  text-align: center;
+  line-height: 24px;      /* centers the digit */
+  font-size: 0.85rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background: #fff;
+  vertical-align: middle; /* ensure same baseline in some browsers */
+}
+
+.qty-btn:hover:not(:disabled) {
+  border-color: var(--eco-green);
+  background: #f7fff2;
+  color: var(--eco-green);
+  transform: translateY(-1px);
+}
+
+.qty-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* input alignment fix – keep exactly same size as buttons */
+.qty-input {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  margin: 0;
+  text-align: center;
+  line-height: 24px; /* slightly less to visually center digits */
+  font-size: 0.85rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.qty-input:focus {
+  outline: none;
+  border-color: var(--eco-green);
+  box-shadow: 0 0 0 2px rgba(110,161,36, 0.15);
+}
+.qty-panel::-webkit-scrollbar {
+  width: 6px;
+}
+.qty-panel::-webkit-scrollbar-track {
+  background: #f2f2f2;
+  border-radius: 10px;
+}
+.qty-panel::-webkit-scrollbar-thumb {
+  background-color: var(--eco-green);
+  border-radius: 10px;
+}
+/* optional tiny nudge if still 1px high/low on your OS */
+.qty-input { transform: translateY(0.5px); }
+/* force compact eco-green (+ / -) buttons style */
+.qty-right .qty-btn {
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+  min-height: 22px;
+  font-size: 14px;
+  line-height: 22px;
+  border-radius: 6px;
+
+  border: 1px solid var(--eco-green);
+  color: var(--eco-green);
+  background: #ffffff !important;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* hover */
+.qty-right .qty-btn:hover:not(:disabled) {
+  background: var(--eco-green) !important;
+  color: #fff !important;
+  border-color: var(--eco-green) !important;
+  transform: translateY(-1px);
+}
+/* ===============================
+   Template Modals (Save / Load)
+   same card styling as detail overlays
+   =============================== */
+/* Modal card */
+
+
+
+/* ===============================
+   SMALL TEMPLATE POPUPS (Save / Load)
+   =============================== */
+
+   .template-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.25);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+.template-card {
+  position: relative;
+  width: 520px;
+  background: #fff;
+  border-radius: 16px;
+  padding: 26px 32px;
+  box-shadow: 0 4px 22px rgba(0,0,0,0.2);
+  z-index: 10000;
+}
+
+.template-card h3 {
+  margin-top: 0;
+  margin-bottom: 18px;
+  font-size: 1.25rem;       /* bigger title */
+  font-weight: 700;
+  color: #222;
+}
+
+.template-card .fp-input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  margin-bottom: 16px;
+  font-size: 1rem;
+}
+
+.template-card button {
+  width: 100%;
+  margin-top: 10px;
+}
+
+
+
+
+/* fade animation (soft) */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+/* make the 4 buttons wrap 2x2 nicely */
+/* 4 planner action buttons layout */
+.main-controls {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 14px;
+  margin-bottom: 6px;
+}
+
+
+.main-controls button {
+  font-size: 0.82rem;
+  padding: 6px 12px;
+}
+/* optional — make grey ones feel softer */
+.main-controls .fp-clear {
+  background: #f3f3f3;
+}
+.main-controls .fp-apply {
+  background-color: var(--eco-green);
+  color: white;
+  border: none;
+  transition: background 0.2s ease;
+}
+.main-controls .fp-apply:hover {
+  background-color: #74b42e;
+}
+.main-controls .fp-clear {
+  background: #f4f4f4;
+  color: #333;
+  border: 1px solid #ddd;
+}
+
+.main-controls .fp-clear:hover {
+  background: #ebebeb;
+}
+.main-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 40px;           /* NEW — gives breathing room */
+}
+
+
+
+
+.template-close-x:hover {
+  color: #222;
+}
+
+/* force X to right edge inside template card */
+.template-card .template-close-x {
+  position: absolute;
+  top: 10px;
+  right: 6px !important;   /* force override */
+  background: none;
+  border: none;
+  font-size: 1.6rem;
+  color: #666;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}/* force X inside template modal */
+.template-card .template-close-x {
+  position: absolute;
+  top: 10px;
+  right: 10px !important;
+  z-index: 999999;
+}
+
+/* force X inside SAVE TEMPLATE modal (detail-card) */
+.detail-card .template-close-x {
+  position: absolute;
+  top: 10px;
+  right: 10px !important;
+  z-index: 999999;
+}
+.detail-card {
+  position: relative;
 }

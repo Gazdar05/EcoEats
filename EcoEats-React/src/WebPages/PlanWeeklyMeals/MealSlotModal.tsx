@@ -1,12 +1,19 @@
-import React, { useMemo, useState } from "react";
+// src/WebPage/PlanWeeklyMeals/MealSlotModal.tsx
+import React, { useEffect, useMemo, useState } from "react";
 import type { InventoryItem, DayKey } from "./types";
+
+type RecipeLite = {
+  name: string;
+  ingredients: { name: string; quantity?: string }[];
+};
 
 type Props = {
   day: DayKey;
   slot: "breakfast" | "lunch" | "dinner" | "snacks";
   existing?: any;
   inventory: InventoryItem[];
-  recipes: string[];
+  suggestedRecipes: RecipeLite[];
+  genericRecipes: RecipeLite[];
   onClose: () => void;
   onConfirm: (
     day: DayKey,
@@ -14,157 +21,248 @@ type Props = {
     mealData: {
       name: string;
       type: "recipe" | "generic" | "custom";
-      ingredients: InventoryItem[];
+      // We will pass objects that include `used_qty` (virtual reservation).
+      // Casting to any at call site to avoid changing your InventoryItem type here.
+      ingredients: any[];
       nutrition?: any;
     }
   ) => void;
 };
 
-// ✅ Helper to ensure every item has a definite string ID
 function getItemId(it: InventoryItem): string {
-  return String(it._id ?? it.id ?? "");
+  return String((it as any)._id ?? (it as any).id ?? "");
 }
 
-// ✅ Helper to simulate recipe ingredient breakdown (for now static keywords)
-const RECIPE_INGREDIENT_MAP: Record<string, string[]> = {
-  "Green Goddess Salad": ["lettuce", "spinach", "olive oil", "lemon"],
-  "Spicy Chickpea Bowl": ["chickpeas", "rice", "tomato", "onion"],
-  "Mediterranean Quinoa": ["quinoa", "cucumber", "feta", "olive oil"],
-  "Creamy Tomato Pasta": ["pasta", "tomato", "cream", "cheese"],
-  "Chicken Stir Fry": ["chicken", "broccoli", "soy sauce", "garlic"],
-  "Omelette with Veggies": ["eggs", "broccoli", "onion", "tomato"],
-  "Pasta Primavera": ["pasta", "carrot", "broccoli", "olive oil"],
-  "Stir Fry Veggies": ["broccoli", "carrot", "onion", "soy sauce"],
-  "Rice & Beans": ["rice", "beans", "onion", "tomato"],
-  Omelette: ["eggs", "milk", "salt"],
-  "Grilled Cheese Sandwich": ["bread", "cheese", "butter"],
-  "Avocado Toast": ["bread", "avocado", "salt", "pepper"],
-};
+function getAvailableQty(it: InventoryItem): number {
+  const q = Number((it as any).quantity ?? 0);
+  return isNaN(q) || q < 0 ? 0 : q;
+}
 
 const MealSlotModal: React.FC<Props> = ({
   day,
   slot,
   existing,
   inventory,
-  recipes,
+  suggestedRecipes,
+  genericRecipes,
   onClose,
   onConfirm,
 }) => {
   const [tab, setTab] = useState<"suggested" | "generic" | "custom">(
     "suggested"
   );
+
   const [selectedRecipe, setSelectedRecipe] = useState<string | null>(
     existing?.name ?? null
   );
   const [customName, setCustomName] = useState(existing?.name ?? "");
-  const [selectedItems, setSelectedItems] = useState<Record<string, boolean>>(
-    {}
-  );
 
+  // used quantities keyed by inventory id
+  const [usedQty, setUsedQty] = useState<Record<string, number>>({});
+
+  // lowercased names for matching
   const invNames = useMemo(
-    () => inventory.map((i) => i.name.toLowerCase()),
+    () => inventory.map((i) => (i.name || "").toLowerCase()),
     [inventory]
   );
 
-  // ✅ Smart Suggested Recipes — based on ingredient overlap
-  const suggested = useMemo(() => {
-    const calcMatch = (recipe: string) => {
-      const ingredients = RECIPE_INGREDIENT_MAP[recipe] || [];
-      if (!ingredients.length) return { match: 0, available: [], missing: [] };
-
-      const available = ingredients.filter((ing) =>
-        invNames.some((n) => n.includes(ing))
-      );
-      const missing = ingredients.filter(
-        (ing) => !invNames.some((n) => n.includes(ing))
-      );
-      const match = Math.round((available.length / ingredients.length) * 100);
-      return { match, available, missing };
-    };
-    // Use the dynamically fetched recipes here (from MongoDB backend)
-    const withScores = recipes.map((r) => ({
-      name: r,
-      ...calcMatch(r),
-    }));
-
-    // show only recipes that have at least some match (or fallback)
-    const filtered = withScores.filter((r) => r.match > 20);
-    return (filtered.length ? filtered : withScores).sort(
-      (a, b) => b.match - a.match
+  // score helper
+  function score(rec: RecipeLite) {
+    const ingNames = (rec.ingredients || []).map((i) =>
+      (i.name || "").toLowerCase()
     );
-  }, [inventory, recipes, invNames]);
-
-  // ✅ Generic recipes — also with match analysis
-  const genericList = useMemo(() => {
-    return recipes.map((r) => {
-      const ingredients = RECIPE_INGREDIENT_MAP[r] || [];
-      const available = ingredients.filter((ing) =>
-        invNames.some((n) => n.includes(ing))
-      );
-      const missing = ingredients.filter(
-        (ing) => !invNames.some((n) => n.includes(ing))
-      );
-      const match = ingredients.length
-        ? Math.round((available.length / ingredients.length) * 100)
-        : 0;
-      return { name: r, match, available, missing };
-    });
-  }, [inventory, recipes, invNames]);
-
-  function toggleItem(id: string) {
-    setSelectedItems((s) => ({ ...s, [id]: !s[id] }));
+    const available = ingNames.filter((ing) =>
+      invNames.some((n) => n.includes(ing) || ing.includes(n))
+    );
+    const missing = ingNames.filter(
+      (ing) => !invNames.some((n) => n.includes(ing) || ing.includes(n))
+    );
+    const match = ingNames.length
+      ? Math.round((available.length / ingNames.length) * 100)
+      : 0;
+    return { name: rec.name, match, available, missing, _full: rec };
   }
 
-  function buildIngredients(): InventoryItem[] {
-    const ids = Object.entries(selectedItems)
-      .filter(([, v]) => v)
-      .map(([k]) => k);
-    return inventory.filter((it) => ids.includes(getItemId(it)));
+  const suggested = useMemo(
+    () => suggestedRecipes.map(score).sort((a, b) => b.match - a.match),
+    [suggestedRecipes, invNames]
+  );
+
+  const genericList = useMemo(
+    () => genericRecipes.map(score).sort((a, b) => b.match - a.match),
+    [genericRecipes, invNames]
+  );
+
+  // map a recipe name to a list of matched inventory items
+  function mapRecipeToInventory(recipeName: string | null): InventoryItem[] {
+    if (!recipeName) return [];
+    const rec =
+      suggestedRecipes.find((r) => r.name === recipeName) ||
+      genericRecipes.find((r) => r.name === recipeName);
+    if (!rec) return [];
+
+    const ingNames = (rec.ingredients || []).map((i) =>
+      (i.name || "").toLowerCase()
+    );
+
+    // Match by loose contains both ways; de-duplicate by id
+    const hits: InventoryItem[] = [];
+    const seen = new Set<string>();
+    for (const it of inventory) {
+      const name = (it.name || "").toLowerCase();
+      const matched = ingNames.some(
+        (w) => name.includes(w) || w.includes(name)
+      );
+      if (matched) {
+        const id = getItemId(it);
+        if (id && !seen.has(id)) {
+          seen.add(id);
+          hits.push(it);
+        }
+      }
+    }
+    return hits;
+  }
+
+  // When user switches recipe/tab, initialize default used quantities
+  useEffect(() => {
+    if (tab === "custom") {
+      // initialize with zeros for all
+      const init: Record<string, number> = {};
+      for (const it of inventory) init[getItemId(it)] = 0;
+      setUsedQty(init);
+      return;
+    }
+
+    // SG: default to 1 for each matched item (bounded by available)
+    const targets = mapRecipeToInventory(selectedRecipe);
+    const init: Record<string, number> = {};
+    for (const it of targets) {
+      const id = getItemId(it);
+      const max = getAvailableQty(it);
+      init[id] = Math.min(1, max); // default 1 if available
+    }
+    setUsedQty(init);
+  }, [tab, selectedRecipe, inventory]);
+
+  function setQty(id: string, next: number, max: number) {
+    if (!id) return;
+    const v = Math.max(0, Math.min(Math.floor(next || 0), max));
+    setUsedQty((s) => ({ ...s, [id]: v }));
   }
 
   function confirm() {
-    if (tab === "suggested") {
-      if (!selectedRecipe) return alert("Select a suggested recipe.");
-
-      const matched = RECIPE_INGREDIENT_MAP[selectedRecipe] || [];
-      const ingredients = inventory.filter((it) =>
-        matched.some((m) => it.name.toLowerCase().includes(m))
-      );
-
-      onConfirm(day, slot, {
-        name: selectedRecipe,
-        type: "recipe",
-        ingredients,
-      });
-      return;
-    }
-
-    if (tab === "generic") {
-      if (!selectedRecipe) return alert("Select a generic recipe.");
-
-      const matched = RECIPE_INGREDIENT_MAP[selectedRecipe] || [];
-      const ingredients = inventory.filter((it) =>
-        matched.some((m) => it.name.toLowerCase().includes(m))
-      );
-
-      onConfirm(day, slot, {
-        name: selectedRecipe,
-        type: "generic",
-        ingredients,
-      });
-      return;
-    }
-
+    // CUSTOM: name + chosen quantities
     if (tab === "custom") {
       if (!customName.trim()) return alert("Enter a meal name.");
-      const ingredients = buildIngredients();
-      onConfirm(day, slot, {
+      const chosen = inventory
+        .map((it) => {
+          const id = getItemId(it);
+          const want = usedQty[id] || 0;
+          return want > 0
+            ? {
+                id,
+                name: it.name,
+                used_qty: want, // <-- virtual reservation
+              }
+            : null;
+        })
+        .filter(Boolean) as any[];
+
+      if (chosen.length === 0)
+        return alert("Select at least one ingredient with quantity > 0.");
+
+      return onConfirm(day, slot, {
         name: customName.trim(),
         type: "custom",
-        ingredients,
+        ingredients: chosen as any, // typed as any to avoid changing InventoryItem here
       });
     }
+
+    // SG: must have a recipe selected
+    const all = [...suggested, ...genericList];
+    const selected = all.find((x) => x.name === selectedRecipe)?._full;
+    if (!selected) return alert("Select a recipe.");
+
+    const targets = mapRecipeToInventory(selected.name);
+    const chosen = targets
+      .map((it) => {
+        const id = getItemId(it);
+        const want = usedQty[id] || 0;
+        return want > 0
+          ? {
+              id,
+              name: it.name,
+              used_qty: want, // <-- virtual reservation
+            }
+          : null;
+      })
+      .filter(Boolean) as any[];
+
+    if (chosen.length === 0)
+      return alert("Set at least one ingredient quantity > 0.");
+
+    onConfirm(day, slot, {
+      name: selected.name,
+      type: tab === "generic" ? "generic" : "recipe",
+      ingredients: chosen as any,
+    });
   }
+
+  // ===== UI pieces for quantity picking
+
+  function QtyRow({ it }: { it: InventoryItem }) {
+    const id = getItemId(it);
+    const max = getAvailableQty(it);
+    const val = usedQty[id] ?? 0;
+
+    return (
+      <div className="qty-row">
+        <div className="qty-left">
+          <div className="qty-name">{it.name}</div>
+          <div className="qty-meta">
+            Available: {max}{" "}
+            {max === 0 && <span className="tag-gray">out</span>}
+          </div>
+        </div>
+        <div className="qty-right">
+          <button
+            className="qty-btn"
+            onClick={() => setQty(id, val - 1, max)}
+            disabled={val <= 0}
+            aria-label={`Decrease ${it.name}`}
+          >
+            −
+          </button>
+          <input
+            className="qty-input"
+            type="number"
+            min={0}
+            max={max}
+            value={val}
+            onChange={(e) => setQty(id, Number(e.target.value), max)}
+          />
+          <button
+            className="qty-btn"
+            onClick={() => setQty(id, val + 1, max)}
+            disabled={val >= max}
+            aria-label={`Increase ${it.name}`}
+          >
+            +
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // For SG: show quantity editor for the selected recipe’s matched items
+  const sgTargets = useMemo(
+    () =>
+      tab !== "custom" && selectedRecipe
+        ? mapRecipeToInventory(selectedRecipe)
+        : [],
+    [tab, selectedRecipe, inventory]
+  );
 
   return (
     <div className="detail-overlay" onClick={onClose}>
@@ -199,7 +297,6 @@ const MealSlotModal: React.FC<Props> = ({
         </div>
 
         <div className="meal-modal-body">
-          {/* Suggested */}
           {tab === "suggested" && (
             <div className="suggested-list">
               {suggested.map((r) => (
@@ -227,10 +324,19 @@ const MealSlotModal: React.FC<Props> = ({
                   </div>
                 </label>
               ))}
+
+              {/* Quantity chooser for selected suggested recipe */}
+              {selectedRecipe && sgTargets.length > 0 && (
+                <div className="qty-panel">
+                  <div className="qty-title">Choose quantities</div>
+                  {sgTargets.map((it) => (
+                    <QtyRow key={getItemId(it)} it={it} />
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
-          {/* Generic */}
           {tab === "generic" && (
             <div className="suggested-list">
               {genericList.map((r) => (
@@ -258,10 +364,19 @@ const MealSlotModal: React.FC<Props> = ({
                   </div>
                 </label>
               ))}
+
+              {/* Quantity chooser for selected generic recipe */}
+              {selectedRecipe && sgTargets.length > 0 && (
+                <div className="qty-panel">
+                  <div className="qty-title">Choose quantities</div>
+                  {sgTargets.map((it) => (
+                    <QtyRow key={getItemId(it)} it={it} />
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
-          {/* Custom Meal */}
           {tab === "custom" && (
             <div className="custom-area">
               <input
@@ -270,32 +385,16 @@ const MealSlotModal: React.FC<Props> = ({
                 onChange={(e) => setCustomName(e.target.value)}
               />
               <div className="custom-subtitle">
-                Select ingredients from inventory (
-                {
-                  Object.keys(selectedItems).filter((k) => selectedItems[k])
-                    .length
-                }{" "}
-                selected)
+                Pick items & quantities (virtual reservation)
               </div>
 
-              <div className="fp-cats" style={{ maxHeight: 220 }}>
-                {inventory.map((it) => {
-                  const id = getItemId(it);
-                  return (
-                    <label key={id} className="fp-checkbox">
-                      <input
-                        type="checkbox"
-                        checked={!!selectedItems[id]}
-                        onChange={() => toggleItem(id)}
-                        disabled={!!it.reserved}
-                      />
-                      <span>
-                        {it.name}{" "}
-                        {it.reserved ? "(reserved)" : `- ${it.quantity}`}
-                      </span>
-                    </label>
-                  );
-                })}
+              <div
+                className="qty-panel"
+                style={{ maxHeight: 260, overflow: "auto" }}
+              >
+                {inventory.map((it) => (
+                  <QtyRow key={getItemId(it)} it={it} />
+                ))}
               </div>
             </div>
           )}
