@@ -262,7 +262,8 @@ export default function Analytics() {
               </ResponsiveContainer>
             </div>
           </div>
-
+          
+          
           {/* Category Details */}
           <div className="details-card">
             <h3>Category Details</h3>
