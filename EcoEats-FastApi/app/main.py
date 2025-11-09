@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.routers import auth, inventory, browse, donation
+from app.routers import auth, inventory, browse, donation, analytics
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.database import db
@@ -30,3 +30,4 @@ app.include_router(auth.router)
 app.include_router(inventory.router, prefix="/inventory", tags=["Inventory"])
 app.include_router(browse.router, prefix="/browse", tags=["Browse"])
 app.include_router(donation.router, prefix="/donations", tags=["Donations"])
+app.include_router(analytics.router, prefix="/analytics", tags=["Analytics"])
