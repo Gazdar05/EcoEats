@@ -28,9 +28,6 @@ function NotificationsPage() {
   return <h1>User Notifications</h1>;
 }
 
-function AnalyticsPage() {
-  return <h1>Track and Record of User</h1>;
-}
 function SupportPage() {
   return <h1>Support Page</h1>;
 }
