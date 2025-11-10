@@ -8,8 +8,10 @@ import {
   Info,
   Circle,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const Notifications: React.FC = () => {
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState([
     {
       id: 1,
@@ -19,7 +21,6 @@ const Notifications: React.FC = () => {
       time: "2 hours ago",
       action: "View Item",
       read: false,
-      link: "/inventory",
     },
     {
       id: 2,
@@ -29,7 +30,6 @@ const Notifications: React.FC = () => {
       time: "1 day ago",
       action: "View Recipe",
       read: false,
-      link: "/meals",
     },
     {
       id: 3,
@@ -39,7 +39,6 @@ const Notifications: React.FC = () => {
       time: "Yesterday",
       action: "View Donation",
       read: true,
-      link: "/donations",
     },
     {
       id: 4,
@@ -49,7 +48,6 @@ const Notifications: React.FC = () => {
       time: "2 days ago",
       action: "",
       read: true,
-      link: "/donations",
     },
     {
       id: 5,
@@ -59,7 +57,6 @@ const Notifications: React.FC = () => {
       time: "3 days ago",
       action: "Learn More",
       read: true,
-      link: "/system",
     },
     {
       id: 6,
@@ -69,34 +66,40 @@ const Notifications: React.FC = () => {
       time: "1 week ago",
       action: "Add to List",
       read: false,
-      link: "/inventory",
     },
   ]);
 
   const [activeTab, setActiveTab] = useState("All");
 
-  // Filter notifications by tab
   const filteredNotifications =
     activeTab === "All"
       ? notifications
       : notifications.filter((n) => n.type === activeTab.toLowerCase());
 
-  // Mark all notifications as read
   const markAllAsRead = () => {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
   };
 
-  // Mark single notification as read
   const markAsRead = (id: number) => {
     setNotifications((prev) =>
       prev.map((n) => (n.id === id ? { ...n, read: true } : n))
     );
   };
 
-  // Handle navigation (temporary simulation)
+  // ✅ Smart routing for different actions
   const openNotification = (note: any) => {
     markAsRead(note.id);
-    alert(`Redirecting to ${note.link}`);
+    if (note.action === "Add to List") {
+      navigate("/inventory?action=add");
+    } else if (note.action === "View Item") {
+      navigate(`/inventory?action=view&id=${note.id}`);
+    } else if (note.action === "View Donation") {
+      navigate("/inventory?action=donations");
+    } else if (note.action === "View Recipe") {
+      navigate("/meals");
+    } else {
+      navigate("/notifications");
+    }
   };
 
   return (
@@ -142,6 +145,7 @@ const Notifications: React.FC = () => {
               {note.action && (
                 <button
                   className="notif-btn"
+                  style={{ backgroundColor: "#6EA124", color: "white" }}
                   onClick={(e) => {
                     e.stopPropagation();
                     openNotification(note);
