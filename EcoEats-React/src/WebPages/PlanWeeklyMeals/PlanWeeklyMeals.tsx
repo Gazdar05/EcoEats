@@ -6,8 +6,11 @@ import MealCalendar from "./MealCalendar";
 import InventorySidebar from "./InventorySidebar";
 import MealSlotModal from "./MealSlotModal";
 import type { InventoryItem, WeekPlan, MealSlot, DayKey } from "./types";
-import { sampleInventory, sampleRecipes } from "./mockData";
+import { sampleInventory } from "./mockData";
 import { differenceInCalendarWeeks, format } from "date-fns";
+
+// ✅ NEW
+import { NotifierProvider, useNotify } from "./Toast";
 
 const fallbackRecipe: RecipeLite = {
   name: "Sample Meal",
@@ -26,14 +29,14 @@ const DAYS: DayKey[] = [
 
 function startOfWeek(date = new Date()) {
   const d = new Date(date);
-  const day = d.getDay(); // 0 (Sun) - 6 (Sat)
-  const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Monday as first day
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
   const monday = new Date(d.setDate(diff));
   monday.setHours(0, 0, 0, 0);
   return monday;
 }
 function dateForDay(weekStart: Date, day: DayKey) {
-  const dayIndex = DAYS.indexOf(day); // 0 = Monday
+  const dayIndex = DAYS.indexOf(day);
   const date = new Date(weekStart);
   date.setDate(weekStart.getDate() + dayIndex);
   return date;
@@ -42,15 +45,13 @@ function dateForDay(weekStart: Date, day: DayKey) {
 function formatWeekRange(start: Date) {
   const end = new Date(start);
   end.setDate(start.getDate() + 6);
-  const opts: Intl.DateTimeFormatOptions = {
-    month: "short",
-    day: "numeric",
-  };
+  const opts: Intl.DateTimeFormatOptions = { month: "short", day: "numeric" };
   return `Week of ${start.toLocaleDateString(
     undefined,
     opts
   )} - ${end.toLocaleDateString(undefined, opts)}`;
 }
+
 function formatWeekLabel(weekStart: Date) {
   const now = startOfWeek(new Date());
   const diffWeeks = differenceInCalendarWeeks(weekStart, now);
@@ -58,8 +59,6 @@ function formatWeekLabel(weekStart: Date) {
   if (diffWeeks === 0) return `This Week (${formatWeekRange(weekStart)})`;
   if (diffWeeks === 1) return `Next Week (${formatWeekRange(weekStart)})`;
   if (diffWeeks === -1) return `Last Week (${formatWeekRange(weekStart)})`;
-
-  // For any other week, just show "Week of ..."
   return formatWeekRange(weekStart);
 }
 
@@ -67,21 +66,20 @@ const defaultEmptyPlan = (weekStartIso: string): WeekPlan => ({
   userId: "me",
   weekStart: weekStartIso,
   meals: DAYS.reduce((acc, day) => {
-    acc[day] = {
-      breakfast: null,
-      lunch: null,
-      dinner: null,
-      snacks: null,
-    };
+    acc[day] = { breakfast: null, lunch: null, dinner: null, snacks: null };
     return acc;
   }, {} as WeekPlan["meals"]),
 });
+
 type RecipeLite = {
   name: string;
   ingredients: { name: string; quantity?: string }[];
 };
 
-const PlanWeeklyMeals: React.FC = () => {
+// ✅ NEW inner component
+const PlannerInner: React.FC = () => {
+  const notify = useNotify(); // <-- new notifier hook
+
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [suggestedRecipes, setSuggestedRecipes] = useState<RecipeLite[]>([]);
   const [genericRecipes, setGenericRecipes] = useState<RecipeLite[]>([]);
@@ -89,7 +87,8 @@ const PlanWeeklyMeals: React.FC = () => {
   const [saveTemplateModal, setSaveTemplateModal] = useState(false);
   const [loadTemplateModal, setLoadTemplateModal] = useState(false);
   const [templates, setTemplates] = useState<any[]>([]);
-
+  const [tplName, setTplName] = useState("");
+  const [tplErr, setTplErr] = useState<string | null>(null);
   const [plan, setPlan] = useState<WeekPlan | null>(null);
   const [loading, setLoading] = useState(false);
   const [slotModal, setSlotModal] = useState<{
@@ -100,33 +99,33 @@ const PlanWeeklyMeals: React.FC = () => {
   }>({ open: false });
 
   // load inventory + recipes + plan
+  // load inventory + recipes + plan
   useEffect(() => {
     async function loadAll() {
       setLoading(true);
       try {
-        // inventory
         const invRes = await fetch(`${API_BASE_URL}/inventory`);
         if (invRes.ok) {
           const inv = await invRes.json();
           setInventory(inv);
         } else {
-          // fallback to mock
           setInventory([...sampleInventory]);
         }
 
-        // suggested recipes
-        // suggested
         const recRes = await fetch(`${API_BASE_URL}/mealplan/suggested/me`);
         if (recRes.ok) {
           const recs = await recRes.json();
-          // expect array of objects with .name and .ingredients
           const cleaned = Array.isArray(recs)
             ? recs.map((r: any) => ({
+                id: r.id,
                 name: r.name,
+                match_pct: r.match_pct,
                 ingredients: (r.ingredients || []).map((i: any) => ({
                   name: i.name,
                   quantity: i.quantity,
                 })),
+                matched_items: r.matched_items ?? [],
+                missing_items: r.missing_items ?? [],
               }))
             : [];
           setSuggestedRecipes(cleaned);
@@ -134,7 +133,6 @@ const PlanWeeklyMeals: React.FC = () => {
           setSuggestedRecipes([]);
         }
 
-        // generic
         const genRes = await fetch(`${API_BASE_URL}/mealplan/generic`);
         if (genRes.ok) {
           const gens = await genRes.json();
@@ -152,29 +150,31 @@ const PlanWeeklyMeals: React.FC = () => {
           setGenericRecipes([]);
         }
 
-        // meal plan for this week
         const iso = weekStart.toISOString();
         const planRes = await fetch(
           `${API_BASE_URL}/mealplan?weekStart=${encodeURIComponent(iso)}`
         );
         if (planRes.ok) {
           const wp = await planRes.json();
-          setPlan(wp);
+          const normalized = {
+            userId: wp.user_id ?? wp.userId ?? "me",
+            weekStart: wp.week_start ?? wp.weekStart ?? iso,
+            meals: wp.meals ?? {},
+            id: wp.id ?? wp._id ?? null,
+          };
+          setPlan(normalized);
         } else {
           setPlan(defaultEmptyPlan(iso));
         }
       } catch (err) {
         console.error("Failed to load plan/inventory:", err);
         setInventory([...sampleInventory]);
-
         const fallbackRecipe: RecipeLite = {
           name: "Sample Meal",
           ingredients: [],
         };
-
         setSuggestedRecipes([fallbackRecipe]);
         setGenericRecipes([fallbackRecipe]);
-
         setPlan(defaultEmptyPlan(weekStart.toISOString()));
       } finally {
         setLoading(false);
@@ -184,7 +184,6 @@ const PlanWeeklyMeals: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [weekStart]);
 
-  // helpers
   const weekLabel = useMemo(() => formatWeekRange(weekStart), [weekStart]);
 
   function gotoPrevWeek() {
@@ -204,13 +203,12 @@ const PlanWeeklyMeals: React.FC = () => {
   function closeSlot() {
     setSlotModal({ open: false });
   }
+
   const [activeDay, setActiveDay] = useState<DayKey>("monday");
-  // ✅ LIVE weekly usage total
+
   const weeklyUsage = useMemo(() => {
     if (!plan) return {};
-
     const usage: Record<string, number> = {};
-
     for (const day of DAYS) {
       const slots = plan.meals[day];
       if (!slots) continue;
@@ -227,33 +225,24 @@ const PlanWeeklyMeals: React.FC = () => {
     return usage;
   }, [plan]);
 
-  // assign meal to slot (called from modal)
   async function assignMeal(
     day: DayKey,
     slot: keyof MealSlot,
     mealData: {
       name: string;
       type: "recipe" | "generic" | "custom";
-      ingredients: {
-        id: string;
-        name: string;
-        used_qty: number;
-      }[];
+      ingredients: { id: string; name: string; used_qty: number }[];
       nutrition?: any;
     }
   ) {
     if (!plan) return;
-
     const newPlan = structuredClone(plan);
-
     newPlan.meals[day][slot] = {
       name: mealData.name,
       type: mealData.type,
-      ingredients: mealData.ingredients, // store with used_qty
+      ingredients: mealData.ingredients,
       nutrition: mealData.nutrition ?? null,
     };
-
-    // ✅ reduce inventory quantities here
     setInventory((prev) =>
       prev.map((it) => {
         const id = (it as any)._id ?? (it as any).id;
@@ -266,7 +255,6 @@ const PlanWeeklyMeals: React.FC = () => {
         };
       })
     );
-
     setPlan(newPlan);
 
     try {
@@ -276,39 +264,31 @@ const PlanWeeklyMeals: React.FC = () => {
         body: JSON.stringify(newPlan),
       });
       if (!res.ok) throw new Error(await res.text());
-      alert("Meal saved.");
+      notify.success("Meal saved to this week.");
     } catch (err) {
       console.error("Failed to save plan:", err);
-      alert("Failed to save meal.");
+      notify.error("Failed to save meal. Please try again.");
     } finally {
       closeSlot();
     }
   }
 
-  // remove meal from slot
   async function removeMeal(day: DayKey, slot: keyof MealSlot) {
     if (!plan) return;
-
     const currentMeal = plan.meals[day][slot];
     if (!currentMeal) return;
 
-    // return virtual usage back into inventory
     const used = currentMeal.ingredients || [];
-
     setInventory((prev) =>
       prev.map((it) => {
         const id = (it as any)._id ?? (it as any).id;
         const hit = used.find((u: any) => u.id === id);
         if (!hit) return it;
         const addBack = Number(hit.used_qty || 0);
-        return {
-          ...it,
-          quantity: Number(it.quantity || 0) + addBack,
-        };
+        return { ...it, quantity: Number(it.quantity || 0) + addBack };
       })
     );
 
-    // remove from plan
     const newPlan = structuredClone(plan);
     newPlan.meals[day][slot] = null;
     setPlan(newPlan);
@@ -320,12 +300,14 @@ const PlanWeeklyMeals: React.FC = () => {
         body: JSON.stringify(newPlan),
       });
       if (!res.ok) throw new Error(await res.text());
+
+      notify.info("Meal removed."); // ✅ added here
     } catch (err) {
       console.error("Failed to save updated plan:", err);
+      notify.error("Failed removing meal.");
     }
   }
 
-  // ✅ FIXED copyLastWeek()
   async function copyLastWeek() {
     if (!plan) return;
     if (
@@ -352,8 +334,6 @@ const PlanWeeklyMeals: React.FC = () => {
       if (!res.ok) throw new Error(await res.text());
 
       const updated = await res.json();
-
-      // 🧠 Normalize backend response for frontend
       const normalized = {
         userId: updated.user_id ?? updated.userId ?? "me",
         weekStart:
@@ -364,9 +344,8 @@ const PlanWeeklyMeals: React.FC = () => {
 
       if (Object.keys(normalized.meals || {}).length > 0) {
         setPlan(normalized);
-        alert("Copied last week's plan successfully!");
+        notify.success("Copied last week's plan into this week.");
       } else {
-        console.warn("Backend returned no meals — refetching plan.");
         const planRes = await fetch(
           `${API_BASE_URL}/mealplan?weekStart=${encodeURIComponent(
             weekStart.toISOString()
@@ -375,21 +354,20 @@ const PlanWeeklyMeals: React.FC = () => {
         if (planRes.ok) {
           const planData = await planRes.json();
           setPlan(planData);
-          alert("Copied and reloaded last week's plan.");
+          notify.success("Copied last week's plan and refreshed.");
         } else {
           const empty = defaultEmptyPlan(weekStart.toISOString());
           setPlan(empty);
-          alert("No data found — created empty plan.");
+          notify.info("No data to copy — created an empty plan.");
         }
       }
     } catch (err) {
       console.error("Copy failed:", err);
-      alert("Failed to copy last week's plan. Creating empty plan instead.");
+      notify.error("Copy failed. Started a fresh empty week.");
       const empty = defaultEmptyPlan(weekStart.toISOString());
       setPlan(empty);
     }
   }
-
   if (!plan) {
     return (
       <div className="meal-wrap">
@@ -400,17 +378,38 @@ const PlanWeeklyMeals: React.FC = () => {
 
   async function saveTemplate(name: string) {
     if (!plan) return;
-    await fetch(`${API_BASE_URL}/mealplan/templates`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name,
-        meals: plan.meals,
-        userId: "me",
-      }),
-    });
-    alert("Template saved!");
-    setSaveTemplateModal(false);
+    const trimmed = (name || "").trim();
+    if (!trimmed) {
+      setTplErr("Please enter a template name.");
+      return;
+    }
+    const mealCount = countMeals(plan.meals);
+    if (mealCount === 0) {
+      setTplErr(
+        "This week is empty. Add at least 1 meal to save as a template."
+      );
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/mealplan/templates`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: trimmed,
+          meals: plan.meals,
+          userId: "me",
+        }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      notify.success("Template saved!");
+      setTplName("");
+      setTplErr(null);
+      setSaveTemplateModal(false);
+    } catch (e) {
+      console.error(e);
+      notify.error("Failed to save template.");
+    }
   }
 
   async function openLoadTemplates() {
@@ -418,22 +417,87 @@ const PlanWeeklyMeals: React.FC = () => {
     const data = await res.json();
     setTemplates(data);
     setLoadTemplateModal(true);
+    await refreshTemplates();
+    setLoadTemplateModal(true);
   }
 
-  async function applyTemplate(templateId: string, weekStart: string) {
-    await fetch(`${API_BASE_URL}/mealplan/templates/apply`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ templateId, userId: "me", weekStart }),
-    });
-    alert("Template applied!");
-    setLoadTemplateModal(false);
-    setWeekStart(startOfWeek(new Date(weekStart)));
+  async function applyTemplate(templateId: string, weekStartISO: string) {
+    if (!templateId || !weekStartISO) return;
+
+    weekStartISO = new Date(weekStartISO).toISOString();
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/mealplan/templates/apply`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          templateId,
+          userId: "me",
+          weekStart: weekStartISO,
+        }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+
+      setWeekStart(startOfWeek(new Date(weekStartISO)));
+
+      const planRes = await fetch(
+        `${API_BASE_URL}/mealplan?weekStart=${encodeURIComponent(weekStartISO)}`
+      );
+
+      if (planRes.ok) {
+        const updated = await planRes.json();
+        const normalized = {
+          userId: updated.user_id ?? updated.userId ?? "me",
+          weekStart: updated.week_start ?? updated.weekStart ?? weekStartISO,
+          meals: updated.meals ?? {},
+          id: updated.id ?? updated._id ?? null,
+        };
+        setPlan(normalized);
+      }
+
+      setLoadTemplateModal(false);
+      notify.success("Template applied!");
+    } catch (e) {
+      console.error(e);
+      notify.error("Failed to apply template.");
+    }
+  }
+
+  async function refreshTemplates() {
+    const res = await fetch(`${API_BASE_URL}/mealplan/templates`);
+    const data = await res.json();
+    setTemplates(data);
+  }
+
+  async function deleteTemplate(id: string) {
+    if (!window.confirm("Delete this template? This cannot be undone.")) return;
+    try {
+      const res = await fetch(`${API_BASE_URL}/mealplan/templates/id/${id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) throw new Error(await res.text());
+      await refreshTemplates();
+    } catch (e) {
+      console.error(e);
+      notify.error("Failed to delete template.");
+    }
+  }
+
+  function countMeals(meals: WeekPlan["meals"]) {
+    let c = 0;
+    for (const d of DAYS) {
+      const slots = meals[d];
+      if (!slots) continue;
+      if (slots.breakfast) c++;
+      if (slots.lunch) c++;
+      if (slots.dinner) c++;
+      if (slots.snacks) c++;
+    }
+    return c;
   }
 
   return (
     <div className="meal-wrap">
-      {/* TOP BAR */}
       <div className="main-top">
         <h2>Meal Planner</h2>
 
@@ -463,16 +527,16 @@ const PlanWeeklyMeals: React.FC = () => {
             value={format(dateForDay(weekStart, activeDay), "yyyy-MM-dd")}
             onChange={(e) => {
               const value = e.target.value;
-              if (!value) return; // ✅ Ignore if user tries to clear it
+              if (!value) return;
               const selected = new Date(value);
               setWeekStart(startOfWeek(selected));
               const jsDay = selected.getDay();
               const newDay: DayKey = DAYS[(jsDay + 6) % 7];
               setActiveDay(newDay);
             }}
-            onClick={(e) => e.currentTarget.showPicker?.()} // keeps native picker behavior
+            onClick={(e) => e.currentTarget.showPicker?.()}
             className="week-picker"
-            required // ✅ Prevents clearing in most browsers
+            required
           />
         </div>
 
@@ -494,10 +558,8 @@ const PlanWeeklyMeals: React.FC = () => {
         </div>
       </div>
 
-      {/* MAIN CONTENT AREA: white planner box + inventory sidebar */}
       <div className="main-content">
         <section className="meal-main">
-          {/* ✅ NEW: Day switcher buttons */}
           <div className="day-tabs">
             {DAYS.map((d) => (
               <button
@@ -524,7 +586,6 @@ const PlanWeeklyMeals: React.FC = () => {
         </aside>
       </div>
 
-      {/* MODAL */}
       {slotModal.open && slotModal.day && slotModal.slot && (
         <MealSlotModal
           day={slotModal.day}
@@ -537,6 +598,7 @@ const PlanWeeklyMeals: React.FC = () => {
           onConfirm={assignMeal}
         />
       )}
+
       {saveTemplateModal && (
         <div
           className="detail-overlay"
@@ -549,21 +611,33 @@ const PlanWeeklyMeals: React.FC = () => {
             >
               ×
             </button>
-
             <h3>Name this Weekly Plan</h3>
+
             <input
               id="tplNameInput"
               placeholder="e.g. High Protein Week"
               className="fp-input"
+              value={tplName}
+              onChange={(e) => {
+                setTplName(e.target.value);
+                if (tplErr) setTplErr(null);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") saveTemplate(tplName);
+              }}
             />
+            {tplErr && (
+              <div
+                style={{ color: "#b24b4b", fontSize: ".9rem", marginBottom: 8 }}
+              >
+                {tplErr}
+              </div>
+            )}
+
             <button
               className="fp-apply"
-              onClick={() =>
-                saveTemplate(
-                  (document.getElementById("tplNameInput") as HTMLInputElement)
-                    .value || "My Week Plan"
-                )
-              }
+              disabled={!tplName.trim()}
+              onClick={() => saveTemplate(tplName)}
             >
               Save Template
             </button>
@@ -583,24 +657,66 @@ const PlanWeeklyMeals: React.FC = () => {
             >
               ×
             </button>
-
             <h3>Saved Templates</h3>
+
             {templates.length === 0 && <p>No templates found.</p>}
+
             {templates.map((t) => (
               <div
                 key={t.id}
                 style={{
-                  display: "flex",
-                  justifyContent: "space-between",
+                  display: "grid",
+                  gridTemplateColumns: "1fr auto auto auto",
                   alignItems: "center",
-                  marginBottom: "10px",
+                  gap: "10px",
+                  padding: "8px 0",
+                  borderBottom: "1px solid #f1f1f1",
                 }}
               >
-                <span>{t.name}</span>
+                <div>
+                  <div style={{ fontWeight: 700 }}>{t.name}</div>
+                  {t.created_at && (
+                    <div style={{ fontSize: ".8rem", color: "#777" }}>
+                      {new Date(t.created_at).toLocaleString()}
+                    </div>
+                  )}
+                </div>
+
                 <input
                   type="date"
-                  onChange={(e) => applyTemplate(t.id, e.target.value)}
+                  onChange={(e) => (e.currentTarget.dataset.tid = t.id)}
+                  data-tid={t.id}
+                  id={`date-${t.id}`}
+                  style={{
+                    padding: "6px 8px",
+                    borderRadius: 8,
+                    border: "1px solid #ddd",
+                  }}
                 />
+
+                <button
+                  className="fp-apply"
+                  onClick={() => {
+                    const el = document.getElementById(
+                      `date-${t.id}`
+                    ) as HTMLInputElement | null;
+                    const v = el?.value;
+                    if (!v) {
+                      notify.error("Pick a week start date first.");
+                      return;
+                    }
+                    applyTemplate(t.id, v);
+                  }}
+                >
+                  Apply to Week
+                </button>
+
+                <button
+                  className="fp-clear"
+                  onClick={() => deleteTemplate(t.id)}
+                >
+                  Delete
+                </button>
               </div>
             ))}
           </div>
@@ -609,5 +725,9 @@ const PlanWeeklyMeals: React.FC = () => {
     </div>
   );
 };
-
+const PlanWeeklyMeals: React.FC = () => (
+  <NotifierProvider>
+    <PlannerInner />
+  </NotifierProvider>
+);
 export default PlanWeeklyMeals;

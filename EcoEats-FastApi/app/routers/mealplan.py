@@ -320,7 +320,13 @@ async def frontend_get_mealplan(weekStart: str = Query(...), userId: str = Query
         }
         await db.meal_plans.insert_one(empty)
         plan = empty
-    plan["id"] = str(plan["_id"])
+
+    # ✅ fix: ensure week_start always ends with Z for FE match
+    ws = plan.get("week_start")
+    if ws and not ws.endswith("Z"):
+        plan["week_start"] = ws + "Z"
+
+    plan["id"] = str(plan["_id"]) if "_id" in plan else None
     return serialize_mongo(plan)
 
 
@@ -371,6 +377,25 @@ async def frontend_save_mealplan(plan: dict = Body(...)):
 
     if meal_entries:
         await db.meal_entries.insert_many(meal_entries)
+            # 3️⃣ create notifications for each meal added (Meal Reminders)
+        for entry in meal_entries:
+            meal_name = entry["meal"]["name"]
+            slot = entry["slot"]
+            day = entry["day"]
+
+            await db.notifications.insert_one({
+                "user_id": user_id,
+                "type": "meal_reminder",
+                "title": f"Upcoming meal: {meal_name}",
+                "message": f"{slot.title()} on {day} is planned.",
+                "timestamp": datetime.utcnow(),
+                "read": False,
+                "link_to": {
+                    "module": "mealplan",
+                    "day": day,
+                    "slot": slot
+            }
+        })
 
     return {"status": "saved", "modified": result.modified_count, "entries_saved": len(meal_entries)}
 

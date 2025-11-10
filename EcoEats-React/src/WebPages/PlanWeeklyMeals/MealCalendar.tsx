@@ -1,10 +1,11 @@
+// src/WebPage/PlanWeeklyMeals/MealCalendar.tsx
 import React from "react";
 import type { WeekPlan, InventoryItem, DayKey } from "./types";
 
 type Props = {
   plan: WeekPlan;
   inventory: InventoryItem[];
-  days: DayKey[]; // one or more days (used to display weekly/daily view)
+  days: DayKey[];
   onOpenSlot: (day: DayKey, slot: keyof WeekPlan["meals"][DayKey]) => void;
   onRemoveMeal: (day: DayKey, slot: keyof WeekPlan["meals"][DayKey]) => void;
 };
@@ -27,7 +28,11 @@ const MealCalendar: React.FC<Props> = ({
   onOpenSlot,
   onRemoveMeal,
 }) => {
-  // Fallback if no day array provided (safety)
+  const [pendingDelete, setPendingDelete] = React.useState<{
+    day: DayKey;
+    slot: keyof WeekPlan["meals"][DayKey];
+  } | null>(null);
+
   const dayKeys: DayKey[] =
     Array.isArray(days) && days.length > 0
       ? days
@@ -43,7 +48,6 @@ const MealCalendar: React.FC<Props> = ({
     <div className="meal-calendar-grid-wrapper">
       <h3 className="meal-grid-title">Weekly Meal Planner</h3>
 
-      {/* === Top row: Day headers === */}
       <div className="meal-calendar-day-row">
         {dayKeys.map((day) => (
           <div key={`header-${day}`} className="grid-day-header">
@@ -52,8 +56,6 @@ const MealCalendar: React.FC<Props> = ({
         ))}
       </div>
 
-      {/* === Main meal grid === */}
-      {/* === Main meal grid === */}
       <div className="meal-calendar-grid">
         {slotLabels.map((slot) =>
           dayKeys.map((day) => {
@@ -62,7 +64,7 @@ const MealCalendar: React.FC<Props> = ({
               <div
                 key={`${day}-${slot}`}
                 className="meal-square"
-                onClick={() => onOpenSlot(day, slot)} // ✅ whole square clickable
+                onClick={() => onOpenSlot(day, slot)}
               >
                 <div className="meal-square-title">
                   {slot[0].toUpperCase() + slot.slice(1)}
@@ -70,7 +72,6 @@ const MealCalendar: React.FC<Props> = ({
 
                 {meal ? (
                   <>
-                    {/* Optional image */}
                     {"image" in meal && (meal as any).image ? (
                       <img
                         src={(meal as any).image}
@@ -78,7 +79,7 @@ const MealCalendar: React.FC<Props> = ({
                         className="meal-square-img"
                       />
                     ) : (
-                      <div className="meal-square-placeholder">🍽️</div>
+                      <div className="meal-square-img">🍽️</div>
                     )}
 
                     <div className="meal-square-name">
@@ -87,28 +88,27 @@ const MealCalendar: React.FC<Props> = ({
 
                     <div className="meal-square-meta">
                       {meal.ingredients?.length
-                        ? `${meal.ingredients.length} items`
-                        : "No ingredients"}
+                        ? `${meal.ingredients.length} ingredients`
+                        : ""}
                     </div>
 
                     <div className="meal-square-actions">
                       <button
+                        className="edit-btn"
                         onClick={(e) => {
-                          e.stopPropagation(); // Prevent triggering onOpenSlot
+                          e.stopPropagation();
                           onOpenSlot(day, slot);
                         }}
-                        title="Edit meal"
-                        className="edit-btn"
                       >
                         ✏️
                       </button>
+
                       <button
-                        onClick={(e) => {
-                          e.stopPropagation(); // Prevent triggering onOpenSlot
-                          onRemoveMeal(day, slot);
-                        }}
-                        title="Remove meal"
                         className="delete-btn"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setPendingDelete({ day, slot });
+                        }}
                       >
                         🗑️
                       </button>
@@ -124,6 +124,37 @@ const MealCalendar: React.FC<Props> = ({
           })
         )}
       </div>
+
+      {pendingDelete && (
+        <div className="detail-overlay" onClick={() => setPendingDelete(null)}>
+          <div
+            className="detail-card"
+            style={{ maxWidth: 300 }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 style={{ marginBottom: 14 }}>Remove this meal?</h3>
+            <div
+              style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}
+            >
+              <button
+                className="fp-clear"
+                onClick={() => setPendingDelete(null)}
+              >
+                Cancel
+              </button>
+              <button
+                className="fp-apply"
+                onClick={() => {
+                  onRemoveMeal(pendingDelete.day, pendingDelete.slot);
+                  setPendingDelete(null);
+                }}
+              >
+                Remove
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

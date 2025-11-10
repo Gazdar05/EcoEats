@@ -1,6 +1,7 @@
 // src/WebPage/PlanWeeklyMeals/MealSlotModal.tsx
 import React, { useEffect, useMemo, useState } from "react";
 import type { InventoryItem, DayKey } from "./types";
+import { useNotify } from "./Toast"; // ✅ ADDED
 
 type RecipeLite = {
   name: string;
@@ -21,8 +22,6 @@ type Props = {
     mealData: {
       name: string;
       type: "recipe" | "generic" | "custom";
-      // We will pass objects that include `used_qty` (virtual reservation).
-      // Casting to any at call site to avoid changing your InventoryItem type here.
       ingredients: any[];
       nutrition?: any;
     }
@@ -48,6 +47,8 @@ const MealSlotModal: React.FC<Props> = ({
   onClose,
   onConfirm,
 }) => {
+  const notify = useNotify(); // ✅ ADDED
+
   const [tab, setTab] = useState<"suggested" | "generic" | "custom">(
     "suggested"
   );
@@ -57,16 +58,13 @@ const MealSlotModal: React.FC<Props> = ({
   );
   const [customName, setCustomName] = useState(existing?.name ?? "");
 
-  // used quantities keyed by inventory id
   const [usedQty, setUsedQty] = useState<Record<string, number>>({});
 
-  // lowercased names for matching
   const invNames = useMemo(
     () => inventory.map((i) => (i.name || "").toLowerCase()),
     [inventory]
   );
 
-  // score helper
   function score(rec: RecipeLite) {
     const ingNames = (rec.ingredients || []).map((i) =>
       (i.name || "").toLowerCase()
@@ -84,7 +82,11 @@ const MealSlotModal: React.FC<Props> = ({
   }
 
   const suggested = useMemo(
-    () => suggestedRecipes.map(score).sort((a, b) => b.match - a.match),
+    () =>
+      suggestedRecipes
+        .map(score)
+        .filter((r) => r.match >= 80)
+        .sort((a, b) => b.match - a.match),
     [suggestedRecipes, invNames]
   );
 
@@ -93,7 +95,6 @@ const MealSlotModal: React.FC<Props> = ({
     [genericRecipes, invNames]
   );
 
-  // map a recipe name to a list of matched inventory items
   function mapRecipeToInventory(recipeName: string | null): InventoryItem[] {
     if (!recipeName) return [];
     const rec =
@@ -105,7 +106,6 @@ const MealSlotModal: React.FC<Props> = ({
       (i.name || "").toLowerCase()
     );
 
-    // Match by loose contains both ways; de-duplicate by id
     const hits: InventoryItem[] = [];
     const seen = new Set<string>();
     for (const it of inventory) {
@@ -124,23 +124,20 @@ const MealSlotModal: React.FC<Props> = ({
     return hits;
   }
 
-  // When user switches recipe/tab, initialize default used quantities
   useEffect(() => {
     if (tab === "custom") {
-      // initialize with zeros for all
       const init: Record<string, number> = {};
       for (const it of inventory) init[getItemId(it)] = 0;
       setUsedQty(init);
       return;
     }
 
-    // SG: default to 1 for each matched item (bounded by available)
     const targets = mapRecipeToInventory(selectedRecipe);
     const init: Record<string, number> = {};
     for (const it of targets) {
       const id = getItemId(it);
       const max = getAvailableQty(it);
-      init[id] = Math.min(1, max); // default 1 if available
+      init[id] = Math.min(1, max);
     }
     setUsedQty(init);
   }, [tab, selectedRecipe, inventory]);
@@ -150,11 +147,10 @@ const MealSlotModal: React.FC<Props> = ({
     const v = Math.max(0, Math.min(Math.floor(next || 0), max));
     setUsedQty((s) => ({ ...s, [id]: v }));
   }
-
   function confirm() {
     // CUSTOM: name + chosen quantities
     if (tab === "custom") {
-      if (!customName.trim()) return alert("Enter a meal name.");
+      if (!customName.trim()) return notify.error("Enter a meal name.");
       const chosen = inventory
         .map((it) => {
           const id = getItemId(it);
@@ -163,44 +159,40 @@ const MealSlotModal: React.FC<Props> = ({
             ? {
                 id,
                 name: it.name,
-                used_qty: want, // <-- virtual reservation
+                used_qty: want,
               }
             : null;
         })
         .filter(Boolean) as any[];
 
       if (chosen.length === 0)
-        return alert("Select at least one ingredient with quantity > 0.");
+        return notify.error(
+          "Select at least one ingredient with quantity > 0."
+        );
 
       return onConfirm(day, slot, {
         name: customName.trim(),
         type: "custom",
-        ingredients: chosen as any, // typed as any to avoid changing InventoryItem here
+        ingredients: chosen as any,
       });
     }
 
     // SG: must have a recipe selected
     const all = [...suggested, ...genericList];
     const selected = all.find((x) => x.name === selectedRecipe)?._full;
-    if (!selected) return alert("Select a recipe.");
+    if (!selected) return notify.error("Select a recipe.");
 
     const targets = mapRecipeToInventory(selected.name);
     const chosen = targets
       .map((it) => {
         const id = getItemId(it);
         const want = usedQty[id] || 0;
-        return want > 0
-          ? {
-              id,
-              name: it.name,
-              used_qty: want, // <-- virtual reservation
-            }
-          : null;
+        return want > 0 ? { id, name: it.name, used_qty: want } : null;
       })
       .filter(Boolean) as any[];
 
     if (chosen.length === 0)
-      return alert("Set at least one ingredient quantity > 0.");
+      return notify.error("Set at least one ingredient quantity > 0.");
 
     onConfirm(day, slot, {
       name: selected.name,
@@ -255,7 +247,6 @@ const MealSlotModal: React.FC<Props> = ({
     );
   }
 
-  // For SG: show quantity editor for the selected recipe’s matched items
   const sgTargets = useMemo(
     () =>
       tab !== "custom" && selectedRecipe
@@ -325,7 +316,6 @@ const MealSlotModal: React.FC<Props> = ({
                 </label>
               ))}
 
-              {/* Quantity chooser for selected suggested recipe */}
               {selectedRecipe && sgTargets.length > 0 && (
                 <div className="qty-panel">
                   <div className="qty-title">Choose quantities</div>
@@ -365,7 +355,6 @@ const MealSlotModal: React.FC<Props> = ({
                 </label>
               ))}
 
-              {/* Quantity chooser for selected generic recipe */}
               {selectedRecipe && sgTargets.length > 0 && (
                 <div className="qty-panel">
                   <div className="qty-title">Choose quantities</div>
