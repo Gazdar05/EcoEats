@@ -268,7 +268,7 @@ export default function FoodAnalytics() {
                   <YAxis />
                   <Tooltip />
                   <Legend />
-                  <Line type="monotone" dataKey="inventory" stroke="#6EA124" name="Inventory" strokeWidth={2} />
+                  <Line type="monotone" dataKey="inventory" stroke="#6EA124" name="Used" strokeWidth={2} />
                   <Line type="monotone" dataKey="donations" stroke="#1460ecff" name="Donations" strokeWidth={2} />
                   <Line type="monotone" dataKey="wasted" stroke="#dc3545" name="Wasted" strokeWidth={2} />
                 </LineChart>
