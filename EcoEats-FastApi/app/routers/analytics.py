@@ -25,6 +25,7 @@ router = APIRouter(tags=["Analytics"])
 collection = db["food_items"]
 
 def ensure_datetime(date_value: Union[str, datetime, None]) -> Optional[datetime]:
+    """Ensure a datetime object from string or datetime."""
     if isinstance(date_value, datetime):
         return date_value
     elif isinstance(date_value, str):
@@ -34,74 +35,61 @@ def ensure_datetime(date_value: Union[str, datetime, None]) -> Optional[datetime
             return None
     return None
 
-# --- [FIXED] ---
-# Helper function to build the aggregation pipeline.
-# This correctly handles date string conversion AND filtering.
+
+# --- Aggregation Pipeline Builder ---
 def build_aggregation_pipeline(
     start_date: Optional[str],
     end_date: Optional[str],
     category: Optional[str]
 ) -> List[dict]:
-    
     match_criteria = {}
     pipeline = []
 
-    # Add category filter (this can be matched directly)
     if category:
         match_criteria["category"] = category
 
-    # --- [THIS IS THE FIX] ---
-    # We need to handle mixed types (string and date) for 'created_at'.
-    # We use $cond to check the type before trying to convert.
+    # Convert string date field properly
     add_fields_stage = {
         "$addFields": {
             "created_at_date": {
                 "$cond": {
                     "if": { "$eq": [{ "$type": "$created_at" }, "string"] },
                     "then": { "$dateFromString": { "dateString": "$created_at" } },
-                    "else": "$created_at"  # If it's not a string, assume it's already a date
+                    "else": "$created_at"
                 }
             }
         }
     }
     pipeline.append(add_fields_stage)
-    # --- [END OF FIX] ---
 
-    # Add date filter
     if start_date and end_date:
         try:
-            # Use min/max time to be inclusive of the full start/end days
             start_dt = datetime.combine(parse(start_date).date(), time.min)
             end_dt = datetime.combine(parse(end_date).date(), time.max)
-            
-            # Add this to the match criteria for the *converted* date field
             match_criteria["created_at_date"] = {"$gte": start_dt, "$lte": end_dt}
-            
         except Exception as e:
-            raise HTTPException(status_code=400, detail=f"Invalid date format: {e}. Use YYYY-MM-DD")
-    
-    # Add the final $match stage to the pipeline
+            raise HTTPException(status_code=400, detail=f"Invalid date format: {e}")
+
     if match_criteria:
         pipeline.append({"$match": match_criteria})
-    
+
     return pipeline
 
 
+# --- SUMMARY ROUTE ---
 @router.get("/summary")
 async def get_analytics_summary(
     start_date: Optional[str] = Query(None),
     end_date: Optional[str] = Query(None),
-    category: Optional[str] = Query(None)
+    category: Optional[str] = Query(None),
+    period: Optional[str] = Query("monthly")
 ):
     today = datetime.utcnow()
-    
-    # [FIX] Use the aggregation pipeline
     pipeline = build_aggregation_pipeline(start_date, end_date, category)
-    
+
     try:
         all_items = await collection.aggregate(pipeline).to_list(length=None)
     except Exception as e:
-        # Catch potential aggregation errors
         raise HTTPException(status_code=500, detail=f"Database aggregation failed: {e}")
 
     if not all_items:
@@ -113,54 +101,64 @@ async def get_analytics_summary(
             "impactMetrics": {"foodSavedKg": 0.0, "co2SavedKg": 0.0, "moneySaved": 0}
         }
 
+    # Totals
     total_items = sum(item.get("quantity", 1) for item in all_items)
-    donations = [item for item in all_items if item.get("source") == "donation"]
-    total_donations = sum(item.get("quantity", 1) for item in donations)
-    inventory_items = [item for item in all_items if item.get("source") == "inventory"]
-    total_inventory = sum(item.get("quantity", 1) for item in inventory_items)
+    donations = [i for i in all_items if i.get("source") == "donation"]
+    total_donations = sum(i.get("quantity", 1) for i in donations)
+    inventory_items = [i for i in all_items if i.get("source") == "inventory"]
+    total_inventory = sum(i.get("quantity", 1) for i in inventory_items)
 
     # Category breakdown
     category_stats = defaultdict(lambda: {"total": 0, "donated": 0, "used": 0, "wasted": 0})
     for item in all_items:
         cat = item.get("category", "Unknown")
-        quantity = item.get("quantity", 1)
-        expiry_date = ensure_datetime(item.get("expiry_date"))
-
-        if expiry_date and expiry_date < today:
-            category_stats[cat]["wasted"] += quantity
-        elif item.get("source") == "donation":
-            category_stats[cat]["donated"] += quantity
-        else:
-            category_stats[cat]["used"] += quantity
-        category_stats[cat]["total"] += quantity
-
-    # Monthly trend
-    # We'll include a "wasted" series. Inventory/donations are counted by created_at_date month,
-    # while wasted is counted by expiry_date month (when the item became wasted).
-    trend_data = defaultdict(lambda: {"inventory": 0, "donations": 0, "wasted": 0})
-    for item in all_items:
-        # Use the converted date
-        created = item.get("created_at_date")
-        if created:
-            month_key = created.strftime("%Y-%m")
-            quantity = item.get("quantity", 1)
-            if item.get("source") == "donation":
-                trend_data[month_key]["donations"] += quantity
-            else:
-                trend_data[month_key]["inventory"] += quantity
-
-        # Also count wasted items by their expiry month (if expired)
+        qty = item.get("quantity", 1)
         expiry = ensure_datetime(item.get("expiry_date"))
         if expiry and expiry < today:
-            expiry_month = expiry.strftime("%Y-%m")
-            trend_data[expiry_month]["wasted"] += item.get("quantity", 1)
+            category_stats[cat]["wasted"] += qty
+        elif item.get("source") == "donation":
+            category_stats[cat]["donated"] += qty
+        else:
+            category_stats[cat]["used"] += qty
+        category_stats[cat]["total"] += qty
+
+    # --- Trend Data with Period Filter ---
+    trend_data = defaultdict(lambda: {"inventory": 0, "donations": 0, "wasted": 0})
+    for item in all_items:
+        created = item.get("created_at_date")
+        qty = item.get("quantity", 1)
+
+        # Determine grouping key based on selected period
+        if created:
+            if period == "weekly":
+                key = created.strftime("%Y-W%U")
+            elif period == "yearly":
+                key = created.strftime("%Y")
+            else:  # monthly default
+                key = created.strftime("%Y-%m")
+
+            if item.get("source") == "donation":
+                trend_data[key]["donations"] += qty
+            else:
+                trend_data[key]["inventory"] += qty
+
+        # Add wasted item count by expiry period
+        expiry = ensure_datetime(item.get("expiry_date"))
+        if expiry and expiry < today:
+            if period == "weekly":
+                key = expiry.strftime("%Y-W%U")
+            elif period == "yearly":
+                key = expiry.strftime("%Y")
+            else:
+                key = expiry.strftime("%Y-%m")
+            trend_data[key]["wasted"] += qty
 
     monthly_trend = [
-        {"date": month, "inventory": data["inventory"], "donations": data["donations"], "wasted": data.get("wasted", 0)}
-        for month, data in sorted(trend_data.items())
+        {"date": key, "inventory": v["inventory"], "donations": v["donations"], "wasted": v["wasted"]}
+        for key, v in sorted(trend_data.items())
     ]
 
-    # Only slice to last 6 months if NO date filter is applied.
+    # Show only recent periods if no filters applied
     if not start_date and not end_date:
         monthly_trend = monthly_trend[-6:]
 
@@ -179,6 +177,7 @@ async def get_analytics_summary(
     }
 
 
+# --- CATEGORY ROUTE ---
 @router.get("/categories")
 async def get_category_breakdown(
     start_date: Optional[str] = Query(None),
@@ -186,9 +185,8 @@ async def get_category_breakdown(
     category: Optional[str] = Query(None)
 ):
     today = datetime.utcnow()
-    
-    # [FIX] Use the aggregation pipeline
     pipeline = build_aggregation_pipeline(start_date, end_date, category)
+
     try:
         all_items = await collection.aggregate(pipeline).to_list(length=None)
     except Exception as e:
@@ -200,28 +198,30 @@ async def get_category_breakdown(
     category_stats = defaultdict(lambda: {"total": 0, "donated": 0, "used": 0, "wasted": 0})
     for item in all_items:
         cat = item.get("category", "Unknown")
-        quantity = item.get("quantity", 1)
-        expiry_date = ensure_datetime(item.get("expiry_date"))
-
-        if expiry_date and expiry_date < today:
-            category_stats[cat]["wasted"] += quantity
+        qty = item.get("quantity", 1)
+        expiry = ensure_datetime(item.get("expiry_date"))
+        if expiry and expiry < today:
+            category_stats[cat]["wasted"] += qty
         elif item.get("source") == "donation":
-            category_stats[cat]["donated"] += quantity
+            category_stats[cat]["donated"] += qty
         else:
-            category_stats[cat]["used"] += quantity
-        category_stats[cat]["total"] += quantity
+            category_stats[cat]["used"] += qty
+        category_stats[cat]["total"] += qty
 
     return {"hasData": True, "categoriesBreakdown": dict(category_stats)}
 
 
+# --- TREND ROUTE ---
 @router.get("/trends")
 async def get_trend_data(
     start_date: Optional[str] = Query(None),
     end_date: Optional[str] = Query(None),
-    category: Optional[str] = Query(None)
+    category: Optional[str] = Query(None),
+    period: Optional[str] = Query("monthly")
 ):
-    # [FIX] Use the aggregation pipeline
     pipeline = build_aggregation_pipeline(start_date, end_date, category)
+    today = datetime.utcnow()
+
     try:
         all_items = await collection.aggregate(pipeline).to_list(length=None)
     except Exception as e:
@@ -230,33 +230,40 @@ async def get_trend_data(
     if not all_items:
         return {"hasData": False, "monthlyTrend": []}
 
-
-    # Include wasted count in trends (wasted by expiry month)
     trend_data = defaultdict(lambda: {"inventory": 0, "donations": 0, "wasted": 0})
-
     for item in all_items:
-        # Use the converted date for inventory/donations
         created = item.get("created_at_date")
-        if created:
-            month_key = created.strftime("%Y-%m")
-            quantity = item.get("quantity", 1)
-            if item.get("source") == "donation":
-                trend_data[month_key]["donations"] += quantity
-            else:
-                trend_data[month_key]["inventory"] += quantity
+        qty = item.get("quantity", 1)
 
-        # Count wasted by expiry month when expired
+        # Period grouping
+        if created:
+            if period == "weekly":
+                key = created.strftime("%Y-W%U")
+            elif period == "yearly":
+                key = created.strftime("%Y")
+            else:
+                key = created.strftime("%Y-%m")
+
+            if item.get("source") == "donation":
+                trend_data[key]["donations"] += qty
+            else:
+                trend_data[key]["inventory"] += qty
+
         expiry = ensure_datetime(item.get("expiry_date"))
-        if expiry and expiry < datetime.utcnow():
-            expiry_month = expiry.strftime("%Y-%m")
-            trend_data[expiry_month]["wasted"] += item.get("quantity", 1)
+        if expiry and expiry < today:
+            if period == "weekly":
+                key = expiry.strftime("%Y-W%U")
+            elif period == "yearly":
+                key = expiry.strftime("%Y")
+            else:
+                key = expiry.strftime("%Y-%m")
+            trend_data[key]["wasted"] += qty
 
     monthly_trend = [
-        {"date": month, "inventory": data["inventory"], "donations": data["donations"], "wasted": data.get("wasted", 0)}
-        for month, data in sorted(trend_data.items())
+        {"date": key, "inventory": v["inventory"], "donations": v["donations"], "wasted": v["wasted"]}
+        for key, v in sorted(trend_data.items())
     ]
 
-    # Only slice to last 6 months if NO date filter is applied.
     if not start_date and not end_date:
         monthly_trend = monthly_trend[-6:]
 
