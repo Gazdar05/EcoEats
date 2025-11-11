@@ -19,4 +19,4 @@ app.include_router(inventory.router, prefix="/inventory", tags=["Inventory"])
 app.include_router(browse.router, prefix="/browse", tags=["Browse"])
 app.include_router(donation.router, prefix="/donations", tags=["Donations"])
 app.include_router(mealplan.router)
-app.include_router(mealplan_templates_router)   # ✅ correct router
+

@@ -1,10 +1,41 @@
 # app/routers/mealplan_templates.py  (this is your /mealplan/templates router file)
 from fastapi import APIRouter, HTTPException, Body
 from app.database import db
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from bson import ObjectId
 
+
+
 router = APIRouter(prefix="/mealplan/templates", tags=["Meal Plan Templates"])
+
+def normalize_week_start(raw: str) -> str:
+    """
+    Normalize any ISO date string to the Monday of that week, formatted exactly
+    like the frontend's toISOString() output, e.g. 2025-02-03T00:00:00.000Z
+    """
+    if not raw:
+        return raw
+
+    base = raw.replace("Z", "")
+    try:
+        dt = datetime.fromisoformat(base)
+    except ValueError:
+        # fallback: drop milliseconds if parsing fails
+        dt = datetime.fromisoformat(base.split(".")[0])
+
+    # snap to Monday 00:00:00 UTC
+    dt = dt.replace(hour=0, minute=0, second=0, microsecond=0)
+    monday = dt - timedelta(days=dt.weekday())
+
+    # ✅ emit with milliseconds + trailing Z (exactly like JS .toISOString())
+    return (
+        monday.replace(tzinfo=timezone.utc)
+        .isoformat(timespec="milliseconds")
+        .replace("+00:00", "Z")
+    )
+
+
+
 
 @router.post("")
 async def save_template(body: dict = Body(...)):
@@ -60,7 +91,7 @@ async def apply_template(body: dict = Body(...)):
 
     # normalize week_start to full ISO like copyLastWeek does
   
-    week_start = week_start_raw
+    week_start = normalize_week_start(week_start_raw)
 
 
     tpl = await db.mealplan_templates.find_one({"_id": ObjectId(template_id)})
@@ -97,9 +128,23 @@ async def apply_template(body: dict = Body(...)):
                 "meal": meal,
                 "created_at": datetime.utcnow(),
             })
+ # ✅ Check inventory and build warnings
+    warnings = []
+    for day, slots in meals.items():
+        for slot, meal in (slots or {}).items():
+            if not meal or "ingredients" not in meal:
+                continue
+            for ing in meal["ingredients"]:
+                if not ing.get("id"):
+                    continue
+                item = await db.food_items.find_one({"_id": ObjectId(ing["id"])})
+                if not item:
+                    warnings.append(f"{ing['name']} missing in inventory")
+                elif item.get("quantity", 0) <= 0:
+                    warnings.append(f"{ing['name']} is out of stock")
 
-    if to_insert:
-        await db.meal_entries.insert_many(to_insert)
-
-    return {"status": "applied", "weekStart": week_start}
-
+    return {
+        "status": "applied",
+        "message": "Template applied successfully",
+        "warnings": warnings
+    }

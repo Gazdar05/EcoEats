@@ -8,6 +8,9 @@ from datetime import datetime
 from app.utils import food_status_from_date
 from bson import ObjectId
 from datetime import timedelta
+from app.routers.mealplan_templates import normalize_week_start
+
+
 router = APIRouter(prefix="/mealplan", tags=["Meal Planner"])
 
 
@@ -298,11 +301,17 @@ async def copy_previous_week(user_id: str, prev_week_start: str, new_week_start:
 @router.get("")
 async def frontend_get_mealplan(weekStart: str = Query(...), userId: str = Query("me")):
     """Frontend: Fetch or create empty plan for given week"""
-    plan = await db.meal_plans.find_one({"user_id": userId, "week_start": weekStart})
+
+    # ✅ Normalize incoming weekStart to canonical Monday 00:00:00.000Z
+    week_start = normalize_week_start(weekStart)
+
+    # ✅ Use normalized value for query
+    plan = await db.meal_plans.find_one({"user_id": userId, "week_start": week_start})
     if not plan:
+        # ✅ Also store using normalized week_start
         empty = {
             "user_id": userId,
-            "week_start": weekStart,
+            "week_start": week_start,
             "meals": {
                 d: {"breakfast": None, "lunch": None, "dinner": None, "snacks": None}
                 for d in [
@@ -330,11 +339,14 @@ async def frontend_get_mealplan(weekStart: str = Query(...), userId: str = Query
     return serialize_mongo(plan)
 
 
+
 @router.put("")
 async def frontend_save_mealplan(plan: dict = Body(...)):
     """Frontend: Save or update plan from UI + record individual meals"""
     user_id = plan.get("userId") or plan.get("user_id") or "me"
     week_start = plan.get("weekStart") or plan.get("week_start")
+
+    week_start = normalize_week_start(week_start)
 
     if not week_start:
         raise HTTPException(status_code=400, detail="Missing weekStart or week_start")
@@ -411,37 +423,91 @@ async def get_meal_entries(user_id: str, week_start: str):
 @router.post("/copy")
 async def frontend_copy_mealplan(body: dict = Body(...)):
     """Frontend: Copy a week's plan + meal entries (persistent save)"""
-    from_week = body.get("fromWeekStart")
-    to_week = body.get("toWeekStart")
-    user_id = body.get("userId", "me")
+    from_week_raw = body.get("fromWeekStart")
+    to_week_raw = body.get("toWeekStart")
+    user_id = (body.get("userId") or "me").strip()
 
-    if not from_week or not to_week:
-        raise HTTPException(status_code=400, detail="Missing week start values")
+    if not from_week_raw or not to_week_raw or not user_id:
+        raise HTTPException(
+            status_code=400,
+            detail="userId, fromWeekStart, and toWeekStart are required.",
+        )
 
-    # 1️⃣ Fetch the source plan
+    # Normalize week keys
+    from_week = normalize_week_start(from_week_raw)
+    to_week = normalize_week_start(to_week_raw)
+
+    # Fetch the source plan
     from_plan = await db.meal_plans.find_one(
         {"user_id": user_id, "week_start": from_week}
     )
     if not from_plan:
-        raise HTTPException(status_code=404, detail="Source week not found")
+        raise HTTPException(status_code=404, detail="Source week not found.")
 
-    # 2️⃣ Prepare new plan
-    new_plan = from_plan.copy()
-    new_plan["_id"] = ObjectId()
-    new_plan["week_start"] = to_week
-    new_plan["created_at"] = datetime.utcnow()
-    new_plan["updated_at"] = datetime.utcnow()
+    meals = from_plan.get("meals") or {}
+    if not meals or all(
+        not any(slot for slot in day.values() if slot) for day in meals.values()
+    ):
+        raise HTTPException(
+            status_code=400,
+            detail="No source week plan to copy — previous week is empty.",
+        )
 
-    meals = from_plan.get("meals", {})
+    # Collect ingredient IDs to validate inventory
+    ingredient_ids = []
+    ingredient_names = {}
+    for day, slots in meals.items():
+        if not slots:
+            continue
+        for slot_name, meal in slots.items():
+            if not meal:
+                continue
+            for ing in meal.get("ingredients") or []:
+                ing_id = ing.get("id") or ing.get("_id")
+                name = ing.get("name") or "Unknown ingredient"
+                if not ing_id:
+                    continue
+                if not ObjectId.is_valid(ing_id):
+                    raise HTTPException(status_code=400, detail=f"Invalid ingredient id: {ing_id}")
+                oid = ObjectId(ing_id)
+                if oid not in ingredient_ids:
+                    ingredient_ids.append(oid)
+                    ingredient_names[str(oid)] = name
 
-    # 3️⃣ Upsert (replace or insert) the new plan
-    await db.meal_plans.update_one(
+    # ✅ Verify inventory quantities
+    if ingredient_ids:
+        inventory_docs = await db.food_items.find({"_id": {"$in": ingredient_ids}}).to_list(None)
+        inventory_map = {str(doc["_id"]): int(doc.get("quantity", 0)) for doc in inventory_docs}
+
+        for oid_str, name in ingredient_names.items():
+            if oid_str not in inventory_map:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Cannot copy plan — missing ingredient: {name}",
+                )
+            qty = inventory_map[oid_str]
+            if qty <= 0:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Cannot copy plan — ingredient {name} is out of stock.",
+                )
+
+    # ✅ Upsert destination plan
+    update_result = await db.meal_plans.update_one(
         {"user_id": user_id, "week_start": to_week},
-        {"$set": {"meals": meals, "created_at": datetime.utcnow(), "updated_at": datetime.utcnow()}},
+        {
+            "$set": {
+                "meals": meals,
+                "created_at": datetime.utcnow(),
+                "updated_at": datetime.utcnow(),
+            }
+        },
         upsert=True,
     )
+    if not update_result.acknowledged:
+        raise HTTPException(status_code=500, detail="Failed to copy meal plan. Please try again.")
 
-    # 4️⃣ Also store individual meal entries for persistence
+    # ✅ Rebuild meal entries
     await db.meal_entries.delete_many({"user_id": user_id, "week_start": to_week})
 
     meal_entries = []
@@ -451,25 +517,27 @@ async def frontend_copy_mealplan(body: dict = Body(...)):
         for slot, meal in slots.items():
             if not meal:
                 continue
-            meal_entries.append({
-                "user_id": user_id,
-                "week_start": to_week,
-                "day": day,
-                "slot": slot,
-                "date": get_date_for_day(to_week, day),
-                "meal": meal,
-                "created_at": datetime.utcnow(),
-            })
+            meal_entries.append(
+                {
+                    "user_id": user_id,
+                    "week_start": to_week,
+                    "day": day,
+                    "slot": slot,
+                    "date": get_date_for_day(to_week, day),
+                    "meal": meal,
+                    "created_at": datetime.utcnow(),
+                }
+            )
 
     if meal_entries:
-        await db.meal_entries.insert_many(meal_entries)
+        try:
+            await db.meal_entries.insert_many(meal_entries)
+        except Exception:
+            raise HTTPException(status_code=500, detail="Database error while saving meal entries.")
 
-    # 5️⃣ Return frontend-ready response
     return {
         "userId": user_id,
         "weekStart": to_week,
         "meals": meals,
-        "id": str(new_plan["_id"]),
-        "status": "copied_and_saved"
+        "status": "copied_and_saved",
     }
-

@@ -433,14 +433,14 @@
   border-radius: 10px;
 }
 
-    /* individual item */
-    .inventory-item {
-    display: flex;
-    justify-content: space-between;
-    padding: 6px 4px;
-    border-bottom: 1px solid #f1f1f1;
-    transition: background 0.2s;
-    }
+.inventory-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 4px 22px 4px;   /* increased bottom padding */
+  border-bottom: 1px solid #f1f1f1;
+  transition: background 0.2s;
+}
+
     .inventory-item:hover {
     background: #fafafa;
     }
@@ -460,10 +460,14 @@
     font-size: 0.8rem;
     color: var(--muted);
     }
+.inventory-item-right {
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px; /* pushes "Used this week" slightly down */
+}
 
-    .inventory-item-right {
-    text-align: right;
-    }
 
     .inventory-expiry {
     font-size: 0.8rem;
@@ -479,6 +483,14 @@
     font-size: 0.75rem;
     color: #999;
     }
+    /* improve usage hint row */
+.inventory-reserved-used {
+  margin-top: 2px;
+  font-size: 0.8rem;       /* same as .inventory-item-meta */
+  color: var(--muted);     /* same muted tone */
+  font-weight: 500;
+}
+
 
   /* =======================
    MealSlotModal Styling
@@ -1501,4 +1513,21 @@ input[type="date"].week-picker::-webkit-calendar-picker-indicator {
   font-size:1.07rem;
   color:#477528;
   font-weight:600;
+}
+/* === ENHANCE ONLY "Copy Last Week" BUTTON === */
+.main-controls .fp-clear {
+  background: var(--eco-green);
+  color: #fff;
+  font-size: 0.95rem;       /* slightly larger text */
+  font-weight: 600;
+  padding: 10px 18px;       /* larger size */
+  border-radius: 10px;      /* smoother rounded shape */
+  border: none;
+  transition: background 0.2s ease, transform 0.15s ease;
+}
+
+/* subtle hover lift */
+.main-controls .fp-clear:hover {
+  background: #5a8d1e;
+  transform: translateY(-2px);
 }
