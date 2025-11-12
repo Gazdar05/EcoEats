@@ -222,10 +222,7 @@
   font-size: 0.95rem;
 }
 
-
-    /* rows for each meal time */
-    /* rows for each meal time */
-/* rows for Breakfast, Lunch, Dinner, Snacks */
+/* rows for each meal time */
 .calendar-body {
   display: grid;
   gap: 12px; /* smaller vertical gaps */
@@ -237,12 +234,14 @@
   gap: 8px;
   align-items: start;
 }
+
 .calendar-slot-label {
   font-weight: 700;
   padding-top: 6px; /* closer to grid */
   font-size: 0.95rem;
   text-align: left;
 }
+
 /* === Meal Slot Content Fix === */
 .calendar-cell {
   position: relative;
@@ -261,6 +260,7 @@
   transform: translateY(-2px);
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
 }
+
 .meal-slot-section {
   border: 1px solid var(--border);
   border-radius: 10px;
@@ -289,62 +289,57 @@
   transition: all 0.2s ease;
 }
 
-
-    /* meal card inside a cell */
-/* meal card inside */
-/* small neat cards inside each meal slot */
-
+/* ============================= */
+/* === IMPROVED MEAL CARD === */
+/* ============================= */
 .meal-card {
   border: 1px solid #e3e3e3;
   border-radius: 10px;
-  padding: 8px 10px;
+  padding: 10px 12px;
   background: #fafafa;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  transition: box-shadow 0.2s ease;
+  transition: box-shadow 0.25s ease, transform 0.15s ease;
 }
 
 .meal-card:hover {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+  background: #fff;
 }
 
-.meal-card img {
-  width: 100%;
-  height: 45px;
-  object-fit: cover;
-  border-radius: 6px;
-}
-
-/* meal name and meta stay compact */
+/* Meal name + meta area */
 .meal-name {
-  font-size: 0.78rem;
+  font-size: 0.88rem;          /* slightly larger text */
   font-weight: 600;
   color: #222;
+  letter-spacing: 0.2px;
+  margin-bottom: 2px;
 }
+
 .meal-meta {
-  font-size: 0.7rem;
-  color: var(--muted);
+  font-size: 0.75rem;
+  color: #777;
+  font-weight: 500;
 }
-/* buttons inside cells */
+
+/* Optional icon/image */
+.meal-card img {
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-right: 10px;
+}
+
+/* action icons/buttons */
 .meal-actions {
   display: flex;
   justify-content: center;
-  gap: 4px;
+  gap: 6px;
   margin-top: auto;
   flex-shrink: 0;
-}
-/* Add button fits neatly below grid */
-.add-meal-btn {
-  border: 1px dashed var(--eco-green);
-  background: #f9fff6;
-  color: #333;
-  font-size: 0.8rem;
-  border-radius: 8px;
-  padding: 6px 10px;
-  cursor: pointer;
-  text-align: center;
-  transition: background 0.2s ease;
 }
 
 .meal-actions button {
@@ -353,7 +348,16 @@
   color: var(--eco-green);
   cursor: pointer;
   font-weight: 600;
+  font-size: 1rem;
+  transition: color 0.2s ease, transform 0.1s ease;
 }
+
+.meal-actions button:hover {
+  color: #2e7d32;
+  transform: scale(1.15);
+}
+
+/* small neat layout of multiple cards */
 .meal-list {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -364,30 +368,31 @@
   overflow: hidden;
 }
 
-.meal-actions button:hover {
-  background: var(--eco-green);
-  color: #fff;
-}
-
+/* Add button fits neatly below grid */
 .add-meal-btn {
   border: 1px dashed var(--eco-green);
-  border-radius: 10px;
-  padding: 8px 10px;
-  font-size: 0.9rem;
   background: #f9fff6;
-  transition: all 0.2s ease;
+  color: #333;
+  font-size: 0.8rem;
+  border-radius: 8px;
+  padding: 6px 10px;
+  cursor: pointer;
+  text-align: center;
+  transition: background 0.2s ease, color 0.2s ease;
 }
 
 .add-meal-btn:hover {
   background: var(--eco-green);
   color: #fff;
 }
-/* Right sidebar starts aligned with planner grid */
+
+/* Right sidebar stays aligned with planner grid */
 .meal-right {
   width: 300px;
   align-self: flex-start;
-  margin-top: 46px; /* ✅ this matches the header (Mon/Tue...) height */
+  margin-top: 46px; /* ✅ matches header height */
 }
+
     /* RIGHT SIDEBAR uses same fp-panel style as BrowseFood */
     .fp-panel {
     background: #fff;
@@ -927,11 +932,18 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   text-align: center;
   width: 100%;
   height: 100%;
-  justify-content: center;
   gap: 6px;
+  padding: 6px 4px;
+  transition: transform 0.2s ease, box-shadow 0.25s ease;
+}
+
+.meal-square-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
 }
 
 /* === Optional meal content (text or image) === */
@@ -961,13 +973,15 @@
 
 
 /* Image inside the meal card */
+/* Meal image (if any) */
 .meal-square-img {
-  width: 80%;
-  height: 80px; /* Adjust size to fit within the card */
+  width: 68%;
+  height: 72px;
   object-fit: cover;
-  border-radius: 8px;
-  margin-bottom: 8px; /* Spacing between image and meal name */
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
 }
+
 
 /* Placeholder for meal image when none exists */
 .meal-square-placeholder {
@@ -978,12 +992,14 @@
 }
 
 /* Meal Content (Image, Name, Ingredients) */
+/* Meal name text */
 .meal-square-name {
-  font-weight: 600;
-  font-size: 0.85rem;
-  color: #222;
-  text-align: center;
-  margin-top: 8px;
+  font-size: 0.95rem;               /* bigger but still fits */
+  font-weight: 700;
+  color: #333;
+  letter-spacing: 0.25px;
+  margin-top: 4px;
+  line-height: 1.3;
 }
 /* Meal Title Styling */
 .meal-square-title {
@@ -995,37 +1011,34 @@
 }
 
 
+/* Ingredient count text */
 .meal-square-meta {
-  font-size: 0.75rem;
-  color: var(--muted); /* Lighter color for ingredients info */
-  text-align: center;
-  margin-top: 4px;
+  font-size: 0.8rem;
+  color: #6b6b6b;
+  font-weight: 500;
+  margin-top: 2px;
 }
 /* === Action Buttons === */
 /* === Action Buttons & Meal Content === */
 /* === Action Buttons & Meal Content === */
 /* Meal Square Action Buttons */
 /* Meal Square Action Buttons */
+/* Icons below meal */
 .meal-square-actions {
   display: flex;
   justify-content: center;
-  gap: 12px; /* increased space between icons */
-  margin-top: 12px; /* ensure spacing between icons and meal content */
-  flex-shrink: 0;
+  gap: 12px;
+  margin-top: 6px;
 }
 
 /* Default button styles (for all icons) */
 .meal-square-actions button {
   border: none;
-  background: none; /* Remove background to match design style */
-  font-size: 1.2rem; /* Increase icon size */
+  background: none;
+  font-size: 1.2rem;
   cursor: pointer;
-  padding: 6px;
-  border-radius: 6px; /* Rounded corners for buttons */
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  transition: all 0.3s ease; /* Smooth transition */
+  color: #777;
+  transition: color 0.2s ease, transform 0.15s ease;
 }
 /* Hover effect for all action buttons */
 .meal-square-actions button:hover {

@@ -69,15 +69,29 @@ const MealSlotModal: React.FC<Props> = ({
     const ingNames = (rec.ingredients || []).map((i) =>
       (i.name || "").toLowerCase()
     );
-    const available = ingNames.filter((ing) =>
-      invNames.some((n) => n.includes(ing) || ing.includes(n))
-    );
-    const missing = ingNames.filter(
-      (ing) => !invNames.some((n) => n.includes(ing) || ing.includes(n))
-    );
+
+    const available: string[] = [];
+    const missing: string[] = [];
+
+    for (const ing of ingNames) {
+      // Find matching inventory item by name
+      const match = inventory.find((i) => {
+        const invName = (i.name || "").toLowerCase();
+        return invName.includes(ing) || ing.includes(invName);
+      });
+
+      // ✅ If exists and has >0 quantity, it's "Have"
+      if (match && Number(match.quantity) > 0) {
+        available.push(match.name);
+      } else {
+        missing.push(ing);
+      }
+    }
+
     const match = ingNames.length
       ? Math.round((available.length / ingNames.length) * 100)
       : 0;
+
     return { name: rec.name, match, available, missing, _full: rec };
   }
 
@@ -87,12 +101,12 @@ const MealSlotModal: React.FC<Props> = ({
         .map(score)
         .filter((r) => r.match >= 80)
         .sort((a, b) => b.match - a.match),
-    [suggestedRecipes, invNames]
+    [suggestedRecipes, inventory] // ✅ include inventory
   );
 
   const genericList = useMemo(
     () => genericRecipes.map(score).sort((a, b) => b.match - a.match),
-    [genericRecipes, invNames]
+    [genericRecipes, inventory] // ✅ include inventory
   );
 
   function mapRecipeToInventory(recipeName: string | null): InventoryItem[] {
