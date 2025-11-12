@@ -172,7 +172,7 @@ const FoodInventory: React.FC = () => {
         setShowViewPopup(true);
       }
     }
-  }, [location.search, inventory]);
+  }, [location.search, inventory]); // ✅ opens popups dynamically
 
   const filteredInventory = useMemo(() => {
     const term = searchTerm.trim().toLowerCase();
@@ -561,7 +561,7 @@ const FoodInventory: React.FC = () => {
         <EditItemPopup
           item={selectedItem}
           onClose={() => setShowEditPopup(false)}
-          onSave={(updated) => handleUpdateItem(updated)} // ✅ fixed type
+          onSave={(updated) => handleUpdateItem(updated)}
         />
       )}
 

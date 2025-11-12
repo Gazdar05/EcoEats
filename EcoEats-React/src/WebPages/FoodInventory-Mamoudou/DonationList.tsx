@@ -1,5 +1,4 @@
-// src/pages/Inventory/DonationList.tsx
-import React, { useEffect } from "react";
+import React from "react";
 import "./DonationList.css";
 
 export interface DonationItem {
@@ -10,8 +9,9 @@ export interface DonationItem {
   expiry: string;
   storage: string;
   status: string;
+  notes?: string;
+  image?: string;
   pickupLocation?: string;
-  pickupDate?: string;
   availability?: string;
 }
 
@@ -21,51 +21,73 @@ interface DonationListProps {
 }
 
 const DonationList: React.FC<DonationListProps> = ({ donations, onClose }) => {
-  useEffect(() => {
-    document.body.classList.add("popup-open");
-    return () => document.body.classList.remove("popup-open");
-  }, []);
-
   return (
-    <div className="donation-list-overlay" onClick={onClose}>
-      <div className="donation-list-container" onClick={(e) => e.stopPropagation()}>
-        <div className="donation-list-header">
-          <h2>Donation List</h2>
-          <button className="close-donation-list" onClick={onClose}>✕</button>
-        </div>
-
-        {donations.length === 0 ? (
-          <p className="no-donations">No donations available.</p>
-        ) : (
-          <table className="donation-list-table">
-            <thead>
-              <tr>
-                <th>Item Name</th><th>Category</th><th>Quantity</th><th>Expiry</th>
-                <th>Storage</th><th>Status</th><th>Pickup Location</th><th>Pickup Date</th><th>Availability</th>
-              </tr>
-            </thead>
-            <tbody>
-              {donations.map((donation) => (
-                <tr key={donation.id}>
-                  <td>{donation.name}</td>
-                  <td>{donation.category}</td>
-                  <td>{donation.quantity}</td>
-                  <td>{donation.expiry}</td>
-                  <td>{donation.storage}</td>
-                  <td><span className={`status ${donation.status === "Expired" ? "expired" : donation.status === "Expiring Soon" ? "expiring" : "fresh"}`}>{donation.status}</span></td>
-                  <td>{donation.pickupLocation || "—"}</td>
-                  <td>{donation.pickupDate || "—"}</td>
-                  <td>{donation.availability || "Available"}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-
-        <div className="donation-list-actions">
-          <button className="close-btn" onClick={onClose}>Close</button>
-        </div>
+    <div className="donation-list-wrapper">
+      <div className="donation-header">
+        <h2>Donations</h2>
+        <button className="btn-close" onClick={onClose}>
+          Close
+        </button>
       </div>
+
+      {donations.length === 0 ? (
+        <div className="no-donations">No donations found.</div>
+      ) : (
+        <table className="donation-table">
+          <thead>
+            <tr>
+              <th>Image</th>
+              <th>Name</th>
+              <th>Category</th>
+              <th>Quantity</th>
+              <th>Expiry</th>
+              <th>Storage</th>
+              <th>Status</th>
+              <th>Pickup Location</th>
+              <th>Availability</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {donations.map((d) => (
+              <tr key={d.id} className="donation-row">
+                <td>
+                  {d.image ? (
+                    <img src={d.image} alt={d.name} className="donation-img" />
+                  ) : (
+                    "No Image"
+                  )}
+                </td>
+                <td>{d.name}</td>
+                <td>{d.category}</td>
+                <td>{d.quantity}</td>
+                <td>{d.expiry}</td>
+                <td>{d.storage}</td>
+                <td>
+                  <span
+                    className={`status-badge ${
+                      d.status === "Expired"
+                        ? "status-expired"
+                        : d.status === "Expiring Soon"
+                        ? "status-expiring"
+                        : "status-fresh"
+                    }`}
+                  >
+                    {d.status}
+                  </span>
+                </td>
+                <td>{d.pickupLocation || "-"}</td>
+                <td>{d.availability || "-"}</td>
+                <td>
+                  <button onClick={() => alert("Donated: " + d.name)}>
+                    View Donation
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
     </div>
   );
 };
