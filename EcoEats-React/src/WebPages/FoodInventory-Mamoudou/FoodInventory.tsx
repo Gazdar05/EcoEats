@@ -21,7 +21,7 @@ import DonationPopup from "./DonationPopup";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import DonationList from "./DonationList";
 import Navbar from "../../components/navbar";
-
+import { useLocation } from "react-router-dom"; // ✅ Added import
 
 const API_BASE = "http://127.0.0.1:8000";
 
@@ -52,6 +52,8 @@ interface DonationItem {
 }
 
 const FoodInventory: React.FC = () => {
+  const location = useLocation(); // ✅ for reading query params
+
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [donations, setDonations] = useState<DonationItem[]>([]);
 
@@ -152,6 +154,25 @@ const FoodInventory: React.FC = () => {
     fetchInventory();
     fetchDonations();
   }, []);
+
+  // ✅ NEW useEffect: handle query params (action=view/add/donations)
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const action = params.get("action");
+    const id = params.get("id");
+
+    if (action === "add") {
+      setShowAddPopup(true);
+    } else if (action === "donations") {
+      setShowDonationList(true);
+    } else if (action === "view" && id) {
+      const item = inventory.find((it) => it.id === id);
+      if (item) {
+        setSelectedItem(item);
+        setShowViewPopup(true);
+      }
+    }
+  }, [location.search, inventory]);
 
   const filteredInventory = useMemo(() => {
     const term = searchTerm.trim().toLowerCase();
@@ -528,8 +549,6 @@ const FoodInventory: React.FC = () => {
           </tbody>
         </table>
       </div>
-
-     
 
       {showViewPopup && selectedItem && (
         <ViewItemPopup

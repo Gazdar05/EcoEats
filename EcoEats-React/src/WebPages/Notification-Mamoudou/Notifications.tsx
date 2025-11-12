@@ -12,9 +12,10 @@ import { useNavigate } from "react-router-dom";
 
 const Notifications: React.FC = () => {
   const navigate = useNavigate();
+
   const [notifications, setNotifications] = useState([
     {
-      id: 1,
+      id: 101,
       type: "inventory",
       icon: <Leaf color="#3BAE3B" size={18} />,
       title: "Your fresh carrots are expiring in 2 days. Plan a meal!",
@@ -23,7 +24,7 @@ const Notifications: React.FC = () => {
       read: false,
     },
     {
-      id: 2,
+      id: 102,
       type: "meal",
       icon: <BookOpen color="#8BC34A" size={18} />,
       title: 'New recipe suggestion: "Lentil Stew" matches your inventory.',
@@ -32,7 +33,7 @@ const Notifications: React.FC = () => {
       read: false,
     },
     {
-      id: 3,
+      id: 103,
       type: "donation",
       icon: <Calendar color="#4CAF50" size={18} />,
       title: "Reminder: Your donation items for Harvest Hub are due tomorrow.",
@@ -41,16 +42,16 @@ const Notifications: React.FC = () => {
       read: true,
     },
     {
-      id: 4,
+      id: 104,
       type: "donation",
       icon: <Package color="#777" size={18} />,
       title: "Your food donation to Community Shelter was picked up.",
       time: "2 days ago",
-      action: "",
+      action: "View Donation",
       read: true,
     },
     {
-      id: 5,
+      id: 105,
       type: "system",
       icon: <Info color="#1976D2" size={18} />,
       title: "System Update: New features added to Donation Listing.",
@@ -59,7 +60,7 @@ const Notifications: React.FC = () => {
       read: true,
     },
     {
-      id: 6,
+      id: 106,
       type: "inventory",
       icon: <Circle color="#888" size={18} />,
       title: "Your eggs are running low. Time to restock!",
@@ -71,6 +72,7 @@ const Notifications: React.FC = () => {
 
   const [activeTab, setActiveTab] = useState("All");
 
+  // Filter notifications by tab
   const filteredNotifications =
     activeTab === "All"
       ? notifications
@@ -86,19 +88,37 @@ const Notifications: React.FC = () => {
     );
   };
 
-  // ✅ Smart routing for different actions
+  // ✅ Smart navigation per action type
   const openNotification = (note: any) => {
     markAsRead(note.id);
-    if (note.action === "Add to List") {
-      navigate("/inventory?action=add");
-    } else if (note.action === "View Item") {
-      navigate(`/inventory?action=view&id=${note.id}`);
-    } else if (note.action === "View Donation") {
-      navigate("/inventory?action=donations");
-    } else if (note.action === "View Recipe") {
-      navigate("/meals");
-    } else {
-      navigate("/notifications");
+
+    switch (note.action) {
+      case "View Item":
+        // ✅ open specific item by id
+        navigate(`/inventory?action=view&id=${note.id}`);
+        break;
+
+      case "Add to List":
+        // ✅ open AddItemPopup
+        navigate("/inventory?action=add");
+        break;
+
+      case "View Donation":
+        // ✅ open DonationList popup
+        navigate("/inventory?action=donations");
+        break;
+
+      case "View Recipe":
+        // ✅ go to meals page
+        navigate("/meals");
+        break;
+
+      case "Learn More":
+        // ❌ no redirect, only mark as read
+        break;
+
+      default:
+        break;
     }
   };
 
@@ -127,6 +147,7 @@ const Notifications: React.FC = () => {
         ))}
       </div>
 
+      {/* ✅ Scrollable list only */}
       <div className="notif-list">
         {filteredNotifications.length === 0 ? (
           <div className="no-notifs">No new notifications.</div>
@@ -145,7 +166,6 @@ const Notifications: React.FC = () => {
               {note.action && (
                 <button
                   className="notif-btn"
-                  style={{ backgroundColor: "#6EA124", color: "white" }}
                   onClick={(e) => {
                     e.stopPropagation();
                     openNotification(note);
