@@ -19,5 +19,6 @@ venv/
 # Ignore OS-specific files
 .DS_Store
 Thumbs.db
-
-
+ 
+/EcoEats-React/node_modules
+/EcoEats/node_modules
