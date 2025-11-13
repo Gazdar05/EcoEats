@@ -35,24 +35,27 @@ const Notifications: React.FC = () => {
       const mapped: FrontendNotification[] = data
         .filter((n) => !n.is_read)
         .map((n) => {
-          let type = n.type;
+          let type = n.type; // preserve backend type
           const title = (n.title || n.message || "").toLowerCase();
 
-          // Force upcoming meals to type = "meal"
+          // Identify special cases
           const isUpcomingMeal = type === "meal" && title.includes("upcoming");
-          if (isUpcomingMeal) type = "meal";
+          const isExpiringOrDeleted =
+            title.includes("expiring") ||
+            title.includes("expired") ||
+            title.includes("deleted") ||
+            title.includes("removed");
 
-          // Determine which notifications get an action button
+          // Action buttons
           const isNewOrEditedInventory =
-            type === "inventory" && (title.includes("added") || title.includes("updated") || title.includes("edited"));
+            type === "inventory" &&
+            (title.includes("added") || title.includes("updated") || title.includes("edited"));
 
           const show_action =
             (type === "donation" || isNewOrEditedInventory) &&
+            !isExpiringOrDeleted &&
             n.show_action !== false &&
-            !title.includes("expiring") &&
-            !title.includes("expired") &&
-            !title.includes("deleted") &&
-            !title.includes("removed");
+            !isUpcomingMeal;
 
           let action_label: string | undefined = undefined;
           if (type === "donation" && show_action) action_label = n.action_label || "View Donation";
@@ -60,7 +63,7 @@ const Notifications: React.FC = () => {
 
           return {
             ...n,
-            type,
+            type, // keep the correct type for tab filtering
             icon:
               type === "inventory"
                 ? <Leaf color="#3BAE3B" size={18} />
@@ -103,16 +106,19 @@ const Notifications: React.FC = () => {
       setNotifications((prev) => prev.filter((n) => n.id !== note.id));
     }
 
+    // Navigate for donation
     if ((note.action_label || "").toLowerCase() === "view donation") {
       navigate("/inventory?action=donations");
       return;
     }
 
+    // Navigate if backend provides a link
     if (note.action_link) {
       navigate(note.action_link);
       return;
     }
 
+    // Navigate to inventory item
     if (note.type === "inventory" && note.link) {
       navigate(`/inventory?action=view&id=${encodeURIComponent(note.link)}`);
       return;

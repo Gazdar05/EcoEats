@@ -17,32 +17,36 @@ async def get_notifications():
         item["id"] = str(item["_id"])
         del item["_id"]
 
-        # Ensure created_at is ISO string
         if "created_at" in item:
             item["created_at"] = item["created_at"].isoformat()
 
         title_lower = item.get("title", "").lower()
         item_type = item.get("type", "system")  # default type
 
-        # Hide action for expiring/deleted items
+        # Expiring / expired / deleted / removed
+        is_expiring_or_deleted = "expired" in title_lower or "expiring" in title_lower or "deleted" in title_lower or "removed" in title_lower
         show_action = True
-        if "expired" in title_lower or "expiring" in title_lower or "deleted" in title_lower or "removed" in title_lower:
+
+        if is_expiring_or_deleted:
             show_action = False
+            # Keep the original type (important!)
+            if item_type == "inventory":
+                item_type = "inventory"
             if item["title"] in seen_expiring_items:
                 continue
             seen_expiring_items.add(item["title"])
 
-        # Upcoming meals: always type "meal", no action needed
+        # Upcoming meals
         if item_type == "meal" and "upcoming" in title_lower:
             item_type = "meal"
-            show_action = False  # no action button
+            show_action = False
 
-        # Set action_label and action_link
+        # Set action labels and links
         action_label = None
         action_link = None
 
         if item_type == "inventory":
-            if "added" in title_lower or "updated" in title_lower or "edited" in title_lower:
+            if not is_expiring_or_deleted and ("added" in title_lower or "updated" in title_lower or "edited" in title_lower):
                 action_label = "View Item"
                 action_link = f"/inventory?action=view&id={item.get('link')}"
         elif item_type == "donation":
@@ -52,12 +56,12 @@ async def get_notifications():
         elif item_type == "system":
             action_label = "Learn More"
             action_link = None
-        # meals (including upcoming) have no action
+        # meals: upcoming or normal
         elif item_type == "meal":
             action_label = None
             action_link = None
 
-        # Ensure show_action is False if no action_label
+        # If no action_label, ensure show_action is False
         if not action_label:
             show_action = False
 
