@@ -111,9 +111,18 @@ export default function FoodAnalytics() {
       if (selectedCategory) trendsParams.append('category', selectedCategory);
 
       const trendsRes = await fetch(`${API_BASE_URL}/analytics/trends?${trendsParams}`);
-      if (!trendsRes.ok) throw new Error('Failed to fetch trends');
-      const trendsData = await trendsRes.json();
-      setTrends(trendsData.monthlyTrend || []);
+    if (!trendsRes.ok) throw new Error('Failed to fetch trends');
+    const trendsData = await trendsRes.json();
+
+    // Map backend field names (period/saved/donated/wasted) into frontend fields
+    const trendFormatted = (trendsData.trend || []).map((t: any) => ({
+      date: t.period,
+      inventory: t.saved,
+      donations: t.donated,
+    wasted: t.wasted || 0,
+  }));
+  setTrends(trendFormatted);
+
 
     } catch (err: any) {
       console.error(err);
