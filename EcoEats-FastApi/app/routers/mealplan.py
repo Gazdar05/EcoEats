@@ -1,4 +1,3 @@
-# app/routers/mealplan.py
 from fastapi import APIRouter, HTTPException, status, Body, Query
 from app.database import db
 from pydantic import BaseModel, Field
@@ -296,19 +295,15 @@ async def copy_previous_week(user_id: str, prev_week_start: str, new_week_start:
 
 
 # -----------------------------
-# ✅ Added: Frontend-compatible routes (/mealplan GET, PUT, COPY)
+# ✅ Frontend-compatible routes
 # -----------------------------
 @router.get("")
 async def frontend_get_mealplan(weekStart: str = Query(...), userId: str = Query("me")):
     """Frontend: Fetch or create empty plan for given week"""
 
-    # ✅ Normalize incoming weekStart to canonical Monday 00:00:00.000Z
     week_start = normalize_week_start(weekStart)
-
-    # ✅ Use normalized value for query
     plan = await db.meal_plans.find_one({"user_id": userId, "week_start": week_start})
     if not plan:
-        # ✅ Also store using normalized week_start
         empty = {
             "user_id": userId,
             "week_start": week_start,
@@ -330,7 +325,6 @@ async def frontend_get_mealplan(weekStart: str = Query(...), userId: str = Query
         await db.meal_plans.insert_one(empty)
         plan = empty
 
-    # ✅ fix: ensure week_start always ends with Z for FE match
     ws = plan.get("week_start")
     if ws and not ws.endswith("Z"):
         plan["week_start"] = ws + "Z"
@@ -389,7 +383,8 @@ async def frontend_save_mealplan(plan: dict = Body(...)):
 
     if meal_entries:
         await db.meal_entries.insert_many(meal_entries)
-            # 3️⃣ create notifications for each meal added (Meal Reminders)
+
+        # ✅ FIXED: create proper meal notifications under the "meal" tab
         for entry in meal_entries:
             meal_name = entry["meal"]["name"]
             slot = entry["slot"]
@@ -397,19 +392,20 @@ async def frontend_save_mealplan(plan: dict = Body(...)):
 
             await db.notifications.insert_one({
                 "user_id": user_id,
-                "type": "meal_reminder",
+                "type": "meal",  # ✅ use correct tab type
                 "title": f"Upcoming meal: {meal_name}",
                 "message": f"{slot.title()} on {day} is planned.",
-                "timestamp": datetime.utcnow(),
-                "read": False,
+                "created_at": datetime.utcnow(),  # ✅ match timestamp field
+                "is_read": False,
                 "link_to": {
                     "module": "mealplan",
                     "day": day,
                     "slot": slot
-            }
-        })
+                }
+            })
 
     return {"status": "saved", "modified": result.modified_count, "entries_saved": len(meal_entries)}
+
 
 @router.get("/entries/{user_id}/{week_start}")
 async def get_meal_entries(user_id: str, week_start: str):
@@ -433,11 +429,9 @@ async def frontend_copy_mealplan(body: dict = Body(...)):
             detail="userId, fromWeekStart, and toWeekStart are required.",
         )
 
-    # Normalize week keys
     from_week = normalize_week_start(from_week_raw)
     to_week = normalize_week_start(to_week_raw)
 
-    # Fetch the source plan
     from_plan = await db.meal_plans.find_one(
         {"user_id": user_id, "week_start": from_week}
     )
@@ -453,7 +447,6 @@ async def frontend_copy_mealplan(body: dict = Body(...)):
             detail="No source week plan to copy — previous week is empty.",
         )
 
-    # Collect ingredient IDs to validate inventory
     ingredient_ids = []
     ingredient_names = {}
     for day, slots in meals.items():
@@ -474,7 +467,6 @@ async def frontend_copy_mealplan(body: dict = Body(...)):
                     ingredient_ids.append(oid)
                     ingredient_names[str(oid)] = name
 
-    # ✅ Verify inventory quantities
     if ingredient_ids:
         inventory_docs = await db.food_items.find({"_id": {"$in": ingredient_ids}}).to_list(None)
         inventory_map = {str(doc["_id"]): int(doc.get("quantity", 0)) for doc in inventory_docs}
@@ -492,7 +484,6 @@ async def frontend_copy_mealplan(body: dict = Body(...)):
                     detail=f"Cannot copy plan — ingredient {name} is out of stock.",
                 )
 
-    # ✅ Upsert destination plan
     update_result = await db.meal_plans.update_one(
         {"user_id": user_id, "week_start": to_week},
         {
@@ -507,7 +498,6 @@ async def frontend_copy_mealplan(body: dict = Body(...)):
     if not update_result.acknowledged:
         raise HTTPException(status_code=500, detail="Failed to copy meal plan. Please try again.")
 
-    # ✅ Rebuild meal entries
     await db.meal_entries.delete_many({"user_id": user_id, "week_start": to_week})
 
     meal_entries = []

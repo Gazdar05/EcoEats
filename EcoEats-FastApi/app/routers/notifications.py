@@ -10,58 +10,61 @@ notifications = db["notifications"]
 @router.get("/")
 async def get_notifications():
     items = await notifications.find().sort("created_at", -1).to_list(length=None)
-    seen_expiring_items = set()  # to avoid duplicate notifications for expiring items
-
     result = []
+
     for item in items:
         item["id"] = str(item["_id"])
         del item["_id"]
 
+        # Ensure timestamp consistency
         if "created_at" in item:
             item["created_at"] = item["created_at"].isoformat()
+        elif "timestamp" in item:
+            # Convert legacy field if needed
+            item["created_at"] = item["timestamp"].isoformat()
+            del item["timestamp"]
 
         title_lower = item.get("title", "").lower()
-        item_type = item.get("type", "system")  # default type
+        item_type = item.get("type", "system")
 
-        # Expiring / expired / deleted / removed
-        is_expiring_or_deleted = "expired" in title_lower or "expiring" in title_lower or "deleted" in title_lower or "removed" in title_lower
-        show_action = True
-
-        if is_expiring_or_deleted:
-            show_action = False
-            # Keep the original type (important!)
-            if item_type == "inventory":
-                item_type = "inventory"
-            if item["title"] in seen_expiring_items:
-                continue
-            seen_expiring_items.add(item["title"])
-
-        # Upcoming meals
+        # ✅ Normalize types
+        if item_type == "meal_reminder":
+            item_type = "meal"
+        if "expiring" in title_lower or "expired" in title_lower:
+            item_type = "inventory"
         if item_type == "meal" and "upcoming" in title_lower:
             item_type = "meal"
-            show_action = False
 
-        # Set action labels and links
+        # ✅ Action visibility logic
+        show_action = True
+        if "deleted" in title_lower or "removed" in title_lower:
+            show_action = False
+        if item_type == "meal" and "upcoming" in title_lower:
+            show_action = False  # upcoming meals: no button
+
+        # ✅ Default action labels/links
         action_label = None
         action_link = None
 
+        # Inventory notifications
         if item_type == "inventory":
-            if not is_expiring_or_deleted and ("added" in title_lower or "updated" in title_lower or "edited" in title_lower):
+            if any(k in title_lower for k in ["added", "updated", "expiring", "expired"]):
                 action_label = "View Item"
                 action_link = f"/inventory?action=view&id={item.get('link')}"
+        # Donation notifications
         elif item_type == "donation":
             if "donated" in title_lower:
                 action_label = "View Donation"
                 action_link = "/inventory?action=donations"
-        elif item_type == "system":
-            action_label = "Learn More"
-            action_link = None
-        # meals: upcoming or normal
+        # Meal notifications
         elif item_type == "meal":
             action_label = None
             action_link = None
+        # System notifications
+        else:
+            action_label = "Learn More"
+            action_link = None
 
-        # If no action_label, ensure show_action is False
         if not action_label:
             show_action = False
 
@@ -74,7 +77,8 @@ async def get_notifications():
 
     return result
 
-# ✅ POST mark a notification as read
+
+# ✅ POST mark a single notification as read
 @router.post("/{notif_id}/mark_read")
 async def mark_as_read(notif_id: str):
     try:
@@ -90,6 +94,7 @@ async def mark_as_read(notif_id: str):
         raise HTTPException(status_code=404, detail="Notification not found")
     return {"modified_count": result.modified_count}
 
+
 # ✅ POST mark all notifications as read
 @router.post("/mark_all_read")
 async def mark_all_read():
@@ -99,7 +104,8 @@ async def mark_all_read():
     )
     return {"modified_count": result.modified_count}
 
-# Optional: GET unread notifications count
+
+# ✅ GET unread notifications count
 @router.get("/unread_count")
 async def unread_count():
     count = await notifications.count_documents({"is_read": False})
