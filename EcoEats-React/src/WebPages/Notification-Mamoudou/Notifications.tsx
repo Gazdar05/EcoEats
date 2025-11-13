@@ -33,12 +33,16 @@ const Notifications: React.FC = () => {
       const data: BackendNotification[] = await res.json();
 
       const mapped: FrontendNotification[] = data
-        // only show unread notifications in UI (you already mark read on click)
         .filter((n) => !n.is_read)
         .map((n) => {
           const title = (n.title || n.message || "").toLowerCase();
-          const isExpiring = title.includes("expiring") || title.includes("expired");
-          const isDeleted = title.includes("deleted") || title.includes("removed");
+
+          // Hide action button for expiring/expired items, deleted items, or upcoming meals
+          const isExpiringOrExpired = title.includes("expiring") || title.includes("expired");
+          const isDeletedOrRemoved = title.includes("deleted") || title.includes("removed");
+          const isUpcomingMeal = n.type === "meal" && title.includes("upcoming");
+
+          const show_action = !(isExpiringOrExpired || isDeletedOrRemoved || isUpcomingMeal) && n.show_action !== false;
 
           return {
             ...n,
@@ -52,9 +56,9 @@ const Notifications: React.FC = () => {
                 : n.type === "system"
                 ? <Info color="#1976D2" size={18} />
                 : <Circle color="#888" size={18} />,
-            // hide action for expiring, expired, or deleted notifications
-            show_action: !isExpiring && !isDeleted && n.show_action !== false,
-            action_label: n.action_label || (n.type === "donation" ? "View Donation" : "Learn More"),
+            show_action,
+            // Only donations get an action button
+            action_label: n.type === "donation" && show_action ? n.action_label || "View Donation" : undefined,
             action_link: n.action_link || n.link || "",
           };
         });
@@ -73,9 +77,7 @@ const Notifications: React.FC = () => {
 
   const markAsReadBackend = async (id: string) => {
     try {
-      await fetch(`${API_BASE}/notifications/${id}/mark_read`, {
-        method: "POST",
-      });
+      await fetch(`${API_BASE}/notifications/${id}/mark_read`, { method: "POST" });
     } catch (err) {
       console.error("Failed to mark notification as read:", err);
     }
@@ -87,6 +89,7 @@ const Notifications: React.FC = () => {
       setNotifications((prev) => prev.filter((n) => n.id !== note.id));
     }
 
+    // Navigate to donation list if it's a donation notification
     if ((note.action_label || "").toLowerCase() === "view donation") {
       navigate("/inventory?action=donations");
       return;
@@ -101,8 +104,6 @@ const Notifications: React.FC = () => {
       navigate(`/inventory?action=view&id=${encodeURIComponent(note.link)}`);
       return;
     }
-
-    return;
   };
 
   const markAllAsRead = async () => {
@@ -157,7 +158,6 @@ const Notifications: React.FC = () => {
                 <span className="notif-time">{new Date(note.created_at).toLocaleString()}</span>
               </div>
 
-              {/* ✅ Hide button for deleted notifications */}
               {note.show_action && note.action_label && (
                 <button
                   className="notif-btn"
