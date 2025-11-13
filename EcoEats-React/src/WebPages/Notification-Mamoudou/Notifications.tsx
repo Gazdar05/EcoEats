@@ -33,17 +33,12 @@ const Notifications: React.FC = () => {
       const data: BackendNotification[] = await res.json();
 
       const mapped: FrontendNotification[] = data
+        // only show unread notifications in UI (you already mark read on click)
         .filter((n) => !n.is_read)
         .map((n) => {
-          const isExpiring =
-            n.title?.toLowerCase().includes("expiring") ||
-            n.title?.toLowerCase().includes("expired");
-
-          // Automatically set donation notifications to open DonationList page
-          const actionLink =
-            n.type === "donation" ? "/food-inventory?action=donations" : n.action_link || n.link || "";
-
-          const actionLabel = n.type === "donation" ? "View Donation" : n.action_label || "Learn More";
+          const title = (n.title || n.message || "").toLowerCase();
+          const isExpiring = title.includes("expiring") || title.includes("expired");
+          const isDeleted = title.includes("deleted") || title.includes("removed");
 
           return {
             ...n,
@@ -57,9 +52,10 @@ const Notifications: React.FC = () => {
                 : n.type === "system"
                 ? <Info color="#1976D2" size={18} />
                 : <Circle color="#888" size={18} />,
-            show_action: !isExpiring && n.show_action !== false,
-            action_label: actionLabel,
-            action_link: actionLink,
+            // hide action for expiring, expired, or deleted notifications
+            show_action: !isExpiring && !isDeleted && n.show_action !== false,
+            action_label: n.action_label || (n.type === "donation" ? "View Donation" : "Learn More"),
+            action_link: n.action_link || n.link || "",
           };
         });
 
@@ -71,13 +67,15 @@ const Notifications: React.FC = () => {
 
   useEffect(() => {
     fetchNotifications();
-    const interval = setInterval(fetchNotifications, 5000);
+    const interval = setInterval(fetchNotifications, 5000); // polling every 5s
     return () => clearInterval(interval);
   }, []);
 
   const markAsReadBackend = async (id: string) => {
     try {
-      await fetch(`${API_BASE}/notifications/${id}/mark_read`, { method: "POST" });
+      await fetch(`${API_BASE}/notifications/${id}/mark_read`, {
+        method: "POST",
+      });
     } catch (err) {
       console.error("Failed to mark notification as read:", err);
     }
@@ -89,14 +87,32 @@ const Notifications: React.FC = () => {
       setNotifications((prev) => prev.filter((n) => n.id !== note.id));
     }
 
-    if (note.show_action && note.action_link) {
-      navigate(note.action_link);
+    if ((note.action_label || "").toLowerCase() === "view donation") {
+      navigate("/inventory?action=donations");
+      return;
     }
+
+    if (note.action_link) {
+      navigate(note.action_link);
+      return;
+    }
+
+    if (note.type === "inventory" && note.link) {
+      navigate(`/inventory?action=view&id=${encodeURIComponent(note.link)}`);
+      return;
+    }
+
+    return;
   };
 
   const markAllAsRead = async () => {
-    await Promise.all(notifications.map((n) => markAsReadBackend(n.id)));
-    setNotifications([]);
+    try {
+      await fetch(`${API_BASE}/notifications/mark_all_read`, { method: "POST" });
+      setNotifications([]);
+    } catch (err) {
+      console.error("Failed to mark all notifications as read:", err);
+      setNotifications([]);
+    }
   };
 
   const filteredNotifications =
@@ -137,9 +153,11 @@ const Notifications: React.FC = () => {
             >
               <div className="notif-icon">{note.icon}</div>
               <div className="notif-content">
-                <p className="notif-text">{note.title}</p>
+                <p className="notif-text">{note.title || note.message}</p>
                 <span className="notif-time">{new Date(note.created_at).toLocaleString()}</span>
               </div>
+
+              {/* ✅ Hide button for deleted notifications */}
               {note.show_action && note.action_label && (
                 <button
                   className="notif-btn"

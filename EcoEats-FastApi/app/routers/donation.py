@@ -44,7 +44,7 @@ async def convert_to_donation(
         }}
     )
 
-    # 🔔 Notify donation
+    # 🔔 Notify donation created
     await create_notification(
         title="Item Donated",
         message=f"{item['name']} has been successfully donated.",
@@ -64,3 +64,27 @@ async def get_donations():
         item["id"] = str(item["_id"])
         del item["_id"]
     return items
+
+# 🗑️ NEW: Delete donation endpoint
+@router.delete("/{item_id}", status_code=status.HTTP_200_OK)
+async def delete_donation(item_id: str):
+    try:
+        obj_id = ObjectId(item_id)
+    except InvalidId:
+        raise HTTPException(status_code=400, detail="Invalid item ID")
+
+    item = await collection.find_one({"_id": obj_id, "source": "donation"})
+    if not item:
+        raise HTTPException(status_code=404, detail="Donation not found")
+
+    await collection.delete_one({"_id": obj_id})
+
+    # 🔔 Create a notification for the deleted donation
+    await create_notification(
+        title="Donation Deleted",
+        message=f"The donation '{item['name']}' has been removed.",
+        notif_type="donation",
+        link="/donations"
+    )
+
+    return {"message": f"Donation '{item['name']}' deleted successfully."}

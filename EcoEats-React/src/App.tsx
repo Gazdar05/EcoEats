@@ -15,7 +15,7 @@ import HomePage from "./WebPages/Register-Emmeline/HomePage";
 import BrowseFood from "./WebPages/BrowseFood-Zayyan/BrowsePage";
 import Notifications from "./WebPages/Notification-Mamoudou/Notifications";
 
-// Temporary placeholder pages (until replaced with real components)
+// Temporary placeholder pages
 function MealsPage() {
   return <h1>Meal Planning</h1>;
 }
@@ -36,12 +36,16 @@ function App() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Hide navbar only on /inventory
-  const hideNavbar = location.pathname === "/inventory";
+  // Hide navbar only on /inventory and /food-inventory
+  const hideNavbar =
+    location.pathname === "/inventory" ||
+    location.pathname === "/food-inventory";
 
-  // Hide footer on /inventory and /browse
+  // Hide footer on /inventory, /food-inventory and /browse
   const hideFooter =
-    location.pathname === "/inventory" || location.pathname === "/browse";
+    location.pathname === "/inventory" ||
+    location.pathname === "/food-inventory" ||
+    location.pathname === "/browse";
 
   useEffect(() => {
     // Auto logout after 15 minutes of inactivity
@@ -99,6 +103,18 @@ function App() {
             </ProtectedRoute>
           }
         />
+
+        {/* ✅ Food Inventory (supports ?action=donations) */}
+        <Route
+          path="/food-inventory"
+          element={
+            <ProtectedRoute>
+              <FoodInventory />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* ✅ Keep old /inventory route working */}
         <Route
           path="/inventory"
           element={
@@ -107,6 +123,7 @@ function App() {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/meals"
           element={

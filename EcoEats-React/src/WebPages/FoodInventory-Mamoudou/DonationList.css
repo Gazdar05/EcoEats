@@ -1,18 +1,19 @@
 /* ===============================
-   Donation List Table Styles (Inline Below Inventory)
+   Donation List Table Styles
    =============================== */
 
-/* Wrapper now flows below the inventory table */
+/* Wrapper */
 .donation-list-wrapper {
-  padding: 20px;
+  padding: 25px;
   max-width: 1200px;
   width: 95%;
-  margin: 2rem auto; /* spacing below inventory table */
-  font-family: Arial, sans-serif;
-  background-color: #fff;
-  border-radius: 10px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+  margin: 2rem auto;
+  font-family: 'Inter', Arial, sans-serif;
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
   position: relative;
+  transition: all 0.3s ease;
 }
 
 /* Header */
@@ -24,8 +25,8 @@
 }
 
 .donation-header h2 {
-  font-size: 24px;
-  font-weight: 600;
+  font-size: 26px;
+  font-weight: 700;
   color: #111827;
 }
 
@@ -33,10 +34,17 @@
   background: #ef4444;
   color: white;
   border: none;
-  border-radius: 6px;
-  padding: 6px 12px;
+  border-radius: 8px;
+  padding: 8px 14px;
   cursor: pointer;
   font-size: 14px;
+  font-weight: 500;
+  transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.btn-close:hover {
+  background: #dc2626;
+  transform: scale(1.05);
 }
 
 /* No donations text */
@@ -44,7 +52,17 @@
   text-align: center;
   font-size: 16px;
   color: #6b7280;
-  padding: 2rem 0;
+  padding: 3rem 0;
+  font-style: italic;
+}
+
+/* Scrollable table container */
+.donation-table-container {
+  max-height: 500px;
+  overflow-y: auto;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.05);
 }
 
 /* Table */
@@ -52,14 +70,11 @@
   width: 100%;
   border-collapse: collapse;
   background-color: #fff;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  border-radius: 8px;
-  overflow: hidden;
 }
 
 .donation-table th,
 .donation-table td {
-  padding: 12px 15px;
+  padding: 14px 18px;
   text-align: left;
   border-bottom: 1px solid #e5e7eb;
   font-size: 14px;
@@ -70,11 +85,16 @@
   background-color: #f9fafb;
   font-weight: 600;
   color: #111827;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
+/* Rows */
 .donation-row {
-  transition: background 0.2s, transform 0.2s;
-  cursor: pointer;
+  transition: background 0.25s ease, transform 0.2s ease;
 }
 
 .donation-row:hover {
@@ -82,21 +102,24 @@
   transform: translateY(-1px);
 }
 
+/* Images */
 .donation-img {
-  width: 50px;
-  height: 50px;
+  width: 55px;
+  height: 55px;
   object-fit: cover;
-  border-radius: 6px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
 }
 
 /* Status badges */
 .status-badge {
-  font-weight: 500;
-  padding: 4px 8px;
-  border-radius: 6px;
+  font-weight: 600;
+  padding: 5px 10px;
+  border-radius: 8px;
   font-size: 0.8rem;
   display: inline-block;
   text-align: center;
+  min-width: 80px;
 }
 
 .status-fresh {
@@ -114,12 +137,43 @@
   background-color: #fee2e2;
 }
 
+/* Delete button */
+.btn-delete {
+  background: #ef4444;
+  color: #fff;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.25s ease;
+}
+
+.btn-delete:hover {
+  background: #dc2626;
+  transform: scale(1.05);
+}
+
 /* Responsive adjustments */
+@media (max-width: 1024px) {
+  .donation-table th,
+  .donation-table td {
+    padding: 12px 10px;
+    font-size: 13px;
+  }
+
+  .donation-img {
+    width: 45px;
+    height: 45px;
+  }
+}
+
 @media (max-width: 768px) {
   .donation-table th,
   .donation-table td {
     font-size: 12px;
-    padding: 8px 10px;
+    padding: 10px 8px;
   }
 
   .donation-img {
@@ -145,7 +199,7 @@
   .donation-table td {
     display: flex;
     justify-content: space-between;
-    padding: 8px;
+    padding: 8px 10px;
     border-bottom: 1px solid #e5e7eb;
     position: relative;
   }
@@ -154,16 +208,23 @@
     content: attr(data-label);
     font-weight: 600;
     color: #111827;
+    width: 45%;
   }
 
   .donation-row {
     margin-bottom: 12px;
-    border-radius: 8px;
+    border-radius: 10px;
     background: #fff;
-    padding: 8px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    padding: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  }
+
+  .btn-delete {
+    padding: 5px 10px;
+    font-size: 12px;
   }
 }
+
 /* ===============================
    End of Donation List Table Styles
    =============================== */
