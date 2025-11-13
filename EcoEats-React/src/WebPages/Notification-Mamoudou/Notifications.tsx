@@ -35,30 +35,44 @@ const Notifications: React.FC = () => {
       const mapped: FrontendNotification[] = data
         .filter((n) => !n.is_read)
         .map((n) => {
+          let type = n.type;
           const title = (n.title || n.message || "").toLowerCase();
 
-          // Hide action button for expiring/expired items, deleted items, or upcoming meals
-          const isExpiringOrExpired = title.includes("expiring") || title.includes("expired");
-          const isDeletedOrRemoved = title.includes("deleted") || title.includes("removed");
-          const isUpcomingMeal = n.type === "meal" && title.includes("upcoming");
+          // Force upcoming meals to type = "meal"
+          const isUpcomingMeal = type === "meal" && title.includes("upcoming");
+          if (isUpcomingMeal) type = "meal";
 
-          const show_action = !(isExpiringOrExpired || isDeletedOrRemoved || isUpcomingMeal) && n.show_action !== false;
+          // Determine which notifications get an action button
+          const isNewOrEditedInventory =
+            type === "inventory" && (title.includes("added") || title.includes("updated") || title.includes("edited"));
+
+          const show_action =
+            (type === "donation" || isNewOrEditedInventory) &&
+            n.show_action !== false &&
+            !title.includes("expiring") &&
+            !title.includes("expired") &&
+            !title.includes("deleted") &&
+            !title.includes("removed");
+
+          let action_label: string | undefined = undefined;
+          if (type === "donation" && show_action) action_label = n.action_label || "View Donation";
+          if (isNewOrEditedInventory && show_action) action_label = n.action_label || "View Item";
 
           return {
             ...n,
+            type,
             icon:
-              n.type === "inventory"
+              type === "inventory"
                 ? <Leaf color="#3BAE3B" size={18} />
-                : n.type === "meal"
+                : type === "meal"
                 ? <BookOpen color="#8BC34A" size={18} />
-                : n.type === "donation"
+                : type === "donation"
                 ? <Calendar color="#4CAF50" size={18} />
-                : n.type === "system"
+                : type === "system"
                 ? <Info color="#1976D2" size={18} />
                 : <Circle color="#888" size={18} />,
             show_action,
-            // Only donations get an action button
-            action_label: n.type === "donation" && show_action ? n.action_label || "View Donation" : undefined,
+            action_label,
             action_link: n.action_link || n.link || "",
           };
         });
@@ -71,7 +85,7 @@ const Notifications: React.FC = () => {
 
   useEffect(() => {
     fetchNotifications();
-    const interval = setInterval(fetchNotifications, 5000); // polling every 5s
+    const interval = setInterval(fetchNotifications, 5000);
     return () => clearInterval(interval);
   }, []);
 
@@ -89,7 +103,6 @@ const Notifications: React.FC = () => {
       setNotifications((prev) => prev.filter((n) => n.id !== note.id));
     }
 
-    // Navigate to donation list if it's a donation notification
     if ((note.action_label || "").toLowerCase() === "view donation") {
       navigate("/inventory?action=donations");
       return;
