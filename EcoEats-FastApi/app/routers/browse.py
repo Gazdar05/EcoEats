@@ -26,7 +26,7 @@ def serialize_item(item):
     return item
 
 
-# ✅ Get all items with optional filters
+# Get all items with optional filters
 @router.get("/items")
 async def get_items(
     source: str | None = Query(None, description="inventory or donation"),
@@ -38,10 +38,13 @@ async def get_items(
     query = {}
 
     # filters based on query params
+
     if source:
         query["source"] = source
+
     if categories:
         query["category"] = {"$in": categories}
+
     if storage and storage.lower() != "all":
         query["storage"] = {"$regex": f"^{storage}$", "$options": "i"}
 
@@ -69,7 +72,7 @@ async def get_items(
     return results
 
 
-# ✅ Get one item details
+# Get one item details
 @router.get("/item/{item_id}")
 async def get_item(item_id: str):
     try:
@@ -83,7 +86,7 @@ async def get_item(item_id: str):
     return serialize_item(item)
 
 
-# ✅ Mark an item as used
+# Mark an item as used
 @router.put("/item/{item_id}/mark-used")
 async def mark_item_used(item_id: str):
     item = await db.food_items.find_one({"_id": ObjectId(item_id)})
@@ -102,7 +105,7 @@ async def mark_item_used(item_id: str):
         return {"status": "item removed"}
 
 
-# ✅ Plan a meal (reserve item)
+# Plan a meal (reserve item)
 @router.put("/item/{item_id}/plan-meal")
 async def plan_meal(item_id: str):
     result = await db.food_items.update_one(
@@ -114,7 +117,7 @@ async def plan_meal(item_id: str):
     return {"status": "reserved for meal"}
 
 
-# ✅ Flag for donation
+# Flag for donation
 @router.put("/item/{item_id}/flag-donation")
 async def flag_donation(
     item_id: str,
@@ -137,7 +140,7 @@ async def flag_donation(
     return {"status": "flagged for donation"}
 
 
-# ✅ Remove from donation
+# Remove from donation
 @router.put("/item/{item_id}/remove-donation")
 async def remove_donation(item_id: str):
     result = await db.food_items.update_one(
@@ -149,7 +152,7 @@ async def remove_donation(item_id: str):
     return {"status": "removed from donation"}
 
 
-# ✅ Mark item as donated
+# Mark item as donated
 @router.put("/item/{item_id}/mark-donated")
 async def mark_donated(item_id: str):
     result = await db.food_items.update_one(

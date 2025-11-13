@@ -1,0 +1,1546 @@
+    /* src/WebPage/PlanWeeklyMeals/PlanWeeklyMeals.css */
+    /* Reuse theme variables from BrowseFood for consistent look */
+    :root {
+    --eco-green: #6EA124;
+    --muted: #666;
+    --border: #e6e6e6;
+    --card-bg: #fff;
+    --fp-width: 320px;
+    --nav-height: 58px;
+    }
+
+    /* page wrapper */
+    .meal-wrap {
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    gap: 20px;
+    }
+
+    /* left (main) */
+    .meal-main {
+    flex: 1;
+    }
+/* --- Layout alignment fixes --- */
+.main-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 28px;
+  width: 100%;
+  position: relative;
+}
+
+.main-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+  width: 100%;
+  box-sizing: border-box;
+  /* keep a small fixed height so planner below doesn't shift */
+  height: 56px;
+}
+
+    .main-top h2 {
+    flex: 1;
+    text-align: left;
+    }
+
+    .main-controls {
+    flex: 1;
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    align-items: center;
+    
+    }
+/* --- WEEK CONTROLS: fixed wide bar, one-line text --- */
+.week-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: #f7f9f7;
+  padding: 10px 18px;
+  border-radius: 10px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  box-sizing: border-box;
+
+  /* FIXED WIDTH — this keeps it stable */
+  width: 780px;          /* ⬅️ make it comfortably wide */
+  flex: 0 0 780px;       /* keeps size fixed even when week text changes */
+  height: 60px;
+  transform: translateX(-60px);
+}
+
+
+/* week navigation buttons */
+.week-btn {
+  background: var(--eco-green);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  width: 34px;
+  height: 34px;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.1s ease;
+}
+
+.week-btn:hover {
+  background: #5a8d1e;
+  transform: translateY(-1px);
+}
+/* Week label: allow two-line wrap, centered, responsive font */
+.week-label {
+  flex: 1;
+  text-align: center;
+  font-weight: 600;
+  font-size: 1rem;
+  color: #222;
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 6px 14px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+
+  white-space: nowrap;       /* keep on one line */
+  overflow: visible;         /* don't clip or add ... */
+  text-overflow: unset;      /* no ellipsis */
+  min-width: 300px;          /* enough space for week text */
+  max-width: 380px;          /* consistent look */
+}
+
+/* When viewport is very narrow, fallback: let bar become flexible */
+
+.week-picker {
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 4px 6px;
+  background: #fdfdfd;
+  color: #333;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: border 0.2s ease, box-shadow 0.2s ease;
+}
+.week-picker:hover,
+.week-picker:focus {
+  border-color: var(--eco-green);
+  box-shadow: 0 0 0 2px rgba(110, 161, 36, 0.2);
+  outline: none;
+}
+/* this week button */
+.week-today-btn {
+  background: #f1f9f2;
+  color: var(--eco-green);
+  border: 1px solid var(--eco-green);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  background-color: var(--eco-green);
+}
+
+.week-today-btn:hover {
+  background: var(--eco-green);
+  color:var(--eco-green);
+  transform: translateY(-1px);
+}
+    /* week navigation buttons */
+/* week navigation buttons - cleaner flat style */
+.week-controls button {
+  border: none;
+  background: transparent;
+  color: var(--eco-green);
+  font-size: 1.2rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.25s ease;
+}
+
+.week-controls button:hover {
+  background: rgba(110, 161, 36, 0.1); /* subtle green tint */
+  transform: translateY(-1px);
+}
+
+.week-controls button:active {
+  transform: translateY(1px);
+  opacity: 0.85;
+}
+
+.week-controls .week-label {
+  font-weight: 600;
+  padding: 6px 14px;
+  font-size: 1rem;
+  color: #222;
+  background: #f8f8f8;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+
+
+
+    /* grid area for planner */
+    .planner-grid {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.04);
+    min-height: 520px;
+    }
+
+    /* calendar structure */
+    .meal-calendar { width: 100%; }
+    .calendar-top {
+    display: grid;
+    grid-template-columns: 160px repeat(7, 1fr);
+    gap: 12px; /* increased spacing between columns */
+    align-items: center;
+    margin-bottom: 16px;
+    }
+   .calendar-top {
+  display: grid;
+  grid-template-columns: 120px repeat(7, 1fr);
+  gap: 8px; /* slightly tighter horizontally */
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.calendar-day {
+  text-align: center;
+  font-weight: 700;
+  color: #111;
+  font-size: 0.95rem;
+}
+
+/* rows for each meal time */
+.calendar-body {
+  display: grid;
+  gap: 12px; /* smaller vertical gaps */
+}
+
+.calendar-row {
+  display: grid;
+  grid-template-columns: 120px repeat(7, 1fr);
+  gap: 8px;
+  align-items: start;
+}
+
+.calendar-slot-label {
+  font-weight: 700;
+  padding-top: 6px; /* closer to grid */
+  font-size: 0.95rem;
+  text-align: left;
+}
+
+/* === Meal Slot Content Fix === */
+.calendar-cell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: stretch;
+  height: 140px;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #fff;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.calendar-cell:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+}
+
+.meal-slot-section {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #fff;
+  margin-bottom: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.meal-slot-header {
+  background: #f6f9f5;
+  padding: 10px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  font-weight: 600;
+  border-bottom: 1px solid #eee;
+}
+
+.meal-slot-body {
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+/* ============================= */
+/* === IMPROVED MEAL CARD === */
+/* ============================= */
+.meal-card {
+  border: 1px solid #e3e3e3;
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: #fafafa;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: box-shadow 0.25s ease, transform 0.15s ease;
+}
+
+.meal-card:hover {
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+  background: #fff;
+}
+
+/* Meal name + meta area */
+.meal-name {
+  font-size: 0.88rem;          /* slightly larger text */
+  font-weight: 600;
+  color: #222;
+  letter-spacing: 0.2px;
+  margin-bottom: 2px;
+}
+
+.meal-meta {
+  font-size: 0.75rem;
+  color: #777;
+  font-weight: 500;
+}
+
+/* Optional icon/image */
+.meal-card img {
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-right: 10px;
+}
+
+/* action icons/buttons */
+.meal-actions {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-top: auto;
+  flex-shrink: 0;
+}
+
+.meal-actions button {
+  background: transparent;
+  border: none;
+  color: var(--eco-green);
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 1rem;
+  transition: color 0.2s ease, transform 0.1s ease;
+}
+
+.meal-actions button:hover {
+  color: #2e7d32;
+  transform: scale(1.15);
+}
+
+/* small neat layout of multiple cards */
+.meal-list {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-auto-rows: 1fr;
+  gap: 6px;
+  width: 100%;
+  margin-bottom: 6px;
+  overflow: hidden;
+}
+
+/* Add button fits neatly below grid */
+.add-meal-btn {
+  border: 1px dashed var(--eco-green);
+  background: #f9fff6;
+  color: #333;
+  font-size: 0.8rem;
+  border-radius: 8px;
+  padding: 6px 10px;
+  cursor: pointer;
+  text-align: center;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.add-meal-btn:hover {
+  background: var(--eco-green);
+  color: #fff;
+}
+
+/* Right sidebar stays aligned with planner grid */
+.meal-right {
+  width: 300px;
+  align-self: flex-start;
+  margin-top: 46px; /* ✅ matches header height */
+}
+
+    /* RIGHT SIDEBAR uses same fp-panel style as BrowseFood */
+    .fp-panel {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    box-sizing: border-box;
+    font-size: 0.9rem;
+
+
+    }
+    .fp-panel h3.fp-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    margin-bottom: 10px;
+    color: #222;
+    }
+.inventory-list {
+  max-height: 420px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  padding-right: 12px; /* creates space between list text and scrollbar */
+  margin-right: -6px;  /* pulls scrollbar slightly outside the panel edge */
+
+  /* scrollbar styling */
+  scrollbar-width: thin;
+  scrollbar-color: var(--eco-green) #f2f2f2;
+}
+/* Chrome, Edge, Safari */
+.inventory-list::-webkit-scrollbar {
+  width: 6px;
+  margin-left: 4px; /* visually nudges scrollbar rightward */
+}
+.inventory-list::-webkit-scrollbar-track {
+  background: #f2f2f2;
+  border-radius: 10px;
+}
+.inventory-list::-webkit-scrollbar-thumb {
+  background-color: var(--eco-green);
+  border-radius: 10px;
+}
+
+.inventory-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 4px 22px 4px;   /* increased bottom padding */
+  border-bottom: 1px solid #f1f1f1;
+  transition: background 0.2s;
+}
+
+    .inventory-item:hover {
+    background: #fafafa;
+    }
+
+    .inventory-item-left {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    }
+
+    .inventory-item-name {
+    font-weight: 600;
+    font-size: 0.9rem;
+    }
+
+    .inventory-item-meta {
+    font-size: 0.8rem;
+    color: var(--muted);
+    }
+.inventory-item-right {
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px; /* pushes "Used this week" slightly down */
+}
+
+
+    .inventory-expiry {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--eco-green);
+    }
+
+    .inventory-expiry.expired {
+    color: #d60000;
+    }
+
+    .inventory-reserved {
+    font-size: 0.75rem;
+    color: #999;
+    }
+    /* improve usage hint row */
+.inventory-reserved-used {
+  margin-top: 2px;
+  font-size: 0.8rem;       /* same as .inventory-item-meta */
+  color: var(--muted);     /* same muted tone */
+  font-weight: 500;
+}
+
+
+  /* =======================
+   MealSlotModal Styling
+   ======================= */
+
+/* Overlay background */
+.detail-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3000;
+}
+
+/* Modal card */
+.detail-card {
+  background: #fff;
+  width: 680px;
+  max-width: 95%;
+  border-radius: 16px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.15);
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  animation: fadeInUp 0.25s ease-out;
+}
+
+/* Header */
+.detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid #f0f0f0;
+  padding-bottom: 8px;
+}
+
+.detail-header h3 {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.close-x {
+  background: none;
+  border: none;
+  font-size: 1.3rem;
+  color: #888;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.close-x:hover {
+  color: #333;
+}
+
+/* Tabs */
+.meal-modal-tabs {
+  display: flex;
+  gap: 6px;
+  background: #f8f8f8;
+  border-radius: 10px;
+  padding: 4px;
+}
+ .meal-modal-tabs button {
+  flex: 1;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  padding: 8px 10px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #555;
+  transition: background 0.2s, color 0.2s;
+}
+
+.meal-modal-tabs button.active {
+  background: #6ea124;
+  color: #fff;
+}
+
+/* Recipe list area */
+.suggested-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 350px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+/* Recipe card */
+.fp-recipe-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: #fafafa;
+  border: 1px solid #eee;
+  border-radius: 12px;
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.fp-recipe-card:hover {
+  background: #f2fbe8;
+  border-color: #c8e4b8;
+}
+
+.fp-recipe-card input[type="radio"] {
+  margin-top: 5px;
+  accent-color: #6ea124;
+}
+
+.recipe-info {
+  flex: 1;
+}
+
+.recipe-title {
+  font-weight: 600;
+  color: #333;
+  font-size: 1rem;
+  margin-bottom: 4px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.recipe-title .match {
+  font-weight: 500;
+  font-size: 0.9rem;
+  color: #6ea124;
+}
+
+.recipe-detail {
+  font-size: 0.85rem;
+  color: #555;
+  line-height: 1.4;
+}
+
+.recipe-detail .missing {
+  color: #b24b4b;
+  margin-top: 2px;
+}
+
+/* Custom meal section */
+.custom-area input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  margin-bottom: 10px;
+  font-size: 0.95rem;
+}
+
+.custom-subtitle {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #555;
+  margin-bottom: 8px;
+}
+
+.fp-cats {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow-y: auto;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: 10px;
+  background: #fdfdfd;
+}
+
+.fp-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  color: #333;
+}
+
+.fp-checkbox input {
+  accent-color: #6ea124;
+}
+
+/* Footer buttons */
+.detail-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  border-top: 1px solid #f0f0f0;
+  padding-top: 12px;
+}
+
+.detail-actions button {
+  padding: 8px 16px;
+  font-size: 0.95rem;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.2s, color 0.2s;
+}
+
+/* Cancel */
+.fp-clear {
+  background: #eee;
+  color: #333;
+}
+.fp-clear:hover {
+  background: #ddd;
+}
+
+/* Confirm */
+.detail-actions button:not(.fp-clear) {
+  background: #6ea124;
+  color: #fff;
+}
+.detail-actions button:not(.fp-clear):hover {
+  background: #5b8820;
+}
+
+/* ✅ Updated scrollbar styling for all recipe lists */
+.suggested-list::-webkit-scrollbar,
+.fp-cats::-webkit-scrollbar {
+  width: 6px;
+}
+
+.suggested-list::-webkit-scrollbar-thumb,
+.fp-cats::-webkit-scrollbar-thumb {
+  background: var(--eco-green);
+  border-radius: 6px;
+}
+
+.suggested-list::-webkit-scrollbar-thumb:hover,
+.fp-cats::-webkit-scrollbar-thumb:hover {
+  background: var(--eco-green-dark);
+}
+
+.suggested-list::-webkit-scrollbar-track,
+.fp-cats::-webkit-scrollbar-track {
+  background: #f2f2f2;
+}
+/* Minimal — only change the custom meal name typing bar (no layout/width changes) */
+.detail-card .custom-area > input {
+  background: #ffffff;       /* white background only */
+  color: #222;               /* readable text color */
+  border-color: #ccc;        /* keep same border tone */
+  box-shadow: none;          /* do not change overall box model */
+}
+
+/* subtle placeholder color (doesn't affect layout) */
+.detail-card .custom-area > input::placeholder {
+  color: #9aa0a6;
+  opacity: 1;
+}
+
+/* friendly focus state — only visual highlight, no sizing changes */
+.detail-card .custom-area > input:focus {
+  outline: none;
+  border-color: var(--eco-green);
+  box-shadow: 0 0 0 4px rgba(110, 161, 36, 0.08);
+}
+
+/* Animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+
+    /* modal body */
+    .meal-modal-body {
+    max-height: 360px;
+    overflow: auto;
+    }
+
+    /* reuse fp-checkbox styles */
+    .fp-checkbox {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    font-size: 0.95rem;
+    color: black;
+    margin-bottom: 8px;
+    }
+    .fp-checkbox input {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--eco-green);
+    cursor: pointer;
+    }
+
+    /* actions */
+    .detail-actions {
+    display: flex;
+    justify-content: space-between;
+    gap: 6px;
+    margin-top: 8px;
+    }
+    .detail-actions button {
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: none;
+    background: var(--eco-green);
+    color: #fff;
+    cursor: pointer;
+    }
+    .detail-actions .fp-clear {
+    background: whitesmoke;
+    color: #111;
+    border: 1px solid #ccc;
+    }
+
+    /* responsive */
+    @media (max-width: 1100px) {
+    .meal-wrap { grid-template-columns: 1fr; }
+    .planner-grid { min-height: 420px; }
+    .calendar-top, .calendar-row { grid-template-columns: 100px repeat(7, 1fr); }
+    }
+
+/* === Day Tabs for Single-Day MealCalendar === */
+.day-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.day-tab {
+  background: #f5f5f5;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 6px 10px;
+  cursor: pointer;
+  font-weight: 600;
+  color: #333;
+  transition: all 0.2s ease;
+}
+
+.day-tab:hover {
+  background: #eef9e6;
+}
+
+.day-tab.active {
+  background: var(--eco-green);
+  color: white;
+  border-color: var(--eco-green);
+}
+/* === Meal Grid Wrapper === */
+/* --- Meal grid wrapper --- */
+.meal-calendar-grid-wrapper {
+  width: 100%;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 20px; /* slightly more padding */
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.05);
+}
+.meal-grid-title {
+  margin-bottom: 12px;
+  font-size: 1.1rem;
+  color: var(--eco-green);
+  text-align: center;
+}
+
+/* === Meal Calendar Grid === */
+/* --- 2x2 grid layout --- */
+/* ✅ slightly larger, square-looking, evenly spaced */
+/* === Meal Calendar Grid (smaller version) === */
+.meal-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* two wide columns */
+  grid-template-rows: repeat(2, 180px);  /* two rows */
+  gap: 18px; /* spacing between rectangles */
+  width: 100%;
+  max-width: 100%;
+  padding: 0 24px; /* balanced space inside white wrapper */
+  box-sizing: border-box;
+}
+
+/* === Day Header (plain text, not a box) === */
+.grid-day-header {
+  font-weight: 700;
+  font-size: 1rem;
+  color: #222;
+  text-align: center;
+  margin-bottom: 12px;
+  background: none;      /* remove background box */
+  border: none;          /* remove borders */
+  border-radius: 0;      /* remove rounded edges */
+  box-shadow: none;      /* remove shadow */
+  padding: 0;            /* no padding */
+}
+
+/* === Meal Cell === */
+
+/* --- Each square box --- */
+.meal-square {
+  position: relative;
+  background: #fafafa;
+  border: 1px solid #e2e2e2;
+  border-radius: 12px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  width: 100%;
+  height: 100%;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+}
+/* Meal Grid Card Hover Effects */
+.meal-square:hover {
+  background: var(--eco-green); /* Light green background on hover */
+  color: #fff; /* White text on hover */
+  transform: translateY(-3px); /* Slight lift effect */
+  box-shadow: 0 6px 14px rgba(110, 161, 36, 0.2); /* Drop shadow effect */
+}
+/* === Filled Meal Card === */
+.meal-square-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  width: 100%;
+  height: 100%;
+  gap: 6px;
+  padding: 6px 4px;
+  transition: transform 0.2s ease, box-shadow 0.25s ease;
+}
+
+.meal-square-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+}
+
+/* === Optional meal content (text or image) === */
+.meal-square-content {
+  font-size: 0.9rem;
+  color: #666;
+  opacity: 0.9;
+  text-align: center;
+}
+/* Add Meal Button (same as before, but ensure size is consistent) */
+.add-square-btn {
+  border: 1px dashed var(--eco-green);
+  background: #f9fff6;
+  color: #333;
+  font-size: 1rem; /* Larger font size for the "Add Meal" button */
+  border-radius: 8px;
+  padding: 10px;
+  cursor: pointer;
+  width: 100%;
+  transition: all 0.2s ease;
+  margin-top: 10px;
+}
+.add-square-btn:hover {
+  background: var(--eco-green);
+  color: #fff;
+}
+
+
+/* Image inside the meal card */
+/* Meal image (if any) */
+.meal-square-img {
+  width: 68%;
+  height: 72px;
+  object-fit: cover;
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+
+/* Placeholder for meal image when none exists */
+.meal-square-placeholder {
+  font-size: 1rem;
+  color: #666; /* Grey color for placeholder */
+  opacity: 0.8;
+  margin-top: 10px;
+}
+
+/* Meal Content (Image, Name, Ingredients) */
+/* Meal name text */
+.meal-square-name {
+  font-size: 0.95rem;               /* bigger but still fits */
+  font-weight: 700;
+  color: #333;
+  letter-spacing: 0.25px;
+  margin-top: 4px;
+  line-height: 1.3;
+}
+/* Meal Title Styling */
+.meal-square-title {
+  font-weight: 700;
+  font-size: 1rem;
+  margin-bottom: 8px;
+  color: #333;
+  text-align: center;
+}
+
+
+/* Ingredient count text */
+.meal-square-meta {
+  font-size: 0.8rem;
+  color: #6b6b6b;
+  font-weight: 500;
+  margin-top: 2px;
+}
+/* === Action Buttons === */
+/* === Action Buttons & Meal Content === */
+/* === Action Buttons & Meal Content === */
+/* Meal Square Action Buttons */
+/* Meal Square Action Buttons */
+/* Icons below meal */
+.meal-square-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+/* Default button styles (for all icons) */
+.meal-square-actions button {
+  border: none;
+  background: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: #777;
+  transition: color 0.2s ease, transform 0.15s ease;
+}
+/* Hover effect for all action buttons */
+.meal-square-actions button:hover {
+  transform: scale(1.1); /* Slightly enlarge on hover */
+}
+
+/* Edit Button (Pencil) */
+.meal-square-actions button.edit-btn {
+  color:lightblue; /* Orange color for pencil icon */
+}
+
+.meal-square-actions button.edit-btn:hover {
+  background: lightblue; /* Orange background on hover */
+  color: #fff; /* White icon on hover */
+}
+
+/* Remove Button (Trash Can) */
+.meal-square-actions button.delete-btn {
+  color: red; /* Red color for trash icon */
+}
+
+.meal-square-actions button.delete-btn:hover {
+  background: red; /* Red background on hover */
+  color: #fff; /* White icon on hover */
+}
+
+/* Add meal button */
+/* === Add Meal Button inside Box === */
+.add-square-btn {
+  border: 1px dashed var(--eco-green);
+  background: #f9fff6;
+  color: #333;
+  font-size: 0.8rem;
+  border-radius: 8px;
+  padding: 6px 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 10px;
+}
+
+.add-square-btn:hover {
+  background: var(--eco-green);
+  color: #fff;
+}
+/* Meal title label (Breakfast, Lunch...) */
+/* ✅ Meal title inside box (Breakfast, Lunch, etc.) */
+/* === Title inside (Breakfast, Lunch, etc.) === */
+.meal-square-title {
+  font-weight: 700;
+  font-size: 1rem;
+  margin-bottom: 10px;
+  color: inherit;
+}
+
+/* === Responsive stacking (mobile) === */
+/* Responsive Layout for Small Screens */
+@media (max-width: 650px) {
+  .meal-calendar-grid {
+    grid-template-columns: 1fr; /* Single column layout for smaller screens */
+    grid-template-rows: auto;  /* Adjust height accordingly */
+  }
+}
+/* Add larger pencil and trash icons */
+.meal-square-actions button svg {
+  font-size: 1.2rem; /* Increase size of icons (pencil & trash can) */
+  display: inline-block;
+  margin-right: 4px; /* space between icon and text */
+}/* Add Meal Button (same as before, but ensure size is consistent) */
+.add-square-btn {
+  border: 1px dashed var(--eco-green);
+  background: #f9fff6;
+  color: #333;
+  font-size: 1rem; /* Larger font size for the "Add Meal" button */
+  border-radius: 8px;
+  padding: 10px;
+  cursor: pointer;
+  width: 100%;
+  transition: all 0.2s ease;
+  margin-top: 10px;
+}
+
+.add-square-btn:hover {
+  background: var(--eco-green);
+  color: #fff;
+}
+/* ✅ Make date dropdown appear with a white-looking popup feel */
+input[type="date"].week-picker {
+  appearance: auto;
+  -webkit-appearance: auto;
+  background-color: #fff; /* white base */
+  color: #222;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: border 0.2s ease, box-shadow 0.2s ease;
+}
+/* Hover + Focus for better contrast */
+input[type="date"].week-picker:hover,
+input[type="date"].week-picker:focus {
+  border-color: var(--eco-green);
+  box-shadow: 0 0 0 2px rgba(110, 161, 36, 0.15);
+  background-color: #fff;
+  color: #222;
+}
+
+
+/* Calendar picker icon */
+input[type="date"].week-picker::-webkit-calendar-picker-indicator {
+  filter: invert(39%) sepia(53%) saturate(414%) hue-rotate(49deg)
+    brightness(95%) contrast(90%);
+  cursor: pointer;
+}
+.live-usage-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.lu-box {
+  flex:1;
+  background:#f6f9f5;
+  border:1px solid #e3e3e3;
+  border-radius:8px;
+  padding:6px 8px;
+  font-size:0.8rem;
+  font-weight:600;
+  text-align:center;
+  color:#222;
+}
+/* ======================
+   Qty Selector Styling
+   ====================== */
+
+/* Eco-green scrollbars for any scrollable qty panel */
+.qty-panel {
+  /* no overflow forced here; your JSX sets it when needed */
+  scrollbar-width: thin;
+  scrollbar-color: var(--eco-green) #f2f2f2;
+}
+
+.qty-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+  color: #222;
+}
+
+.qty-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 0;
+  border-bottom: 1px solid #f1f1f1;
+}
+
+.qty-left .qty-name {
+  font-weight: 600;
+  font-size: 0.88rem;
+  color: #333;
+}
+
+.qty-left .qty-meta {
+  font-size: 0.75rem;
+  color: #888;
+  margin-top: 2px;
+}
+
+.qty-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* input alignment fix – match +/- buttons exactly */
+.qty-input {
+  width: 24px;
+  height: 24px;
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+  text-align: center;
+  line-height: 24px;      /* centers the digit */
+  font-size: 0.85rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background: #fff;
+  vertical-align: middle; /* ensure same baseline in some browsers */
+}
+
+.qty-btn:hover:not(:disabled) {
+  border-color: var(--eco-green);
+  background: #f7fff2;
+  color: var(--eco-green);
+  transform: translateY(-1px);
+}
+
+.qty-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* input alignment fix – keep exactly same size as buttons */
+.qty-input {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  margin: 0;
+  text-align: center;
+  line-height: 24px; /* slightly less to visually center digits */
+  font-size: 0.85rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.qty-input:focus {
+  outline: none;
+  border-color: var(--eco-green);
+  box-shadow: 0 0 0 2px rgba(110,161,36, 0.15);
+}
+.qty-panel::-webkit-scrollbar {
+  width: 6px;
+}
+.qty-panel::-webkit-scrollbar-track {
+  background: #f2f2f2;
+  border-radius: 10px;
+}
+.qty-panel::-webkit-scrollbar-thumb {
+  background-color: var(--eco-green);
+  border-radius: 10px;
+}
+/* optional tiny nudge if still 1px high/low on your OS */
+.qty-input { transform: translateY(0.5px); }
+/* force compact eco-green (+ / -) buttons style */
+.qty-right .qty-btn {
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+  min-height: 22px;
+  font-size: 14px;
+  line-height: 22px;
+  border-radius: 6px;
+
+  border: 1px solid var(--eco-green);
+  color: var(--eco-green);
+  background: #ffffff !important;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* hover */
+.qty-right .qty-btn:hover:not(:disabled) {
+  background: var(--eco-green) !important;
+  color: #fff !important;
+  border-color: var(--eco-green) !important;
+  transform: translateY(-1px);
+}
+/* ===============================
+   Template Modals (Save / Load)
+   same card styling as detail overlays
+   =============================== */
+/* Modal card */
+
+
+
+/* ===============================
+   SMALL TEMPLATE POPUPS (Save / Load)
+   =============================== */
+
+   .template-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.25);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+.template-card {
+  position: relative;
+  width: 520px;
+  background: #fff;
+  border-radius: 16px;
+  padding: 26px 32px;
+  box-shadow: 0 4px 22px rgba(0,0,0,0.2);
+  z-index: 10000;
+}
+
+.template-card h3 {
+  margin-top: 0;
+  margin-bottom: 18px;
+  font-size: 1.25rem;       /* bigger title */
+  font-weight: 700;
+  color: #222;
+}
+
+.template-card .fp-input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  margin-bottom: 16px;
+  font-size: 1rem;
+}
+
+.template-card button {
+  width: 100%;
+  margin-top: 10px;
+}
+
+
+
+
+/* fade animation (soft) */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+/* make the 4 buttons wrap 2x2 nicely */
+/* 4 planner action buttons layout */
+.main-controls {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 14px;
+  margin-bottom: 6px;
+}
+
+
+.main-controls button {
+  font-size: 0.82rem;
+  padding: 6px 12px;
+}
+/* optional — make grey ones feel softer */
+.main-controls .fp-clear {
+  background: #f3f3f3;
+}
+.main-controls .fp-apply {
+  background-color: var(--eco-green);
+  color: white;
+  border: none;
+  transition: background 0.2s ease;
+}
+.main-controls .fp-apply:hover {
+  background-color: #74b42e;
+}
+.main-controls .fp-clear {
+  background: #f4f4f4;
+  color: #333;
+  border: 1px solid #ddd;
+}
+
+.main-controls .fp-clear:hover {
+  background: #ebebeb;
+}
+.main-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 40px;           /* NEW — gives breathing room */
+}
+
+
+
+
+.template-close-x:hover {
+  color: #222;
+}
+
+/* force X to right edge inside template card */
+.template-card .template-close-x {
+  position: absolute;
+  top: 10px;
+  right: 6px !important;   /* force override */
+  background: none;
+  border: none;
+  font-size: 1.6rem;
+  color: #666;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}/* force X inside template modal */
+.template-card .template-close-x {
+  position: absolute;
+  top: 10px;
+  right: 10px !important;
+  z-index: 999999;
+}
+
+/* force X inside SAVE TEMPLATE modal (detail-card) */
+.detail-card .template-close-x {
+  position: absolute;
+  top: 10px;
+  right: 10px !important;
+  z-index: 999999;
+}
+.detail-card {
+  position: relative;
+}
+
+.template-card .fp-apply,
+.template-card .fp-clear {
+  width: auto;
+  padding: 6px 12px;
+}
+.template-card .fp-clear { background:#f4f4f4; border:1px solid #ddd; }
+.template-card .fp-apply { background: var(--eco-green); color:#fff; border:none; }
+
+/* ===== Toasts / Notices ===== */
+.toast-container{
+  position: fixed;
+  right: 18px;
+  top: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 99999;
+  pointer-events: none;
+}
+
+.toast{
+  pointer-events: auto;
+  min-width: 270px;
+  max-width: 420px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  box-shadow: 0 10px 28px rgba(0,0,0,.12);
+  border: 1px solid rgba(0,0,0,.06);
+  background: #ffffff;
+  font-weight: 600;
+  font-size: .93rem;
+  animation: toastSlideIn .25s ease-out;
+}
+
+.toast.success{ 
+  background:#f1f9ee !important;
+  border-color:#b9e2a3 !important;
+  color:#286a0c !important;
+}
+
+.toast.error{   
+  background:#fff1f1 !important;
+  border-color:#e5b6b6 !important;
+  color:#7a1414 !important;
+}
+
+.toast.info{    
+  background:#f4f8f3 !important;
+  border-color:#c9ddbd !important;
+  color:#396335 !important;
+}
+
+@keyframes toastSlideIn{
+  from{ opacity:0; transform:translateY(-6px); }
+  to{ opacity:1; transform:translateY(0); }
+}
+
+/* inline error line (inside modals/forms) */
+.notice-error{
+  margin-top: 6px;
+  color: #b24b4b;
+  font-size: .9rem;
+}
+.confirm-overlay{
+  position:fixed;
+  top:0; left:0; right:0; bottom:0;
+  background:rgba(0,0,0,.45);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:999999;
+}
+
+.confirm-card{
+  background:#fff;
+  padding:28px 32px;
+  border-radius:14px;
+  box-shadow:0 12px 32px rgba(0,0,0,.25);
+  text-align:center;
+  font-size:1.07rem;
+  color:#477528;
+  font-weight:600;
+}
+/* === ENHANCE ONLY "Copy Last Week" BUTTON === */
+.main-controls .fp-clear {
+  background: var(--eco-green);
+  color: #fff;
+  font-size: 0.95rem;       /* slightly larger text */
+  font-weight: 600;
+  padding: 10px 18px;       /* larger size */
+  border-radius: 10px;      /* smoother rounded shape */
+  border: none;
+  transition: background 0.2s ease, transform 0.15s ease;
+}
+
+/* subtle hover lift */
+.main-controls .fp-clear:hover {
+  background: #5a8d1e;
+  transform: translateY(-2px);
+}
