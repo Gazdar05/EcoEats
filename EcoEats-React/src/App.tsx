@@ -13,6 +13,8 @@ import VerifyAccountPage from "./WebPages/Register-Emmeline/VerifyAccount";
 import ProfilePage from "./WebPages/Register-Emmeline/ProfilePage";
 import HomePage from "./WebPages/Register-Emmeline/HomePage";
 import BrowseFood from "./WebPages/BrowseFood-Zayyan/BrowsePage";
+import FoodAnalytics from "./WebPages/Analytics-Emmeline/FoodAnalytics";
+
 import PlanWeeklyMeals from "./WebPages/PlanWeeklyMeals/PlanWeeklyMeals";
 
 // Temporary placeholder pages (until replaced with real components)
@@ -24,9 +26,6 @@ function NotificationsPage() {
   return <h1>User Notifications</h1>;
 }
 
-function AnalyticsPage() {
-  return <h1>Track and Record of User</h1>;
-}
 function SupportPage() {
   return <h1>Support Page</h1>;
 }
@@ -145,7 +144,7 @@ function App() {
           path="/analytics"
           element={
             <ProtectedRoute>
-              <AnalyticsPage />
+              <FoodAnalytics />
             </ProtectedRoute>
           }
         />
