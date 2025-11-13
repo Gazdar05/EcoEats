@@ -13,21 +13,21 @@ import VerifyAccountPage from "./WebPages/Register-Emmeline/VerifyAccount";
 import ProfilePage from "./WebPages/Register-Emmeline/ProfilePage";
 import HomePage from "./WebPages/Register-Emmeline/HomePage";
 import BrowseFood from "./WebPages/BrowseFood-Zayyan/BrowsePage";
+
+import FoodAnalytics from "./WebPages/Analytics-Emmeline/FoodAnalytics";
+import PlanWeeklyMeals from "./WebPages/PlanWeeklyMeals/PlanWeeklyMeals";
+
 import Notifications from "./WebPages/Notification-Mamoudou/Notifications";
 
 // Temporary placeholder pages
-function MealsPage() {
-  return <h1>Meal Planning</h1>;
-}
 function DonationPage() {
   return <h1>User Donations</h1>;
 }
-function AnalyticsPage() {
-  return <h1>Track and Record of User</h1>;
-}
+
 function SupportPage() {
   return <h1>Support Page</h1>;
 }
+
 function AboutPage() {
   return <h1>About EcoEats</h1>;
 }
@@ -104,7 +104,7 @@ function App() {
           }
         />
 
-        {/* ✅ Food Inventory (supports ?action=donations) */}
+        {/* Food Inventory */}
         <Route
           path="/food-inventory"
           element={
@@ -114,7 +114,7 @@ function App() {
           }
         />
 
-        {/* ✅ Keep old /inventory route working */}
+        {/* Legacy route support */}
         <Route
           path="/inventory"
           element={
@@ -124,14 +124,25 @@ function App() {
           }
         />
 
+        {/* Weekly meals */}
         <Route
           path="/meals"
           element={
             <ProtectedRoute>
-              <MealsPage />
+              <PlanWeeklyMeals />
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/plan-meals"
+          element={
+            <ProtectedRoute>
+              <PlanWeeklyMeals />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Donations */}
         <Route
           path="/donations"
           element={
@@ -141,7 +152,7 @@ function App() {
           }
         />
 
-        {/* ✅ Real Notifications Page */}
+        {/* Real Notifications Page */}
         <Route
           path="/notifications"
           element={
@@ -151,6 +162,7 @@ function App() {
           }
         />
 
+        {/* Profile */}
         <Route
           path="/profile"
           element={
@@ -159,11 +171,13 @@ function App() {
             </ProtectedRoute>
           }
         />
+
+        {/* Analytics */}
         <Route
           path="/analytics"
           element={
             <ProtectedRoute>
-              <AnalyticsPage />
+              <FoodAnalytics />
             </ProtectedRoute>
           }
         />
