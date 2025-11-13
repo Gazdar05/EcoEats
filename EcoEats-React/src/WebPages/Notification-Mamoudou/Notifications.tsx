@@ -35,27 +35,24 @@ const Notifications: React.FC = () => {
       const mapped: FrontendNotification[] = data
         .filter((n) => !n.is_read)
         .map((n) => {
-          let type = n.type; // preserve backend type
+          let type = n.type;
           const title = (n.title || n.message || "").toLowerCase();
 
-          // Identify special cases
-          const isUpcomingMeal = type === "meal" && title.includes("upcoming");
-          const isExpiringOrDeleted =
-            title.includes("expiring") ||
-            title.includes("expired") ||
-            title.includes("deleted") ||
-            title.includes("removed");
+          // Expiring or expired items → force type = inventory
+          if (title.includes("expiring") || title.includes("expired")) type = "inventory";
 
-          // Action buttons
+          // Upcoming meals → force type = meal
+          if (type === "meal" && title.includes("upcoming")) type = "meal";
+
+          // Determine which notifications get an action button
           const isNewOrEditedInventory =
-            type === "inventory" &&
-            (title.includes("added") || title.includes("updated") || title.includes("edited"));
+            type === "inventory" && (title.includes("added") || title.includes("updated") || title.includes("edited"));
 
           const show_action =
             (type === "donation" || isNewOrEditedInventory) &&
-            !isExpiringOrDeleted &&
             n.show_action !== false &&
-            !isUpcomingMeal;
+            !title.includes("deleted") &&
+            !title.includes("removed");
 
           let action_label: string | undefined = undefined;
           if (type === "donation" && show_action) action_label = n.action_label || "View Donation";
@@ -63,7 +60,7 @@ const Notifications: React.FC = () => {
 
           return {
             ...n,
-            type, // keep the correct type for tab filtering
+            type,
             icon:
               type === "inventory"
                 ? <Leaf color="#3BAE3B" size={18} />
@@ -88,7 +85,7 @@ const Notifications: React.FC = () => {
 
   useEffect(() => {
     fetchNotifications();
-    const interval = setInterval(fetchNotifications, 5000);
+    const interval = setInterval(fetchNotifications, 5000); // polling every 5s
     return () => clearInterval(interval);
   }, []);
 
@@ -106,19 +103,16 @@ const Notifications: React.FC = () => {
       setNotifications((prev) => prev.filter((n) => n.id !== note.id));
     }
 
-    // Navigate for donation
     if ((note.action_label || "").toLowerCase() === "view donation") {
       navigate("/inventory?action=donations");
       return;
     }
 
-    // Navigate if backend provides a link
     if (note.action_link) {
       navigate(note.action_link);
       return;
     }
 
-    // Navigate to inventory item
     if (note.type === "inventory" && note.link) {
       navigate(`/inventory?action=view&id=${encodeURIComponent(note.link)}`);
       return;
@@ -174,7 +168,9 @@ const Notifications: React.FC = () => {
               <div className="notif-icon">{note.icon}</div>
               <div className="notif-content">
                 <p className="notif-text">{note.title || note.message}</p>
-                <span className="notif-time">{new Date(note.created_at).toLocaleString()}</span>
+                <span className="notif-time">
+                  {new Date(note.created_at).toLocaleString("en-MY", { timeZone: "Asia/Kuala_Lumpur" })}
+                </span>
               </div>
 
               {note.show_action && note.action_label && (
