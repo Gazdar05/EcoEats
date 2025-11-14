@@ -14,7 +14,6 @@ import ProfilePage from "./WebPages/Register-Emmeline/ProfilePage";
 import HomePage from "./WebPages/Register-Emmeline/HomePage";
 import BrowseFood from "./WebPages/BrowseFood-Zayyan/BrowsePage";
 import FoodAnalytics from "./WebPages/Analytics-Emmeline/FoodAnalytics";
-
 import PlanWeeklyMeals from "./WebPages/PlanWeeklyMeals/PlanWeeklyMeals";
 
 // Temporary placeholder pages (until replaced with real components)
