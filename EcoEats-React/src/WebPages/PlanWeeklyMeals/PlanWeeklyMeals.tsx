@@ -12,6 +12,13 @@ import { differenceInCalendarWeeks, format, startOfWeek } from "date-fns";
 // ✅ NEW
 import { NotifierProvider, useNotify } from "./Toast";
 
+const EMPTY_SLOT: MealSlot = {
+  breakfast: null,
+  lunch: null,
+  dinner: null,
+  snacks: null,
+};
+
 const fallbackRecipe: RecipeLite = {
   name: "Sample Meal",
   ingredients: [],
@@ -249,7 +256,7 @@ const PlannerInner: React.FC = () => {
 
     // reduce inventory locally
     const updatedInv = inventory.map((it) => {
-      const id = it.id || (it as any)._id; // ✅ force id
+      const id = it.id;
       const hit = mealData.ingredients.find((u) => u.id === id);
       if (!hit) return it;
       const used = Number(hit.used_qty || 0);
@@ -311,7 +318,7 @@ const PlannerInner: React.FC = () => {
 
     // restore inventory locally
     const updatedInv = inventory.map((it) => {
-      const id = it.id || (it as any)._id; // ✅ force id
+      const id = it.id;
       const hit = used.find((u: any) => u.id === id);
       if (!hit) return it;
       const addBack = Number(hit.used_qty || 0);
@@ -365,10 +372,12 @@ const PlannerInner: React.FC = () => {
       if (res.ok) {
         const data = await res.json();
         console.log("🔁 refreshed raw inventory", data);
-        const normalized = data.map((item: any) => ({
-          ...item,
-          id: String(item.id || item._id || ""),
-        }));
+        const normalized = data.map((item: any) => {
+          const clean: any = { ...item };
+          clean.id = String(item.id); // always use normalized id only
+          delete clean._id; // 🚀 remove _id forever
+          return clean;
+        });
         setInventory(normalized);
         console.log("✅ refreshed and normalized inventory", normalized);
       } else {
@@ -381,12 +390,14 @@ const PlannerInner: React.FC = () => {
 
   async function copyLastWeek() {
     if (!plan) return;
+
     if (
       !window.confirm(
         "Are you sure you want to copy last week's plan into this week? This will overwrite current plan."
       )
-    )
+    ) {
       return;
+    }
 
     try {
       const prevWeek = new Date(weekStart);
@@ -402,7 +413,6 @@ const PlannerInner: React.FC = () => {
         }),
       });
 
-      // 🧱 Handle failed responses gracefully
       if (!res.ok) {
         let message = "Failed to copy last week.";
         try {
@@ -410,15 +420,14 @@ const PlannerInner: React.FC = () => {
           if (typeof err?.detail === "string") {
             message = err.detail;
           }
-        } catch {
-          // ignore JSON parse errors; keep fallback message
-        }
+        } catch {}
         notify.error(message);
         return;
       }
 
       const updated = await res.json();
-      const normalized = {
+
+      const normalized: WeekPlan = {
         userId: updated.user_id ?? updated.userId ?? "me",
         weekStart:
           updated.week_start ?? updated.weekStart ?? weekStart.toISOString(),
@@ -426,24 +435,87 @@ const PlannerInner: React.FC = () => {
         id: updated.id ?? updated._id ?? null,
       };
 
-      // ✅ Count total meals safely (fixes 'count' type error)
+      // --------------------------------------------------------
+      // 1️⃣ Count meals and warn if empty
+      // --------------------------------------------------------
       const mealCount = Object.values(normalized.meals || {}).reduce(
         (count: number, day: any) => {
-          const slots = Object.values(day || {}) as any[];
-          const slotCount = slots.filter(
-            (slot) => !!slot && !!slot.name
-          ).length;
+          const vals = Object.values(day || {}) as any[];
+          const slotCount = vals.filter((slot) => slot && slot.name).length;
           return count + slotCount;
         },
         0
       );
 
-      // 🧩 Handle empty or invalid plans
       if (mealCount === 0) {
         notify.info("Source week was empty — nothing to copy.");
         return;
       }
 
+      // --------------------------------------------------------
+      // 2️⃣ Build total usage list for the copied week
+      // --------------------------------------------------------
+      const usedList: Record<string, number> = {};
+
+      const dayKeys = Object.keys(normalized.meals) as DayKey[];
+
+      for (const day of dayKeys) {
+        const slots: MealSlot = normalized.meals[day] ?? EMPTY_SLOT;
+
+        for (const slot of [
+          "breakfast",
+          "lunch",
+          "dinner",
+          "snacks",
+        ] as const) {
+          const meal = slots[slot];
+          if (!meal || !meal.ingredients) continue;
+
+          for (const ing of meal.ingredients) {
+            const id = ing.id;
+            if (!id) continue;
+
+            const qty = Number(ing.used_qty ?? 0);
+            usedList[id] = (usedList[id] ?? 0) + qty;
+          }
+        }
+      }
+
+      // --------------------------------------------------------
+      // 3️⃣ Reduce inventory locally
+      // --------------------------------------------------------
+      const updatedInv = inventory.map((it) => {
+        const used = usedList[it.id!] ?? 0;
+        return {
+          ...it,
+          quantity: Math.max(0, Number(it.quantity) - used),
+        };
+      });
+
+      setInventory(updatedInv);
+
+      // --------------------------------------------------------
+      // 4️⃣ Persist inventory to backend
+      // --------------------------------------------------------
+      await fetch(`${API_BASE_URL}/inventory/bulk-update`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(
+          updatedInv
+            .filter((it) => it.id)
+            .map((it) => ({
+              id: it.id,
+              quantity: Number(it.quantity),
+            }))
+        ),
+      });
+
+      // Reload DB
+      await refreshInventoryFromDB();
+
+      // --------------------------------------------------------
+      // 5️⃣ Update UI with new copied plan
+      // --------------------------------------------------------
       setPlan(normalized);
       notify.success("Copied last week's plan into this week.");
     } catch (err) {

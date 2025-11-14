@@ -54,7 +54,7 @@ def normalize_category(cat: str) -> str:
 # -------------------------------
 def serialize_item(item):
     item["id"] = str(item["_id"])
-    del item["_id"]
+    item.pop("_id", None)             # <-- final fix
 
     # expiry normalization
     if "expiry_date" in item:
@@ -65,26 +65,24 @@ def serialize_item(item):
                 item["expiry"] = item["expiry_date"]
         except:
             item["expiry"] = None
-        del item["expiry_date"]
+        item.pop("expiry_date", None)
     else:
         item["expiry"] = None
 
-    # category
-    if "category" in item:
-        item["category"] = normalize_category(item["category"])
+    item["category"] = normalize_category(item.get("category", ""))
 
-    # image fallback
     item["image"] = item.get("image", "")
-    item["quantity"] = int(item.get("quantity", 1))
+    item["quantity"] = int(item.get("quantity", 0))
 
     # expiry → status
-    if "expiry" in item and item["expiry"]:
-        today = datetime.utcnow().date()
+    if item["expiry"]:
         try:
-            exp_date = datetime.strptime(item["expiry"], "%Y-%m-%d").date()
-            if exp_date < today:
+            today = datetime.utcnow().date()
+            exp = datetime.strptime(item["expiry"], "%Y-%m-%d").date()
+            diff = (exp - today).days
+            if diff < 0:
                 item["status"] = "Expired"
-            elif (exp_date - today).days <= 3:
+            elif diff <= 3:
                 item["status"] = "Expiring Soon"
             else:
                 item["status"] = "Fresh"
@@ -93,9 +91,9 @@ def serialize_item(item):
     else:
         item["status"] = "Unknown"
 
-    # reserved flag
-    item["reserved"] = item.get("reserved", False)
+    item["reserved"] = bool(item.get("reserved", False))
     return item
+
 
 # -------------------------------
 # Notification Helper

@@ -43,6 +43,7 @@ export type DayKey =
   | "sunday";
 
 export type WeekPlan = {
+  id?: string | null;   // ⭐ ADD THIS LINE
   userId: string;
   weekStart: string; // ISO
   meals: {
@@ -54,4 +55,10 @@ export type WeekPlan = {
     saturday: MealSlot;
     sunday: MealSlot;
   };
+};
+const EMPTY_SLOT: MealSlot = {
+  breakfast: null,
+  lunch: null,
+  dinner: null,
+  snacks: null,
 };
