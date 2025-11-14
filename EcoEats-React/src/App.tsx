@@ -13,21 +13,21 @@ import VerifyAccountPage from "./WebPages/Register-Emmeline/VerifyAccount";
 import ProfilePage from "./WebPages/Register-Emmeline/ProfilePage";
 import HomePage from "./WebPages/Register-Emmeline/HomePage";
 import BrowseFood from "./WebPages/BrowseFood-Zayyan/BrowsePage";
+
 import FoodAnalytics from "./WebPages/Analytics-Emmeline/FoodAnalytics";
 import PlanWeeklyMeals from "./WebPages/PlanWeeklyMeals/PlanWeeklyMeals";
 
-// Temporary placeholder pages (until replaced with real components)
+import Notifications from "./WebPages/Notification-Mamoudou/Notifications";
 
+// Temporary placeholder pages
 function DonationPage() {
   return <h1>User Donations</h1>;
-}
-function NotificationsPage() {
-  return <h1>User Notifications</h1>;
 }
 
 function SupportPage() {
   return <h1>Support Page</h1>;
 }
+
 function AboutPage() {
   return <h1>About EcoEats</h1>;
 }
@@ -36,12 +36,16 @@ function App() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Hide navbar only on /inventory
-  const hideNavbar = location.pathname === "/inventory";
+  // Hide navbar only on /inventory and /food-inventory
+  const hideNavbar =
+    location.pathname === "/inventory" ||
+    location.pathname === "/food-inventory";
 
-  // Hide footer on /inventory and /browse
+  // Hide footer on /inventory, /food-inventory and /browse
   const hideFooter =
-    location.pathname === "/inventory" || location.pathname === "/browse";
+    location.pathname === "/inventory" ||
+    location.pathname === "/food-inventory" ||
+    location.pathname === "/browse";
 
   useEffect(() => {
     // Auto logout after 15 minutes of inactivity
@@ -80,6 +84,7 @@ function App() {
   return (
     <>
       {!hideNavbar && <Navbar />}
+
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<HomePage />} />
@@ -98,6 +103,18 @@ function App() {
             </ProtectedRoute>
           }
         />
+
+        {/* Food Inventory */}
+        <Route
+          path="/food-inventory"
+          element={
+            <ProtectedRoute>
+              <FoodInventory />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Legacy route support */}
         <Route
           path="/inventory"
           element={
@@ -106,6 +123,8 @@ function App() {
             </ProtectedRoute>
           }
         />
+
+        {/* Weekly meals */}
         <Route
           path="/meals"
           element={
@@ -114,40 +133,6 @@ function App() {
             </ProtectedRoute>
           }
         />
-
-        <Route
-          path="/donations"
-          element={
-            <ProtectedRoute>
-              <DonationPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/notifications"
-          element={
-            <ProtectedRoute>
-              <NotificationsPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/profile"
-          element={
-            <ProtectedRoute>
-              <ProfilePage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/analytics"
-          element={
-            <ProtectedRoute>
-              <FoodAnalytics />
-            </ProtectedRoute>
-          }
-        />
-
         <Route
           path="/plan-meals"
           element={
@@ -156,7 +141,48 @@ function App() {
             </ProtectedRoute>
           }
         />
+
+        {/* Donations */}
+        <Route
+          path="/donations"
+          element={
+            <ProtectedRoute>
+              <DonationPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Real Notifications Page */}
+        <Route
+          path="/notifications"
+          element={
+            <ProtectedRoute>
+              <Notifications />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Profile */}
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <ProfilePage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Analytics */}
+        <Route
+          path="/analytics"
+          element={
+            <ProtectedRoute>
+              <FoodAnalytics />
+            </ProtectedRoute>
+          }
+        />
       </Routes>
+
       {location.pathname === "/" && !hideFooter && <Footer />}
     </>
   );
