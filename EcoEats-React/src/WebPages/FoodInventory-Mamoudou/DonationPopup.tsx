@@ -1,4 +1,3 @@
-// src/pages/Inventory/DonationPopup.tsx
 import React, { useEffect, useState } from "react";
 import "./DonationPopup.css";
 
@@ -22,9 +21,15 @@ interface DonationPopupProps {
 
 const API_BASE = "http://127.0.0.1:8000";
 
-const DonationPopup: React.FC<DonationPopupProps> = ({ donationItem, onClose, onDonationAdded }) => {
+const DonationPopup: React.FC<DonationPopupProps> = ({
+  donationItem,
+  onClose,
+  onDonationAdded,
+}) => {
   const [pickupLocation, setPickupLocation] = useState("");
-  const [donationDate, setDonationDate] = useState(new Date().toISOString().slice(0, 10));
+  const [donationDate, setDonationDate] = useState(
+    new Date().toISOString().slice(0, 10)
+  );
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -35,12 +40,20 @@ const DonationPopup: React.FC<DonationPopupProps> = ({ donationItem, onClose, on
   if (!donationItem) return null;
 
   const handleSubmitDonation = async () => {
+    if (!pickupLocation.trim()) {
+      alert("Please enter a pickup location.");
+      return;
+    }
+
     setLoading(true);
     try {
       const res = await fetch(`${API_BASE}/donations/${donationItem.id}/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ pickupDate: donationDate, pickupLocation }),
+        body: JSON.stringify({
+          pickupDate: donationDate,
+          pickupLocation,
+        }),
       });
 
       if (!res.ok) {
@@ -48,7 +61,9 @@ const DonationPopup: React.FC<DonationPopupProps> = ({ donationItem, onClose, on
         try {
           const err = await res.json();
           if (err?.detail) message = err.detail;
-        } catch {}
+        } catch {
+          // ignore parse error
+        }
         alert(message);
         setLoading(false);
         return;
@@ -57,31 +72,76 @@ const DonationPopup: React.FC<DonationPopupProps> = ({ donationItem, onClose, on
       const createdDonation = await res.json();
       const newId = String(createdDonation.id ?? createdDonation._id ?? "");
       if (onDonationAdded) onDonationAdded(newId);
-      alert(`"${donationItem.name}" has been converted to a donation.`);
+
+      alert(`"${donationItem.name}" has been successfully converted to a donation.`);
       onClose();
-    } catch (err: any) {
-      console.error(err);
-      alert(err?.message || "An unexpected error occurred while creating donation.");
+    } catch (err) {
+      console.error("Donation creation failed:", err);
+      alert("Something went wrong while creating the donation.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="donation-popup-backdrop">
-      <div className="donation-popup">
-        <h2>Convert to Donation</h2>
-        <div className="donation-field"><label>Name</label><input type="text" value={donationItem.name} disabled /></div>
-        <div className="donation-field"><label>Category</label><input type="text" value={donationItem.category} disabled /></div>
-        <div className="donation-field"><label>Quantity</label><input type="text" value={donationItem.quantity} disabled /></div>
-        <div className="donation-field"><label>Expiry</label><input type="text" value={donationItem.expiry} disabled /></div>
-        <div className="donation-field"><label>Storage</label><input type="text" value={donationItem.storage} disabled /></div>
-        <div className="donation-field"><label>Pickup Location</label><input type="text" value={pickupLocation} onChange={(e) => setPickupLocation(e.target.value)} /></div>
-        <div className="donation-field"><label>Donation Date</label><input type="date" value={donationDate} onChange={(e) => setDonationDate(e.target.value)} /></div>
+    <div className="popup-overlay">
+      <div className="popup-content donation-popup">
+        <h2>Donate Item</h2>
 
-        <div className="donation-actions">
-          <button className="btn-submit" onClick={handleSubmitDonation} disabled={loading}>{loading ? "Submitting..." : "Convert to Donation"}</button>
-          <button className="btn-cancel" onClick={onClose} disabled={loading}>Cancel</button>
+        <div className="donation-item-summary">
+          <img
+            src={donationItem.image || "/placeholder.png"}
+            alt={donationItem.name}
+            className="donation-item-image"
+          />
+          <div className="donation-item-info">
+            <h3>{donationItem.name}</h3>
+            <p>
+              Category: <strong>{donationItem.category}</strong>
+            </p>
+            <p>
+              Quantity: <strong>{donationItem.quantity}</strong>
+            </p>
+            <p>
+              Expiry: <strong>{donationItem.expiry}</strong>
+            </p>
+            <p>
+              Storage: <strong>{donationItem.storage}</strong>
+            </p>
+          </div>
+        </div>
+
+        <label>Pickup Location</label>
+        <input
+          type="text"
+          placeholder="Enter pickup location"
+          value={pickupLocation}
+          onChange={(e) => setPickupLocation(e.target.value)}
+          className="pickup-input"
+          required
+        />
+
+        <label>Donation Date</label>
+        <input
+          type="date"
+          value={donationDate}
+          onChange={(e) => setDonationDate(e.target.value)}
+          className="donation-date-input"
+          required
+        />
+
+        <div className="popup-buttons">
+          <button type="button" className="cancel-btn" onClick={onClose}>
+            Cancel
+          </button>
+          <button
+            type="button"
+            className="donate-btn"
+            onClick={handleSubmitDonation}
+            disabled={loading}
+          >
+            {loading ? "Submitting..." : "Confirm Donation"}
+          </button>
         </div>
       </div>
     </div>

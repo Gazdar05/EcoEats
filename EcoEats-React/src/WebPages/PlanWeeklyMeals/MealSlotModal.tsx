@@ -196,17 +196,17 @@ const MealSlotModal: React.FC<Props> = ({
     const selected = all.find((x) => x.name === selectedRecipe)?._full;
     if (!selected) return notify.error("Select a recipe.");
 
-    const targets = mapRecipeToInventory(selected.name);
-    const chosen = targets
-      .map((it) => {
-        const id = getItemId(it);
-        const want = usedQty[id] || 0;
-        return want > 0 ? { id, name: it.name, used_qty: want } : null;
-      })
-      .filter(Boolean) as any[];
+    const chosen = selected.ingredients.map((ing) => {
+      const match = inventory.find((i) =>
+        i.name.toLowerCase().includes(ing.name.toLowerCase())
+      );
 
-    if (chosen.length === 0)
-      return notify.error("Set at least one ingredient quantity > 0.");
+      return {
+        id: String(match?.id || match?._id || ""),
+        name: ing.name,
+        used_qty: 1, // default quantity = 1
+      };
+    });
 
     onConfirm(day, slot, {
       name: selected.name,
@@ -329,15 +329,6 @@ const MealSlotModal: React.FC<Props> = ({
                   </div>
                 </label>
               ))}
-
-              {selectedRecipe && sgTargets.length > 0 && (
-                <div className="qty-panel">
-                  <div className="qty-title">Choose quantities</div>
-                  {sgTargets.map((it) => (
-                    <QtyRow key={getItemId(it)} it={it} />
-                  ))}
-                </div>
-              )}
             </div>
           )}
 
@@ -368,15 +359,6 @@ const MealSlotModal: React.FC<Props> = ({
                   </div>
                 </label>
               ))}
-
-              {selectedRecipe && sgTargets.length > 0 && (
-                <div className="qty-panel">
-                  <div className="qty-title">Choose quantities</div>
-                  {sgTargets.map((it) => (
-                    <QtyRow key={getItemId(it)} it={it} />
-                  ))}
-                </div>
-              )}
             </div>
           )}
 

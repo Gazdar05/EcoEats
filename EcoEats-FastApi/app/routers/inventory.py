@@ -15,25 +15,18 @@ class BulkItem(BaseModel):
     quantity: int
 
 router = APIRouter(tags=["Inventory"])
-collection = db["food_items"]   # ✅ use food_items collection
+collection = db["food_items"]
+notifications = db["notifications"]   # ← his feature enabled
 
-# ✅ Centralized filter for both tagged and untagged inventory items
+# Centralized filter (REQUIRED for main features)
 SOURCE_FILTER = {"$or": [{"source": "inventory"}, {"source": {"$exists": False}}]}
 
 # -------------------------------
 # Constants
 # -------------------------------
 ALLOWED_CATEGORIES = [
-    "Fruits",
-    "Vegetables",
-    "Dairy",
-    "Meat",
-    "Grains",
-    "Pantry Staples",
-    "Bakery",
-    "Beverages",
-    "Canned",
-    "Seafood",
+    "Fruits", "Vegetables", "Dairy", "Meat", "Grains",
+    "Pantry Staples", "Bakery", "Beverages", "Canned", "Seafood"
 ]
 ALLOWED_STORAGE = ["Fridge", "Freezer", "Pantry", "Counter"]
 
@@ -57,27 +50,34 @@ def normalize_category(cat: str) -> str:
     return CATEGORY_MAP.get(cat, cat)
 
 # -------------------------------
-# Helper: serialization
+# Serialization Helper
 # -------------------------------
 def serialize_item(item):
     item["id"] = str(item["_id"])
     del item["_id"]
 
+    # expiry normalization
     if "expiry_date" in item:
-        if isinstance(item["expiry_date"], datetime):
-            item["expiry"] = item["expiry_date"].strftime("%Y-%m-%d")
-        else:
-            item["expiry"] = item["expiry_date"]
+        try:
+            if isinstance(item["expiry_date"], datetime):
+                item["expiry"] = item["expiry_date"].strftime("%Y-%m-%d")
+            else:
+                item["expiry"] = item["expiry_date"]
+        except:
+            item["expiry"] = None
         del item["expiry_date"]
     else:
         item["expiry"] = None
 
+    # category
     if "category" in item:
         item["category"] = normalize_category(item["category"])
 
+    # image fallback
     item["image"] = item.get("image", "")
     item["quantity"] = int(item.get("quantity", 1))
 
+    # expiry → status
     if "expiry" in item and item["expiry"]:
         today = datetime.utcnow().date()
         try:
@@ -88,26 +88,66 @@ def serialize_item(item):
                 item["status"] = "Expiring Soon"
             else:
                 item["status"] = "Fresh"
-        except Exception:
+        except:
             item["status"] = "Unknown"
     else:
         item["status"] = "Unknown"
 
+    # reserved flag
     item["reserved"] = item.get("reserved", False)
     return item
+
+# -------------------------------
+# Notification Helper
+# -------------------------------
+async def create_notification(title, message, notif_type="inventory", user_id="default", link=None, show_action=True):
+    await notifications.insert_one({
+        "title": title,
+        "message": message,
+        "type": notif_type,
+        "user_id": user_id,
+        "link": link,
+        "is_read": False,
+        "created_at": datetime.utcnow(),
+        "show_action": show_action
+    })
 
 # -------------------------------
 # Routes
 # -------------------------------
 
-# ✅ GET all inventory items
+# GET all inventory items (merged)
 @router.get("/")
 async def get_inventory():
     items = await collection.find(SOURCE_FILTER).to_list(length=None)
-    print(f"📦 returning {len(items)} items from DB (with or without source flag)")
+    serialized = [serialize_item(item) for item in items]
+
+    # Auto-create notifications for expired/expiring items
+    for item in serialized:
+        if item["status"] in ["Expired", "Expiring Soon"]:
+            exists = await notifications.find_one({
+                "title": f"Item {item['status']}",
+                "link": f"/inventory/{item['id']}",
+                "type": "system"
+            })
+            if not exists:
+                await create_notification(
+                    title=f"Item {item['status']}",
+                    message=f"{item['name']} is {item['status'].lower()}!",
+                    notif_type="system",
+                    link=f"/inventory/{item['id']}",
+                    show_action=False
+                )
+
+    return serialized
+
+# GET donated items (his feature)
+@router.get("/donations/")
+async def get_donated_items():
+    items = await collection.find({"source": "donation"}).to_list(length=None)
     return [serialize_item(item) for item in items]
 
-# ✅ GET single item
+# GET single item
 @router.get("/{item_id}")
 async def get_inventory_item(item_id: str):
     try:
@@ -121,11 +161,10 @@ async def get_inventory_item(item_id: str):
 
     return serialize_item(item)
 
-# ✅ POST (create)
+# CREATE item (merged)
 @router.post("/", status_code=status.HTTP_201_CREATED)
 async def create_inventory_item(request: Request):
     item = await request.json()
-    print("🧾 Received inventory payload:", item)
 
     if "expiry" in item:
         item["expiry_date"] = item.pop("expiry")
@@ -133,27 +172,28 @@ async def create_inventory_item(request: Request):
     required = ["name", "category", "quantity", "expiry_date", "storage"]
     for field in required:
         if field not in item or not item[field]:
-            raise HTTPException(status_code=400, detail=f"Missing field: {field}")
+            raise HTTPException(400, f"Missing field: {field}")
 
+    # normalization
     item["category"] = normalize_category(str(item["category"]).strip())
     item["storage"] = str(item["storage"]).strip()
     item["name"] = str(item["name"]).strip()
 
     if item["category"] not in ALLOWED_CATEGORIES:
-        raise HTTPException(status_code=400, detail=f"Invalid category: {item['category']}")
+        raise HTTPException(400, f"Invalid category: {item['category']}")
     if item["storage"] not in ALLOWED_STORAGE:
-        raise HTTPException(status_code=400, detail=f"Invalid storage type: {item['storage']}")
+        raise HTTPException(400, f"Invalid storage type: {item['storage']}")
 
     try:
         item["quantity"] = int(item.get("quantity", 1))
-    except (ValueError, TypeError):
-        raise HTTPException(status_code=400, detail="Quantity must be a number")
+    except:
+        raise HTTPException(400, "Quantity must be a number")
 
     if isinstance(item.get("expiry_date"), str):
         try:
             item["expiry_date"] = datetime.strptime(item["expiry_date"], "%Y-%m-%d")
-        except ValueError:
-            raise HTTPException(status_code=400, detail="Invalid expiry_date format. Use YYYY-MM-DD.")
+        except:
+            raise HTTPException(400, "Invalid expiry_date format. Use YYYY-MM-DD.")
 
     item["image"] = item.get("image", "")
     item["source"] = "inventory"
@@ -161,21 +201,25 @@ async def create_inventory_item(request: Request):
 
     result = await collection.insert_one(item)
     new_item = await collection.find_one({"_id": result.inserted_id})
+
+    # send notification
+    await create_notification(
+        title="New Item Added",
+        message=f"{item['name']} was added to inventory.",
+        notif_type="inventory",
+        link=f"/inventory/{result.inserted_id}",
+        show_action=True
+    )
+
     return serialize_item(new_item)
 
-# ✅ BULK update (move ABOVE single-item PUT)
+# BULK UPDATE (main feature)
 @router.put("/bulk-update")
 async def bulk_update_inventory_items(request: Request):
     try:
-        raw = await request.body()
-        items = json.loads(raw)
-    except Exception as e:
-        print("❌ Failed to parse JSON body:", e)
-        raise HTTPException(status_code=400, detail="Invalid JSON body")
-
-    print(f"📦 Received bulk update with {len(items)} items")
-    if len(items) > 0:
-        print("First item sample:", items[0])
+        items = json.loads(await request.body())
+    except:
+        raise HTTPException(400, "Invalid JSON body")
 
     matched = 0
     modified = 0
@@ -184,14 +228,11 @@ async def bulk_update_inventory_items(request: Request):
         _id = it.get("id")
         qty = it.get("quantity")
 
-        if not _id or not isinstance(_id, str):
-            print(f"⚠️ Skipping invalid id: {_id}")
-            continue
-        if not ObjectId.is_valid(_id):
-            print(f"⚠️ Invalid ObjectId string: {_id}")
+        if not _id or not ObjectId.is_valid(_id):
             continue
 
         obj_id = ObjectId(_id)
+
         res = await collection.update_one(
             {"$and": [{"_id": obj_id}, SOURCE_FILTER]},
             {"$set": {"quantity": qty, "updated_at": datetime.utcnow()}}
@@ -199,12 +240,10 @@ async def bulk_update_inventory_items(request: Request):
 
         matched += res.matched_count
         modified += res.modified_count
-        print(f"🛠 Updated {_id}: quantity → {qty}")
 
-    print(f"✅ bulk-update done: matched={matched}, modified={modified}, total={len(items)}")
     return {"status": "ok", "matched": matched, "modified": modified}
 
-# ✅ PUT (update single item)
+# UPDATE item (merged)
 @router.put("/{item_id}")
 async def update_inventory_item(item_id: str, request: Request):
     updated_data = await request.json()
@@ -212,21 +251,21 @@ async def update_inventory_item(item_id: str, request: Request):
     if "expiry" in updated_data:
         try:
             updated_data["expiry_date"] = datetime.strptime(updated_data.pop("expiry"), "%Y-%m-%d")
-        except ValueError:
-            raise HTTPException(status_code=400, detail="Invalid expiry format. Use YYYY-MM-DD.")
+        except:
+            raise HTTPException(400, "Invalid expiry format. Use YYYY-MM-DD.")
 
     try:
         obj_id = ObjectId(item_id)
-    except InvalidId:
-        raise HTTPException(status_code=400, detail="Invalid item ID format")
+    except:
+        raise HTTPException(400, "Invalid item ID format")
 
     if "category" in updated_data:
         updated_data["category"] = normalize_category(updated_data["category"])
         if updated_data["category"] not in ALLOWED_CATEGORIES:
-            raise HTTPException(status_code=400, detail=f"Invalid category: {updated_data['category']}")
+            raise HTTPException(400, f"Invalid category: {updated_data['category']}")
 
     if "storage" in updated_data and updated_data["storage"] not in ALLOWED_STORAGE:
-        raise HTTPException(status_code=400, detail=f"Invalid storage type: {updated_data['storage']}")
+        raise HTTPException(400, f"Invalid storage type: {updated_data['storage']}")
 
     if "image" not in updated_data:
         updated_data["image"] = ""
@@ -237,7 +276,41 @@ async def update_inventory_item(item_id: str, request: Request):
     )
 
     if result.matched_count == 0:
-        raise HTTPException(status_code=404, detail="Item not found")
+        raise HTTPException(404, "Item not found")
 
     updated_item = await collection.find_one({"_id": obj_id})
+
+    # send notification
+    await create_notification(
+        title="Item Updated",
+        message=f"{updated_item['name']} was updated.",
+        notif_type="inventory",
+        link=f"/inventory/{item_id}",
+        show_action=True
+    )
+
     return serialize_item(updated_item)
+
+# DELETE item (his feature merged safely)
+@router.delete("/{item_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_inventory_item(item_id: str):
+    try:
+        obj_id = ObjectId(item_id)
+    except:
+        raise HTTPException(400, "Invalid ID format")
+
+    deleted_item = await collection.find_one({"_id": obj_id})
+
+    result = await collection.delete_one({"_id": obj_id})
+    if result.deleted_count == 0:
+        raise HTTPException(404, "Item not found")
+
+    if deleted_item:
+        await create_notification(
+            title="Item Deleted",
+            message=f"{deleted_item['name']} was removed from inventory.",
+            notif_type="inventory",
+            show_action=False
+        )
+
+    return {"message": "Item deleted successfully"}
