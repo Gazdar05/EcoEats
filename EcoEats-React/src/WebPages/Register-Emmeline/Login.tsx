@@ -85,6 +85,8 @@ const LoginPage: React.FC = () => {
       localStorage.setItem('userEmail', data.user.email);
       localStorage.setItem('userName', data.user.full_name);
 
+      window.dispatchEvent(new Event('storage'));
+
       // Show success screen
       setUserName(data.user.full_name);
       setLoginSuccess(true);
