@@ -1,6 +1,7 @@
 // src/WebPage/PlanWeeklyMeals/InventorySidebar.tsx
 import React from "react";
 import type { InventoryItem } from "./types";
+import { useNavigate } from "react-router-dom";
 
 type Props = {
   inventory: InventoryItem[];
@@ -21,6 +22,8 @@ function formatExpiry(d?: string) {
 }
 
 const InventorySidebar: React.FC<Props> = ({ inventory, weeklyUsage }) => {
+  const navigate = useNavigate();
+
   return (
     <div className="fp-panel" role="region" aria-label="Inventory sidebar">
       <h3 className="fp-title">Available Inventory</h3>
@@ -63,7 +66,11 @@ const InventorySidebar: React.FC<Props> = ({ inventory, weeklyUsage }) => {
       </div>
 
       <div style={{ marginTop: 12 }}>
-        <button className="fp-apply" style={{ width: "100%" }}>
+        <button
+          className="fp-apply"
+          style={{ width: "100%" }}
+          onClick={() => navigate("/browse")}
+        >
           Browse Inventory Items
         </button>
       </div>
