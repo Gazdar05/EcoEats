@@ -52,7 +52,7 @@ function formatWeekRange(start: Date) {
 }
 
 function formatWeekLabel(weekStart: Date) {
-  const now = startOfWeek(new Date());
+  const now = startOfWeek(new Date(), { weekStartsOn: 1 });
   const diffWeeks = differenceInCalendarWeeks(weekStart, now);
 
   if (diffWeeks === 0) return `This Week (${formatWeekRange(weekStart)})`;
@@ -550,8 +550,10 @@ const PlannerInner: React.FC = () => {
             ▶
           </button>
 
-          {differenceInCalendarWeeks(weekStart, startOfWeek(new Date())) !==
-            0 && (
+          {differenceInCalendarWeeks(
+            weekStart,
+            startOfWeek(new Date(), { weekStartsOn: 1 })
+          ) !== 0 && (
             <button
               className="week-today-btn"
               onClick={() =>
