@@ -68,9 +68,14 @@ def build_aggregation_pipeline(start_date: Optional[str], end_date: Optional[str
 
 
 @router.get("/summary")
-async def get_analytics_summary(start_date: Optional[str] = Query(None), end_date: Optional[str] = Query(None), category: Optional[str] = Query(None)):
-    today = datetime.utcnow()
+async def get_analytics_summary(
+    start_date: Optional[str] = Query(None),
+    end_date: Optional[str] = Query(None),
+    category: Optional[str] = Query(None)
+):
+    """Get summary statistics for food saved and donated"""
     pipeline = build_aggregation_pipeline(start_date, end_date, category)
+    
     try:
         all_items = await collection.aggregate(pipeline).to_list(length=None)
     except Exception as e:
@@ -80,9 +85,16 @@ async def get_analytics_summary(start_date: Optional[str] = Query(None), end_dat
         return {
             "hasData": False,
             "message": "No data found for the selected filters.",
-            "totalItems": 0, "totalDonations": 0, "totalUsed": 0,
-            "categoriesBreakdown": {}, "monthlyTrend": [],
-            "impactMetrics": {"foodSavedKg": 0.0, "co2SavedKg": 0.0, "moneySaved": 0}
+            "totalItems": 0,
+            "totalDonations": 0,
+            "totalUsed": 0,
+            "categoriesBreakdown": {},
+            "monthlyTrend": [],
+            "impactMetrics": {
+                "foodSavedKg": 0.0,
+                "co2SavedKg": 0.0,
+                "moneySaved": 0
+            }
         }
 
     total_items = 0
@@ -93,7 +105,7 @@ async def get_analytics_summary(start_date: Optional[str] = Query(None), end_dat
     for item in all_items:
         qty_raw = item.get("quantity", 1)
         try:
-            quantity = int(float(qty_raw))  # convert string or float to int
+            quantity = int(float(qty_raw))
         except (TypeError, ValueError):
             quantity = 1
 
@@ -109,6 +121,7 @@ async def get_analytics_summary(start_date: Optional[str] = Query(None), end_dat
         category_stats[cat]["total"] += quantity
         total_items += quantity
 
+    # Monthly trend
     trend_data = defaultdict(lambda: {"inventory": 0, "donations": 0})
     for item in all_items:
         qty_raw = item.get("quantity", 1)
@@ -149,8 +162,14 @@ async def get_analytics_summary(start_date: Optional[str] = Query(None), end_dat
 
 
 @router.get("/categories")
-async def get_category_breakdown(start_date: Optional[str] = Query(None), end_date: Optional[str] = Query(None), category: Optional[str] = Query(None)):
+async def get_category_breakdown(
+    start_date: Optional[str] = Query(None),
+    end_date: Optional[str] = Query(None),
+    category: Optional[str] = Query(None)
+):
+    """Get analytics by category"""
     pipeline = build_aggregation_pipeline(start_date, end_date, category)
+    
     try:
         all_items = await collection.aggregate(pipeline).to_list(length=None)
     except Exception as e:
@@ -159,7 +178,8 @@ async def get_category_breakdown(start_date: Optional[str] = Query(None), end_da
     if not all_items:
         return {"hasData": False, "categoriesBreakdown": {}}
 
-    category_stats = defaultdict(lambda: {"total": 0, "donated": 0, "used": 0})
+    category_stats = defaultdict(lambda: {"total": 0, "donated": 0, "used": 0, "wasted": 0})
+    
     for item in all_items:
         qty_raw = item.get("quantity", 1)
         try:
@@ -169,23 +189,53 @@ async def get_category_breakdown(start_date: Optional[str] = Query(None), end_da
 
         cat = item.get("category", "Unknown")
 
-        if item.get("source") == "donation":
-            category_stats[cat]["donated"] += quantity
-        else:
-            category_stats[cat]["used"] += quantity
+        # Check if expired (wasted)
+        expiry = item.get("expiry_date")
+        is_wasted = False
+        
+        if expiry:
+            if isinstance(expiry, str):
+                try:
+                    expiry = parse(expiry)
+                except Exception:
+                    expiry = None
+            
+            if expiry and expiry < datetime.utcnow():
+                is_wasted = True
+                category_stats[cat]["wasted"] += quantity
+
+        if not is_wasted:
+            if item.get("source") == "donation":
+                category_stats[cat]["donated"] += quantity
+            else:
+                category_stats[cat]["used"] += quantity
+        
         category_stats[cat]["total"] += quantity
 
     return {"hasData": True, "categoriesBreakdown": dict(category_stats)}
 
+
 @router.get("/trends")
-async def get_trends(period: str = Query("monthly")):
+async def get_trends(
+    period: str = Query("monthly"),
+    start_date: Optional[str] = Query(None),
+    end_date: Optional[str] = Query(None),
+    category: Optional[str] = Query(None)
+):
     """Return trend data grouped by the selected period (weekly, monthly, or yearly)."""
-    all_items = await collection.find().to_list(length=None)
+    
+    # Build aggregation pipeline with filters
+    pipeline = build_aggregation_pipeline(start_date, end_date, category)
+    
+    try:
+        all_items = await collection.aggregate(pipeline).to_list(length=None)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database aggregation failed: {e}")
 
     if not all_items:
         return {"hasData": False, "trend": []}
 
-    trend_data = defaultdict(lambda: {"saved": 0, "donated": 0})
+    trend_data = defaultdict(lambda: {"saved": 0, "donated": 0, "wasted": 0})
 
     for item in all_items:
         qty_raw = item.get("quantity", 1)
@@ -194,15 +244,12 @@ async def get_trends(period: str = Query("monthly")):
         except (TypeError, ValueError):
             quantity = 1
 
-        created = item.get("created_at")
-        if isinstance(created, str):
-            try:
-                created = parse(created)
-            except Exception:
-                continue
+        # Use created_at_date from aggregation pipeline
+        created = item.get("created_at_date")
         if not created:
             continue
 
+        # Format based on period
         if period == "weekly":
             key = created.strftime("%Y-W%U")  # e.g. "2025-W45"
         elif period == "yearly":
@@ -210,13 +257,29 @@ async def get_trends(period: str = Query("monthly")):
         else:  # monthly default
             key = created.strftime("%Y-%m")
 
-        if item.get("source") == "donation":
-            trend_data[key]["donated"] += quantity
-        else:
-            trend_data[key]["saved"] += quantity
+        # Check if item is expired (wasted)
+        expiry = item.get("expiry_date")
+        is_wasted = False
+        
+        if expiry:
+            if isinstance(expiry, str):
+                try:
+                    expiry = parse(expiry)
+                except Exception:
+                    expiry = None
+            
+            if expiry and expiry < datetime.utcnow():
+                is_wasted = True
+                trend_data[key]["wasted"] += quantity
+
+        if not is_wasted:
+            if item.get("source") == "donation":
+                trend_data[key]["donated"] += quantity
+            else:
+                trend_data[key]["saved"] += quantity
 
     trend_list = [
-        {"period": k, "saved": v["saved"], "donated": v["donated"]}
+        {"period": k, "saved": v["saved"], "donated": v["donated"], "wasted": v["wasted"]}
         for k, v in sorted(trend_data.items())
     ]
 
