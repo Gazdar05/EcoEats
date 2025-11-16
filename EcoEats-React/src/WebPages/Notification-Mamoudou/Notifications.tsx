@@ -32,50 +32,44 @@ const Notifications: React.FC = () => {
       const res = await fetch(`${API_BASE}/notifications/`);
       const data: BackendNotification[] = await res.json();
 
-      const mapped: FrontendNotification[] = data
-        .filter((n) => !n.is_read)
-        .map((n) => {
-          let type = n.type;
-          const title = (n.title || n.message || "").toLowerCase();
+      const mapped: FrontendNotification[] = data.map((n) => {
+        let type = n.type;
+        const titleLower = (n.title || n.message || "").toLowerCase();
 
-          // Expiring or expired items → force type = inventory
-          if (title.includes("expiring") || title.includes("expired")) type = "inventory";
+        if (titleLower.includes("expiring") || titleLower.includes("expired")) type = "inventory";
+        if (type === "meal" && titleLower.includes("upcoming")) type = "meal";
 
-          // Upcoming meals → force type = meal
-          if (type === "meal" && title.includes("upcoming")) type = "meal";
+        const isNewOrEditedInventory =
+          type === "inventory" && (titleLower.includes("added") || titleLower.includes("updated") || titleLower.includes("edited"));
 
-          // Determine which notifications get an action button
-          const isNewOrEditedInventory =
-            type === "inventory" && (title.includes("added") || title.includes("updated") || title.includes("edited"));
+        const show_action =
+          (type === "donation" || isNewOrEditedInventory) &&
+          n.show_action !== false &&
+          !titleLower.includes("deleted") &&
+          !titleLower.includes("removed");
 
-          const show_action =
-            (type === "donation" || isNewOrEditedInventory) &&
-            n.show_action !== false &&
-            !title.includes("deleted") &&
-            !title.includes("removed");
+        let action_label: string | undefined = undefined;
+        if (type === "donation" && show_action) action_label = n.action_label || "View Donation";
+        if (isNewOrEditedInventory && show_action) action_label = n.action_label || "View Item";
 
-          let action_label: string | undefined = undefined;
-          if (type === "donation" && show_action) action_label = n.action_label || "View Donation";
-          if (isNewOrEditedInventory && show_action) action_label = n.action_label || "View Item";
-
-          return {
-            ...n,
-            type,
-            icon:
-              type === "inventory"
-                ? <Leaf color="#3BAE3B" size={18} />
-                : type === "meal"
-                ? <BookOpen color="#8BC34A" size={18} />
-                : type === "donation"
-                ? <Calendar color="#4CAF50" size={18} />
-                : type === "system"
-                ? <Info color="#1976D2" size={18} />
-                : <Circle color="#888" size={18} />,
-            show_action,
-            action_label,
-            action_link: n.action_link || n.link || "",
-          };
-        });
+        return {
+          ...n,
+          type,
+          icon:
+            type === "inventory"
+              ? <Leaf color="#3BAE3B" size={18} />
+              : type === "meal"
+              ? <BookOpen color="#8BC34A" size={18} />
+              : type === "donation"
+              ? <Calendar color="#4CAF50" size={18} />
+              : type === "system"
+              ? <Info color="#1976D2" size={18} />
+              : <Circle color="#888" size={18} />,
+          show_action,
+          action_label,
+          action_link: n.action_link || n.link || "",
+        };
+      });
 
       setNotifications(mapped);
     } catch (err) {
@@ -85,7 +79,7 @@ const Notifications: React.FC = () => {
 
   useEffect(() => {
     fetchNotifications();
-    const interval = setInterval(fetchNotifications, 5000); // polling every 5s
+    const interval = setInterval(fetchNotifications, 5000);
     return () => clearInterval(interval);
   }, []);
 
@@ -97,10 +91,12 @@ const Notifications: React.FC = () => {
     }
   };
 
-  const openNotification = (note: FrontendNotification) => {
-    if (!note.is_read) {
+  const openNotification = (note: FrontendNotification, markRead: boolean = true) => {
+    if (markRead && !note.is_read && note.id) {
       markAsReadBackend(note.id);
-      setNotifications((prev) => prev.filter((n) => n.id !== note.id));
+      setNotifications((prev) =>
+        prev.map((n) => (n.id === note.id ? { ...n, is_read: true } : n))
+      );
     }
 
     if ((note.action_label || "").toLowerCase() === "view donation") {
@@ -122,9 +118,20 @@ const Notifications: React.FC = () => {
   const markAllAsRead = async () => {
     try {
       await fetch(`${API_BASE}/notifications/mark_all_read`, { method: "POST" });
-      setNotifications([]);
+      setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
     } catch (err) {
       console.error("Failed to mark all notifications as read:", err);
+      setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
+    }
+  };
+
+  // ---- Updated Clear All ----
+  const clearAllNotifications = async () => {
+    try {
+      await fetch(`${API_BASE}/notifications/clear_all`, { method: "DELETE" });
+      setNotifications([]); // remove from frontend
+    } catch (err) {
+      console.error("Failed to clear notifications:", err);
       setNotifications([]);
     }
   };
@@ -140,7 +147,7 @@ const Notifications: React.FC = () => {
 
       <div className="notif-actions">
         <button className="mark-all" onClick={markAllAsRead}>Mark all read</button>
-        <button className="clear-all" onClick={() => setNotifications([])}>Clear all</button>
+        <button className="clear-all" onClick={clearAllNotifications}>Clear all</button>
       </div>
 
       <div className="notif-tabs">
