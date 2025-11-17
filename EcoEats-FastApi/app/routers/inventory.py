@@ -246,27 +246,49 @@ async def bulk_update_inventory_items(request: Request):
 async def update_inventory_item(item_id: str, request: Request):
     updated_data = await request.json()
 
+    # --------------------------
+    # Normalize fields
+    # --------------------------
     if "expiry" in updated_data:
         try:
-            updated_data["expiry_date"] = datetime.strptime(updated_data.pop("expiry"), "%Y-%m-%d")
+            updated_data["expiry_date"] = datetime.strptime(
+                updated_data.pop("expiry"), "%Y-%m-%d"
+            )
         except:
             raise HTTPException(400, "Invalid expiry format. Use YYYY-MM-DD.")
 
-    try:
-        obj_id = ObjectId(item_id)
-    except:
-        raise HTTPException(400, "Invalid item ID format")
+    if "quantity" in updated_data:
+        try:
+            updated_data["quantity"] = int(updated_data["quantity"])
+        except:
+            raise HTTPException(400, "Quantity must be a number.")
+
+    if "name" in updated_data:
+        updated_data["name"] = str(updated_data["name"]).strip()
 
     if "category" in updated_data:
         updated_data["category"] = normalize_category(updated_data["category"])
         if updated_data["category"] not in ALLOWED_CATEGORIES:
             raise HTTPException(400, f"Invalid category: {updated_data['category']}")
 
-    if "storage" in updated_data and updated_data["storage"] not in ALLOWED_STORAGE:
-        raise HTTPException(400, f"Invalid storage type: {updated_data['storage']}")
+    if "storage" in updated_data:
+        updated_data["storage"] = str(updated_data["storage"]).strip()
+        if updated_data["storage"] not in ALLOWED_STORAGE:
+            raise HTTPException(400, f"Invalid storage type: {updated_data['storage']}")
 
     if "image" not in updated_data:
         updated_data["image"] = ""
+
+    # Always update timestamp
+    updated_data["updated_at"] = datetime.utcnow()
+
+    # --------------------------
+    # Update in MongoDB
+    # --------------------------
+    try:
+        obj_id = ObjectId(item_id)
+    except:
+        raise HTTPException(400, "Invalid item ID format")
 
     result = await collection.update_one(
         {"$and": [{"_id": obj_id}, SOURCE_FILTER]},
@@ -276,17 +298,22 @@ async def update_inventory_item(item_id: str, request: Request):
     if result.matched_count == 0:
         raise HTTPException(404, "Item not found")
 
+    # Fetch updated document
     updated_item = await collection.find_one({"_id": obj_id})
 
-    # send notification
+    # --------------------------
+    # Send notification
+    # --------------------------
     await create_notification(
         title="Item Updated",
         message=f"{updated_item['name']} was updated.",
         notif_type="inventory",
+        user_id="default",
         link=f"/inventory/{item_id}",
         show_action=True
     )
 
+    # Serialize before returning
     return serialize_item(updated_item)
 
 # DELETE item (his feature merged safely)

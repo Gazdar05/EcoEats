@@ -375,7 +375,7 @@ async def frontend_save_mealplan(plan: dict = Body(...)):
             if "ingredients" in meal:
                 for ing in meal["ingredients"]:
                     ing.setdefault("used_qty", None)
-            
+
             entry = {
                 "user_id": user_id,
                 "week_start": week_start,
@@ -387,29 +387,62 @@ async def frontend_save_mealplan(plan: dict = Body(...)):
             }
             meal_entries.append(entry)
 
+    inserted_count = 0
+    inserted_ids = []
+
     if meal_entries:
-        await db.meal_entries.insert_many(meal_entries)
-            # 3️⃣ create notifications for each meal added (Meal Reminders)
-        for entry in meal_entries:
-            meal_name = entry["meal"]["name"]
-            slot = entry["slot"]
-            day = entry["day"]
+        # insert and capture inserted_ids so we can tie notifications to entries
+        try:
+            result_insert = await db.meal_entries.insert_many(meal_entries)
+            inserted_ids = result_insert.inserted_ids or []
+            inserted_count = len(inserted_ids)
+        except Exception:
+            # fallback: attempt individual inserts if bulk fails
+            inserted_ids = []
+            for e in meal_entries:
+                r = await db.meal_entries.insert_one(e)
+                inserted_ids.append(r.inserted_id)
+            inserted_count = len(inserted_ids)
 
-            await db.notifications.insert_one({
+        # 3️⃣ create "meal activity" notifications (one per entry), duplicate-safe
+        # iterate inserted_ids and the corresponding meal_entries
+        for idx, entry in enumerate(meal_entries):
+            try:
+                meal_entry_id = inserted_ids[idx]
+            except Exception:
+                # if indexes mismatch, skip
+                continue
+
+            meal_name = entry["meal"].get("name", "Meal")
+            slot = entry.get("slot")
+            day = entry.get("day")
+
+            # ensure we don't duplicate "meal_activity" notifications
+            exists = await db.notifications.find_one({
+                "meal_entry_id": meal_entry_id,
                 "user_id": user_id,
-                "type": "meal_reminder",
-                "title": f"Upcoming meal: {meal_name}",
-                "message": f"{slot.title()} on {day} is planned.",
-                "timestamp": datetime.utcnow(),
-                "read": False,
-                "link_to": {
-                    "module": "mealplan",
-                    "day": day,
-                    "slot": slot
-            }
-        })
+                "type": "meal_activity"
+            })
 
-    return {"status": "saved", "modified": result.modified_count, "entries_saved": len(meal_entries)}
+            if exists:
+                continue
+
+            try:
+                await db.notifications.insert_one({
+                    "user_id": user_id,
+                    "type": "meal",            # distinct from reminders
+                    "title": f"Meal added: {meal_name}",
+                    "message": f"{slot.title()} on {day} has been added.",
+                    "created_at": datetime.utcnow(),
+                    "meal_entry_id": meal_entry_id,
+                    "is_read": False,
+                    "show_action": False
+                })
+            except Exception:
+                # ignore insertion errors (unique index will protect duplicates)
+                pass
+
+    return {"status": "saved", "modified": result.modified_count, "entries_saved": inserted_count}
 
 @router.get("/entries/{user_id}/{week_start}")
 async def get_meal_entries(user_id: str, week_start: str):

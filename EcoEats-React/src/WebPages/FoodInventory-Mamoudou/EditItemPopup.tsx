@@ -5,7 +5,7 @@ interface InventoryItem {
   id: string;
   name: string;
   category: string;
-  quantity: string;
+  quantity: number | string; // allow string from input, convert later
   expiry: string;
   storage: string;
   status: string;
@@ -16,7 +16,7 @@ interface InventoryItem {
 interface EditItemPopupProps {
   item: InventoryItem;
   onClose: () => void;
-  onSave: (updatedItem: Omit<InventoryItem, "status">) => Promise<void>; // ✅ now async
+  onSave: (updatedItem: InventoryItem) => Promise<void>; // async save
 }
 
 const EditItemPopup: React.FC<EditItemPopupProps> = ({
@@ -27,7 +27,7 @@ const EditItemPopup: React.FC<EditItemPopupProps> = ({
   const [formData, setFormData] = useState({
     name: item.name,
     category: item.category || "",
-    quantity: item.quantity,
+    quantity: item.quantity.toString(),
     expiry: item.expiry,
     storage: item.storage || "",
     notes: item.notes || "",
@@ -63,16 +63,19 @@ const EditItemPopup: React.FC<EditItemPopupProps> = ({
     setLoading(true);
 
     try {
-      const updatedItem = {
+      const updatedItem: InventoryItem = {
         ...item,
         ...formData,
+        quantity: parseInt(formData.quantity, 10), // convert string → number
+        category: formData.category.trim(),
         image: imagePreview || item.image || "",
       };
-      await onSave(updatedItem); // ✅ wait for backend save
+
+      await onSave(updatedItem); // call async backend save
       onClose(); // close popup after save
-    } catch (err) {
+    } catch (err: any) {
       console.error("Failed to save item:", err);
-      alert("Failed to save item. Try again.");
+      alert(err?.message || "Failed to save item. Try again.");
     } finally {
       setLoading(false);
     }
@@ -103,26 +106,28 @@ const EditItemPopup: React.FC<EditItemPopupProps> = ({
               required
             >
               <option value="">Select category</option>
-              <option value="Produce">Produce</option>
-              <option value="Fruit">Fruit</option>
-              <option value="Vegetable">Vegetable</option>
+              <option value="Fruits">Fruits</option>
+              <option value="Vegetables">Vegetables</option>
               <option value="Dairy">Dairy</option>
-              <option value="Bakery">Bakery</option>
               <option value="Meat">Meat</option>
+              <option value="Grains">Grains</option>
+              <option value="Pantry Staples">Pantry Staples</option>
+              <option value="Bakery">Bakery</option>
+              <option value="Beverages">Beverages</option>
+              <option value="Canned">Canned</option>
               <option value="Seafood">Seafood</option>
-              <option value="Dry Goods">Dry Goods</option>
-              <option value="Frozen">Frozen</option>
             </select>
           </div>
 
           <div className="edit-form-group">
             <label>Quantity</label>
             <input
-              type="text"
+              type="number"
               name="quantity"
               value={formData.quantity}
               onChange={handleChange}
               required
+              min={0}
             />
           </div>
 
