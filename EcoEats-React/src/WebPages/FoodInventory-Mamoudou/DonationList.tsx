@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./DonationList.css";
 
 export interface DonationItem {
@@ -6,39 +6,48 @@ export interface DonationItem {
   name: string;
   category: string;
   quantity: string;
-  expiry: string;
   storage: string;
   status: string;
   notes?: string;
   image?: string;
   pickupLocation?: string;
-  availability?: string;
 }
 
 interface DonationListProps {
-  donations: DonationItem[];
-  onClose: () => void;
+  onClose?: () => void; // Optional callback for close button
 }
 
-const API_BASE = "http://127.0.0.1:8000"; // FastAPI backend
+const API_BASE = "http://127.0.0.1:8000";
 
-const DonationList: React.FC<DonationListProps> = ({ donations, onClose }) => {
-  const [donationList, setDonationList] = useState<DonationItem[]>(donations);
+const DonationList: React.FC<DonationListProps> = ({ onClose }) => {
+  const [donationList, setDonationList] = useState<DonationItem[]>([]);
+  const [isVisible, setIsVisible] = useState(true);
 
-  // Send a donation-deleted notification to backend
+  useEffect(() => {
+    const loadDonations = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/donations/`);
+        const data = await res.json();
+        setDonationList(data);
+      } catch (err) {
+        console.error("Failed to load donations:", err);
+      }
+    };
+
+    loadDonations();
+  }, []);
+
   const sendNotification = async (deletedDonation: DonationItem) => {
     try {
       await fetch(`${API_BASE}/notifications/`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title: "Donation Deleted",
           message: `The donation "${deletedDonation.name}" has been deleted.`,
           type: "donation",
           link: deletedDonation.id,
-          show_action: false, // No action button
+          show_action: false,
         }),
       });
     } catch (err) {
@@ -46,35 +55,37 @@ const DonationList: React.FC<DonationListProps> = ({ donations, onClose }) => {
     }
   };
 
-  // Delete donation from backend and update UI
   const handleDelete = async (id: string) => {
     const donationToDelete = donationList.find((d) => d.id === id);
     if (!donationToDelete) return;
 
-    if (!window.confirm(`Are you sure you want to delete "${donationToDelete.name}"?`)) return;
+    if (!window.confirm(`Delete "${donationToDelete.name}"?`)) return;
 
     try {
-      // Delete from backend
-      await fetch(`${API_BASE}/donations/${id}`, {
-        method: "DELETE",
-      });
-
-      // Send notification
+      await fetch(`${API_BASE}/donations/${id}`, { method: "DELETE" });
       await sendNotification(donationToDelete);
-
-      // Remove locally
       setDonationList((prev) => prev.filter((d) => d.id !== id));
     } catch (err) {
       console.error("Failed to delete donation:", err);
-      alert("Failed to delete donation. Please try again.");
+      alert("Failed to delete donation.");
     }
   };
+
+  const handleClose = () => {
+    if (onClose) {
+      onClose();
+    } else {
+      setIsVisible(false); // Hide locally if no callback provided
+    }
+  };
+
+  if (!isVisible) return null; // Hide the component
 
   return (
     <div className="donation-list-wrapper">
       <div className="donation-header">
         <h2>Donations</h2>
-        <button className="btn-close" onClick={onClose}>
+        <button className="btn-close" onClick={handleClose}>
           Close
         </button>
       </div>
@@ -82,7 +93,10 @@ const DonationList: React.FC<DonationListProps> = ({ donations, onClose }) => {
       {donationList.length === 0 ? (
         <div className="no-donations">No donations found.</div>
       ) : (
-        <div className="donation-table-container" style={{ maxHeight: "500px", overflowY: "auto" }}>
+        <div
+          className="donation-table-container"
+          style={{ maxHeight: "500px", overflowY: "auto" }}
+        >
           <table className="donation-table">
             <thead>
               <tr>
@@ -90,40 +104,37 @@ const DonationList: React.FC<DonationListProps> = ({ donations, onClose }) => {
                 <th>Name</th>
                 <th>Category</th>
                 <th>Quantity</th>
-                <th>Expiry</th>
                 <th>Storage</th>
                 <th>Status</th>
                 <th>Pickup Location</th>
-                <th>Availability</th>
                 <th>Action</th>
               </tr>
             </thead>
             <tbody>
               {donationList.map((d) => (
-                <tr key={d.id} className="donation-row">
-                  <td>{d.image ? <img src={d.image} alt={d.name} className="donation-img" /> : "No Image"}</td>
+                <tr key={d.id}>
+                  <td>
+                    {d.image ? (
+                      <img
+                        src={d.image}
+                        alt={d.name}
+                        className="donation-img"
+                      />
+                    ) : (
+                      "No Image"
+                    )}
+                  </td>
                   <td>{d.name}</td>
                   <td>{d.category}</td>
                   <td>{d.quantity}</td>
-                  <td>{d.expiry}</td>
                   <td>{d.storage}</td>
-                  <td>
-                    <span
-                      className={`status-badge ${
-                        d.status === "Expired"
-                          ? "status-expired"
-                          : d.status === "Expiring Soon"
-                          ? "status-expiring"
-                          : "status-fresh"
-                      }`}
-                    >
-                      {d.status}
-                    </span>
-                  </td>
+                  <td>{d.status}</td>
                   <td>{d.pickupLocation || "-"}</td>
-                  <td>{d.availability || "-"}</td>
                   <td>
-                    <button className="btn-delete" onClick={() => handleDelete(d.id)}>
+                    <button
+                      className="btn-delete"
+                      onClick={() => handleDelete(d.id)}
+                    >
                       Delete
                     </button>
                   </td>

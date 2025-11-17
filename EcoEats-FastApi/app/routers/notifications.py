@@ -80,9 +80,9 @@ def normalize_notification(doc: dict) -> dict:
             action_label = "View Item"
             action_link = f"/inventory?action=view&id={doc.get('link','')}"
     elif item_type == "donation":
-        if "donated" in title_lower:
-            action_label = "View Donation"
-            action_link = "/inventory?action=donations"
+        action_label = "View Donation"
+        action_link = "/inventory?action=donations"
+        show_action = True
     elif item_type == "meal":
         action_label = None
         action_link = None

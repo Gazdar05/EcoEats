@@ -1,4 +1,3 @@
-// src/pages/Inventory/EditItemPopup.tsx
 import React, { useState } from "react";
 import "./EditItemPopup.css";
 
@@ -17,7 +16,7 @@ interface InventoryItem {
 interface EditItemPopupProps {
   item: InventoryItem;
   onClose: () => void;
-  onSave: (updatedItem: Omit<InventoryItem, "status">) => void; // ✅ omit status
+  onSave: (updatedItem: Omit<InventoryItem, "status">) => Promise<void>; // ✅ now async
 }
 
 const EditItemPopup: React.FC<EditItemPopupProps> = ({
@@ -34,9 +33,8 @@ const EditItemPopup: React.FC<EditItemPopupProps> = ({
     notes: item.notes || "",
   });
 
-  const [imagePreview, setImagePreview] = useState<string>(
-    item.image ? String(item.image) : ""
-  );
+  const [imagePreview, setImagePreview] = useState<string>(item.image || "");
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -49,20 +47,35 @@ const EditItemPopup: React.FC<EditItemPopupProps> = ({
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () =>
-        setImagePreview(typeof reader.result === "string" ? reader.result : "");
-      reader.readAsDataURL(file);
-    }
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImagePreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleRemoveImage = () => setImagePreview("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const updatedItem = { ...item, ...formData, image: imagePreview || "" };
-    onSave(updatedItem); // ✅ matches Omit<InventoryItem, "status">
+    setLoading(true);
+
+    try {
+      const updatedItem = {
+        ...item,
+        ...formData,
+        image: imagePreview || item.image || "",
+      };
+      await onSave(updatedItem); // ✅ wait for backend save
+      onClose(); // close popup after save
+    } catch (err) {
+      console.error("Failed to save item:", err);
+      alert("Failed to save item. Try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -184,10 +197,19 @@ const EditItemPopup: React.FC<EditItemPopupProps> = ({
           </div>
 
           <div className="edit-popup-actions">
-            <button type="submit" className="edit-save-btn">
-              Save Changes
+            <button
+              type="submit"
+              className="edit-save-btn"
+              disabled={loading}
+            >
+              {loading ? "Saving..." : "Save Changes"}
             </button>
-            <button type="button" className="edit-cancel-btn" onClick={onClose}>
+            <button
+              type="button"
+              className="edit-cancel-btn"
+              onClick={onClose}
+              disabled={loading}
+            >
               Cancel
             </button>
           </div>
