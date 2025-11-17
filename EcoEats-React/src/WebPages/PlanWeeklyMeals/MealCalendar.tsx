@@ -6,7 +6,11 @@ type Props = {
   plan: WeekPlan;
   inventory: InventoryItem[];
   days: DayKey[];
-  onOpenSlot: (day: DayKey, slot: keyof WeekPlan["meals"][DayKey]) => void;
+  onOpenSlot: (
+    day: DayKey,
+    slot: keyof WeekPlan["meals"][DayKey],
+    existing?: any
+  ) => void;
   onRemoveMeal: (day: DayKey, slot: keyof WeekPlan["meals"][DayKey]) => void;
 };
 
@@ -64,7 +68,7 @@ const MealCalendar: React.FC<Props> = ({
               <div
                 key={`${day}-${slot}`}
                 className="meal-square"
-                onClick={() => onOpenSlot(day, slot)}
+                onClick={() => onOpenSlot(day, slot, meal)} // ✅ FIXED
               >
                 <div className="meal-square-title">
                   {slot[0].toUpperCase() + slot.slice(1)}
@@ -97,7 +101,7 @@ const MealCalendar: React.FC<Props> = ({
                         className="edit-btn"
                         onClick={(e) => {
                           e.stopPropagation();
-                          onOpenSlot(day, slot);
+                          onOpenSlot(day, slot, meal); // ✅ FIXED
                         }}
                       >
                         ✏️

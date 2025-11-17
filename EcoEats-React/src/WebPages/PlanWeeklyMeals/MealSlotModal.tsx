@@ -59,6 +59,8 @@ const MealSlotModal: React.FC<Props> = ({
   const [customName, setCustomName] = useState(existing?.name ?? "");
 
   const [usedQty, setUsedQty] = useState<Record<string, number>>({});
+  // Track if we already initialised from an existing meal (edit mode)
+  const [initializedFromExisting, setInitializedFromExisting] = useState(false);
 
   const invNames = useMemo(
     () => inventory.map((i) => (i.name || "").toLowerCase()),
@@ -138,10 +140,44 @@ const MealSlotModal: React.FC<Props> = ({
     return hits;
   }
 
+  // 1️⃣ First effect – run ONCE to initialise from existing meal (edit mode)
   useEffect(() => {
+    if (!existing || initializedFromExisting) return;
+
+    // Prefill quantities from existing.ingredients
+    const init: Record<string, number> = {};
+    for (const ing of existing.ingredients || []) {
+      if (!ing.id) continue;
+      init[ing.id] = Number(ing.used_qty ?? 0);
+    }
+    setUsedQty(init);
+
+    // Select correct tab + name/recipe
+    if (existing.type === "custom") {
+      setTab("custom");
+      setCustomName(existing.name ?? "");
+    } else if (existing.type === "generic") {
+      setTab("generic");
+      setSelectedRecipe(existing.name ?? null);
+    } else {
+      // treat as suggested recipe by default
+      setTab("suggested");
+      setSelectedRecipe(existing.name ?? null);
+    }
+
+    setInitializedFromExisting(true);
+  }, [existing, initializedFromExisting]);
+  // 2️⃣ Second effect – normal defaults when creating a NEW meal
+  useEffect(() => {
+    // If we are editing and already initialised from existing,
+    // don't override the prefilled quantities just for tab/recipe changes.
+    if (existing) return;
+
     if (tab === "custom") {
       const init: Record<string, number> = {};
-      for (const it of inventory) init[getItemId(it)] = 0;
+      for (const it of inventory) {
+        init[getItemId(it)] = 0;
+      }
       setUsedQty(init);
       return;
     }
@@ -154,7 +190,7 @@ const MealSlotModal: React.FC<Props> = ({
       init[id] = Math.min(1, max);
     }
     setUsedQty(init);
-  }, [tab, selectedRecipe, inventory]);
+  }, [tab, selectedRecipe, inventory, existing]);
 
   function setQty(id: string, next: number, max: number) {
     if (!id) return;
@@ -231,6 +267,7 @@ const MealSlotModal: React.FC<Props> = ({
             {max === 0 && <span className="tag-gray">out</span>}
           </div>
         </div>
+
         <div className="qty-right">
           <button
             className="qty-btn"
@@ -240,14 +277,10 @@ const MealSlotModal: React.FC<Props> = ({
           >
             −
           </button>
-          <input
-            className="qty-input"
-            type="number"
-            min={0}
-            max={max}
-            value={val}
-            onChange={(e) => setQty(id, Number(e.target.value), max)}
-          />
+
+          {/* 🔥 REPLACED number input with non-editable display box */}
+          <div className="qty-display">{val}</div>
+
           <button
             className="qty-btn"
             onClick={() => setQty(id, val + 1, max)}
@@ -377,9 +410,11 @@ const MealSlotModal: React.FC<Props> = ({
                 className="qty-panel"
                 style={{ maxHeight: 260, overflow: "auto" }}
               >
-                {inventory.map((it) => (
-                  <QtyRow key={getItemId(it)} it={it} />
-                ))}
+                {inventory
+                  .filter((it) => Number(it.quantity) > 0) // ✅ Only show items that have stock
+                  .map((it) => (
+                    <QtyRow key={getItemId(it)} it={it} />
+                  ))}
               </div>
             </div>
           )}

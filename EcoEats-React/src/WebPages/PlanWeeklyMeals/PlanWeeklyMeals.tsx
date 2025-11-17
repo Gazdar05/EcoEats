@@ -245,7 +245,36 @@ const PlannerInner: React.FC = () => {
   ) {
     if (!plan) return;
 
+    const prev = plan.meals[day][slot]; // previous meal (if any)
+    const isEdit = !!prev;
+
+    // 1️⃣ Start with a fresh clone
     const newPlan = structuredClone(plan);
+
+    // 2️⃣ Restore OLD ingredient quantities if editing
+    let restoredInv = inventory.map((it) => {
+      const id = it.id;
+      if (!prev) return it;
+
+      const oldHit = prev.ingredients?.find((u: any) => u.id === id);
+      if (!oldHit) return it;
+
+      const restoreAmount = Number(oldHit.used_qty || 0);
+      return { ...it, quantity: Number(it.quantity || 0) + restoreAmount };
+    });
+
+    // 3️⃣ Now apply NEW ingredient usage
+    const updatedInv = restoredInv.map((it) => {
+      const id = it.id;
+      const hit = mealData.ingredients.find((u) => u.id === id);
+      if (!hit) return it;
+
+      const used = Number(hit.used_qty || 0);
+      return { ...it, quantity: Math.max(0, Number(it.quantity || 0) - used) };
+    });
+
+    // 4️⃣ Update UI state
+    setInventory(updatedInv);
 
     newPlan.meals[day][slot] = {
       name: mealData.name,
@@ -253,57 +282,38 @@ const PlannerInner: React.FC = () => {
       ingredients: mealData.ingredients,
       nutrition: mealData.nutrition ?? null,
     };
-
-    // reduce inventory locally
-    const updatedInv = inventory.map((it) => {
-      const id = it.id;
-      const hit = mealData.ingredients.find((u) => u.id === id);
-      if (!hit) return it;
-      const used = Number(hit.used_qty || 0);
-      return { ...it, quantity: Math.max(0, Number(it.quantity || 0) - used) };
-    });
-
-    setInventory(updatedInv);
     setPlan(newPlan);
 
-    // ✅ normalize BEFORE sending to backend
+    // 5️⃣ Prepare clean payload for DB
     const normalizedInv = updatedInv
-      .filter((it) => {
-        const rawId = it.id || (it as any)._id;
-        return rawId && /^[0-9a-fA-F]{24}$/.test(String(rawId)); // only valid Mongo IDs
-      })
+      .filter((it) => it.id)
       .map((it) => ({
-        ...it,
-        id: String(it.id || (it as any)._id),
-        quantity: Number(it.quantity ?? 0),
+        id: it.id,
+        quantity: Number(it.quantity),
       }));
 
-    console.log("🧾 Sending bulk update", normalizedInv);
-
-    // ✅ save inventory physically to DB
-    console.log(
-      "📦 Final payload to backend",
-      JSON.stringify(normalizedInv, null, 2)
-    );
-
+    // 6️⃣ Save inventory to backend
     await fetch(`${API_BASE_URL}/inventory/bulk-update`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(normalizedInv),
     });
+
     await refreshInventoryFromDB();
 
+    // 7️⃣ Save weekly meal plan
     try {
       const res = await fetch(`${API_BASE_URL}/mealplan`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newPlan),
       });
+
       if (!res.ok) throw new Error(await res.text());
-      notify.success("Meal saved to this week.");
+
+      notify.success(isEdit ? "Meal updated." : "Meal saved.");
     } catch (err) {
-      console.error("Failed to save plan:", err);
-      notify.error("Failed to save meal. Please try again.");
+      notify.error("Failed saving meal.");
     } finally {
       closeSlot();
     }
@@ -399,6 +409,27 @@ const PlannerInner: React.FC = () => {
       return;
     }
 
+    // 0️⃣ Compute how much THIS week’s existing plan has already used
+    const existingUsed: Record<string, number> = {};
+    const slotNames = ["breakfast", "lunch", "dinner", "snacks"] as const;
+
+    for (const day of DAYS) {
+      const slots = plan.meals[day];
+      if (!slots) continue;
+
+      for (const slot of slotNames) {
+        const meal = (slots as any)[slot];
+        if (!meal || !meal.ingredients) continue;
+
+        for (const ing of meal.ingredients) {
+          if (!ing.id) continue;
+          const qty = Number(ing.used_qty ?? 0);
+          if (!qty) continue;
+          existingUsed[ing.id] = (existingUsed[ing.id] ?? 0) + qty;
+        }
+      }
+    }
+
     try {
       const prevWeek = new Date(weekStart);
       prevWeek.setDate(prevWeek.getDate() - 7);
@@ -435,9 +466,7 @@ const PlannerInner: React.FC = () => {
         id: updated.id ?? updated._id ?? null,
       };
 
-      // --------------------------------------------------------
       // 1️⃣ Count meals and warn if empty
-      // --------------------------------------------------------
       const mealCount = Object.values(normalized.meals || {}).reduce(
         (count: number, day: any) => {
           const vals = Object.values(day || {}) as any[];
@@ -452,9 +481,7 @@ const PlannerInner: React.FC = () => {
         return;
       }
 
-      // --------------------------------------------------------
-      // 2️⃣ Build total usage list for the copied week
-      // --------------------------------------------------------
+      // 2️⃣ Build total usage list for the NEW copied week
       const usedList: Record<string, number> = {};
 
       const dayKeys = Object.keys(normalized.meals) as DayKey[];
@@ -462,13 +489,8 @@ const PlannerInner: React.FC = () => {
       for (const day of dayKeys) {
         const slots: MealSlot = normalized.meals[day] ?? EMPTY_SLOT;
 
-        for (const slot of [
-          "breakfast",
-          "lunch",
-          "dinner",
-          "snacks",
-        ] as const) {
-          const meal = slots[slot];
+        for (const slot of slotNames) {
+          const meal = (slots as any)[slot];
           if (!meal || !meal.ingredients) continue;
 
           for (const ing of meal.ingredients) {
@@ -481,22 +503,23 @@ const PlannerInner: React.FC = () => {
         }
       }
 
-      // --------------------------------------------------------
-      // 3️⃣ Reduce inventory locally
-      // --------------------------------------------------------
+      // 3️⃣ Adjust inventory:
+      //    - FIRST restore quantities from old plan (existingUsed)
+      //    - THEN deduct for the new copied plan (usedList)
       const updatedInv = inventory.map((it) => {
-        const used = usedList[it.id!] ?? 0;
+        const id = it.id!;
+        const restore = existingUsed[id] ?? 0;
+        const newlyUsed = usedList[id] ?? 0;
+
         return {
           ...it,
-          quantity: Math.max(0, Number(it.quantity) - used),
+          quantity: Math.max(0, Number(it.quantity) + restore - newlyUsed),
         };
       });
 
       setInventory(updatedInv);
 
-      // --------------------------------------------------------
       // 4️⃣ Persist inventory to backend
-      // --------------------------------------------------------
       await fetch(`${API_BASE_URL}/inventory/bulk-update`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -513,9 +536,7 @@ const PlannerInner: React.FC = () => {
       // Reload DB
       await refreshInventoryFromDB();
 
-      // --------------------------------------------------------
       // 5️⃣ Update UI with new copied plan
-      // --------------------------------------------------------
       setPlan(normalized);
       notify.success("Copied last week's plan into this week.");
     } catch (err) {

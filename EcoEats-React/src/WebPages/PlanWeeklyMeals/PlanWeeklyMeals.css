@@ -1544,3 +1544,23 @@ input[type="date"].week-picker::-webkit-calendar-picker-indicator {
   background: #5a8d1e;
   transform: translateY(-2px);
 }
+.qty-panel {
+  max-height: 260px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* Non-editable quantity display */
+.qty-display {
+  width: 28px;
+  height: 26px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background: #fafafa;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #333;
+  user-select: none;
+}
