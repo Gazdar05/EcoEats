@@ -366,7 +366,7 @@ export default function FoodAnalytics() {
                     nameKey="name"
                     cx="50%"
                     cy="50%"
-                    outerRadius={100}
+                    outerRadius={99}
                     label
                   >
                     {categoryData.map((_, index) => (
