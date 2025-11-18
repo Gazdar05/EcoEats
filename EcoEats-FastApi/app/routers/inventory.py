@@ -246,17 +246,17 @@ async def bulk_update_inventory_items(request: Request):
 async def update_inventory_item(item_id: str, request: Request):
     updated_data = await request.json()
 
-    # --------------------------
-    # Normalize fields
-    # --------------------------
-    if "expiry" in updated_data:
+    # Handle expiry
+    expiry_val = updated_data.pop("expiry", None)
+    if expiry_val:
         try:
-            updated_data["expiry_date"] = datetime.strptime(
-                updated_data.pop("expiry"), "%Y-%m-%d"
-            )
+            updated_data["expiry_date"] = datetime.strptime(expiry_val, "%Y-%m-%d")
         except:
             raise HTTPException(400, "Invalid expiry format. Use YYYY-MM-DD.")
+    else:
+        updated_data["expiry_date"] = None
 
+    # Normalize other fields
     if "quantity" in updated_data:
         try:
             updated_data["quantity"] = int(updated_data["quantity"])
@@ -276,15 +276,13 @@ async def update_inventory_item(item_id: str, request: Request):
         if updated_data["storage"] not in ALLOWED_STORAGE:
             raise HTTPException(400, f"Invalid storage type: {updated_data['storage']}")
 
-    if "image" not in updated_data:
+    if "image" in updated_data and updated_data["image"] is None:
         updated_data["image"] = ""
 
     # Always update timestamp
     updated_data["updated_at"] = datetime.utcnow()
 
-    # --------------------------
     # Update in MongoDB
-    # --------------------------
     try:
         obj_id = ObjectId(item_id)
     except:
@@ -301,9 +299,7 @@ async def update_inventory_item(item_id: str, request: Request):
     # Fetch updated document
     updated_item = await collection.find_one({"_id": obj_id})
 
-    # --------------------------
     # Send notification
-    # --------------------------
     await create_notification(
         title="Item Updated",
         message=f"{updated_item['name']} was updated.",
@@ -313,7 +309,6 @@ async def update_inventory_item(item_id: str, request: Request):
         show_action=True
     )
 
-    # Serialize before returning
     return serialize_item(updated_item)
 
 # DELETE item (his feature merged safely)
