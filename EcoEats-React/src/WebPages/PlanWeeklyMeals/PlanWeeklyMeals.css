@@ -775,11 +775,13 @@
 }
 
 
-    /* modal body */
-    .meal-modal-body {
-    max-height: 360px;
-    overflow: auto;
-    }
+ /* modal body */
+.meal-modal-body {
+  max-height: 360px;
+  overflow: auto;
+  scroll-behavior: auto !important;
+  overflow-anchor: none;       /* ⬅ prevent browser from snapping back to top */
+}
 
     /* reuse fp-checkbox styles */
     .fp-checkbox {
@@ -1176,10 +1178,18 @@ input[type="date"].week-picker::-webkit-calendar-picker-indicator {
 
 /* Eco-green scrollbars for any scrollable qty panel */
 .qty-panel {
-  /* no overflow forced here; your JSX sets it when needed */
+  /* scrolling behaviour */
+  max-height: 260px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scroll-behavior: auto !important;
+  overflow-anchor: none;            /* ⬅ stop scroll jumping when content updates */
+
+  /* scrollbar styling (Firefox + WebKit) */
   scrollbar-width: thin;
   scrollbar-color: var(--eco-green) #f2f2f2;
 }
+
 
 .qty-title {
   font-size: 0.9rem;
@@ -1547,8 +1557,17 @@ input[type="date"].week-picker::-webkit-calendar-picker-indicator {
 .qty-panel {
   max-height: 260px;
   overflow-y: auto;
-  overscroll-behavior: contain;
+
+  /* THE FIX */
+  overscroll-behavior: none !important;
+  overflow-anchor: none !important;
+  scroll-behavior: auto !important;
+
+  /* Keep your styling */
+  scrollbar-width: thin;
+  scrollbar-color: var(--eco-green) #f2f2f2;
 }
+
 
 /* Non-editable quantity display */
 .qty-display {
@@ -1563,4 +1582,7 @@ input[type="date"].week-picker::-webkit-calendar-picker-indicator {
   justify-content: center;
   color: #333;
   user-select: none;
+  
 }
+
+

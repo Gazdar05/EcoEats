@@ -1,7 +1,7 @@
 // src/WebPage/PlanWeeklyMeals/MealSlotModal.tsx
 import React, { useEffect, useMemo, useState } from "react";
 import type { InventoryItem, DayKey } from "./types";
-import { useNotify } from "./Toast"; // ✅ ADDED
+import { useNotify } from "./Toast";
 
 type RecipeLite = {
   name: string;
@@ -47,7 +47,7 @@ const MealSlotModal: React.FC<Props> = ({
   onClose,
   onConfirm,
 }) => {
-  const notify = useNotify(); // ✅ ADDED
+  const notify = useNotify();
 
   const [tab, setTab] = useState<"suggested" | "generic" | "custom">(
     "suggested"
@@ -59,7 +59,6 @@ const MealSlotModal: React.FC<Props> = ({
   const [customName, setCustomName] = useState(existing?.name ?? "");
 
   const [usedQty, setUsedQty] = useState<Record<string, number>>({});
-  // Track if we already initialised from an existing meal (edit mode)
   const [initializedFromExisting, setInitializedFromExisting] = useState(false);
 
   const invNames = useMemo(
@@ -76,13 +75,11 @@ const MealSlotModal: React.FC<Props> = ({
     const missing: string[] = [];
 
     for (const ing of ingNames) {
-      // Find matching inventory item by name
       const match = inventory.find((i) => {
         const invName = (i.name || "").toLowerCase();
         return invName.includes(ing) || ing.includes(invName);
       });
 
-      // ✅ If exists and has >0 quantity, it's "Have"
       if (match && Number(match.quantity) > 0) {
         available.push(match.name);
       } else {
@@ -103,12 +100,12 @@ const MealSlotModal: React.FC<Props> = ({
         .map(score)
         .filter((r) => r.match >= 80)
         .sort((a, b) => b.match - a.match),
-    [suggestedRecipes, inventory] // ✅ include inventory
+    [suggestedRecipes, inventory]
   );
 
   const genericList = useMemo(
     () => genericRecipes.map(score).sort((a, b) => b.match - a.match),
-    [genericRecipes, inventory] // ✅ include inventory
+    [genericRecipes, inventory]
   );
 
   function mapRecipeToInventory(recipeName: string | null): InventoryItem[] {
@@ -124,6 +121,7 @@ const MealSlotModal: React.FC<Props> = ({
 
     const hits: InventoryItem[] = [];
     const seen = new Set<string>();
+
     for (const it of inventory) {
       const name = (it.name || "").toLowerCase();
       const matched = ingNames.some(
@@ -140,11 +138,10 @@ const MealSlotModal: React.FC<Props> = ({
     return hits;
   }
 
-  // 1️⃣ First effect – run ONCE to initialise from existing meal (edit mode)
+  // Prefill existing meal (edit mode)
   useEffect(() => {
     if (!existing || initializedFromExisting) return;
 
-    // Prefill quantities from existing.ingredients
     const init: Record<string, number> = {};
     for (const ing of existing.ingredients || []) {
       if (!ing.id) continue;
@@ -152,7 +149,6 @@ const MealSlotModal: React.FC<Props> = ({
     }
     setUsedQty(init);
 
-    // Select correct tab + name/recipe
     if (existing.type === "custom") {
       setTab("custom");
       setCustomName(existing.name ?? "");
@@ -160,17 +156,15 @@ const MealSlotModal: React.FC<Props> = ({
       setTab("generic");
       setSelectedRecipe(existing.name ?? null);
     } else {
-      // treat as suggested recipe by default
       setTab("suggested");
       setSelectedRecipe(existing.name ?? null);
     }
 
     setInitializedFromExisting(true);
   }, [existing, initializedFromExisting]);
-  // 2️⃣ Second effect – normal defaults when creating a NEW meal
+
+  // Default mapping for new meals
   useEffect(() => {
-    // If we are editing and already initialised from existing,
-    // don't override the prefilled quantities just for tab/recipe changes.
     if (existing) return;
 
     if (tab === "custom") {
@@ -192,26 +186,22 @@ const MealSlotModal: React.FC<Props> = ({
     setUsedQty(init);
   }, [tab, selectedRecipe, inventory, existing]);
 
+  // Clean scroll-safe qty setter
   function setQty(id: string, next: number, max: number) {
     if (!id) return;
     const v = Math.max(0, Math.min(Math.floor(next || 0), max));
     setUsedQty((s) => ({ ...s, [id]: v }));
   }
+
   function confirm() {
-    // CUSTOM: name + chosen quantities
     if (tab === "custom") {
       if (!customName.trim()) return notify.error("Enter a meal name.");
+
       const chosen = inventory
         .map((it) => {
           const id = getItemId(it);
           const want = usedQty[id] || 0;
-          return want > 0
-            ? {
-                id,
-                name: it.name,
-                used_qty: want,
-              }
-            : null;
+          return want > 0 ? { id, name: it.name, used_qty: want } : null;
         })
         .filter(Boolean) as any[];
 
@@ -227,7 +217,6 @@ const MealSlotModal: React.FC<Props> = ({
       });
     }
 
-    // SG: must have a recipe selected
     const all = [...suggested, ...genericList];
     const selected = all.find((x) => x.name === selectedRecipe)?._full;
     if (!selected) return notify.error("Select a recipe.");
@@ -251,9 +240,8 @@ const MealSlotModal: React.FC<Props> = ({
     });
   }
 
-  // ===== UI pieces for quantity picking
-
-  function QtyRow({ it }: { it: InventoryItem }) {
+  // Memoized quantity row
+  const QtyRow = React.memo(function QtyRow({ it }: { it: InventoryItem }) {
     const id = getItemId(it);
     const max = getAvailableQty(it);
     const val = usedQty[id] ?? 0;
@@ -273,34 +261,23 @@ const MealSlotModal: React.FC<Props> = ({
             className="qty-btn"
             onClick={() => setQty(id, val - 1, max)}
             disabled={val <= 0}
-            aria-label={`Decrease ${it.name}`}
           >
             −
           </button>
 
-          {/* 🔥 REPLACED number input with non-editable display box */}
           <div className="qty-display">{val}</div>
 
           <button
             className="qty-btn"
             onClick={() => setQty(id, val + 1, max)}
             disabled={val >= max}
-            aria-label={`Increase ${it.name}`}
           >
             +
           </button>
         </div>
       </div>
     );
-  }
-
-  const sgTargets = useMemo(
-    () =>
-      tab !== "custom" && selectedRecipe
-        ? mapRecipeToInventory(selectedRecipe)
-        : [],
-    [tab, selectedRecipe, inventory]
-  );
+  });
 
   return (
     <div className="detail-overlay" onClick={onClose}>
@@ -402,6 +379,7 @@ const MealSlotModal: React.FC<Props> = ({
                 value={customName}
                 onChange={(e) => setCustomName(e.target.value)}
               />
+
               <div className="custom-subtitle">
                 Pick items & quantities (virtual reservation)
               </div>
@@ -411,7 +389,7 @@ const MealSlotModal: React.FC<Props> = ({
                 style={{ maxHeight: 260, overflow: "auto" }}
               >
                 {inventory
-                  .filter((it) => Number(it.quantity) > 0) // ✅ Only show items that have stock
+                  .filter((it) => Number(it.quantity) > 0)
                   .map((it) => (
                     <QtyRow key={getItemId(it)} it={it} />
                   ))}
