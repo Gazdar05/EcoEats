@@ -18,7 +18,7 @@ export const NotifierProvider: React.FC<{ children: React.ReactNode }> = ({
     const id = Date.now() + Math.random();
     setToasts((s) => [...s, { id, text, kind }]);
     // auto remove after 3.5s
-    setTimeout(() => setToasts((s) => s.filter((t) => t.id !== id)), 3500);
+    setTimeout(() => setToasts((s) => s.filter((t) => t.id !== id)), 4000);
   };
   const api = useMemo<Ctx>(
     () => ({
